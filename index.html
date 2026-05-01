@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>Caesar: Autonomous AI Research Agent — Deep Research Alternative</title>
+  <meta name="description" content="Caesar is an autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis. Outperforms GPT-5.2 Deep Research and Gemini 3 Deep Research on creative reasoning (p<0.001).">
+  <meta name="keywords" content="AI agent, LLM, RAG, agentic RAG, deep research, autonomous agent, knowledge graph, research agent, ChatGPT Deep Research alternative, Perplexity alternative, Gemini Deep Research alternative, GPT-5, Claude, retrieval augmented generation, scientific discovery">
+  <meta name="author" content="Jason Liang, Elliot Meyerson, Risto Miikkulainen">
+  <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
+
+  <link rel="canonical" href="https://jasonzliang.github.io/caesar-agent/">
+
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Caesar Agent">
+  <meta property="og:title" content="Caesar: Autonomous AI Research Agent">
+  <meta property="og:description" content="Deep research agent with graph-based exploration and adversarial synthesis. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
+  <meta property="og:url" content="https://jasonzliang.github.io/caesar-agent/">
+  <meta property="og:image" content="https://jasonzliang.github.io/caesar-agent/caesar.png">
+  <meta property="og:image:alt" content="Caesar autonomous research agent architecture diagram">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Caesar: Autonomous AI Research Agent">
+  <meta name="twitter:description" content="Deep research agent. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
+  <meta name="twitter:image" content="https://jasonzliang.github.io/caesar-agent/caesar.png">
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    "name": "Caesar",
+    "alternateName": "caesar-agent",
+    "applicationCategory": "DeveloperApplication",
+    "applicationSubCategory": "AI Research Agent",
+    "operatingSystem": "Cross-platform (Python 3.10+)",
+    "description": "Autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis. Outperforms ChatGPT Deep Research, Perplexity, and Gemini Deep Research on creative reasoning.",
+    "url": "https://jasonzliang.github.io/caesar-agent/",
+    "downloadUrl": "https://jasonzliang.github.io/caesar-agent/",
+    "softwareVersion": "0.3.2",
+    "license": "https://opensource.org/licenses/MIT",
+    "programmingLanguage": "Python",
+    "offers": {
+      "@type": "Offer",
+      "price": "0",
+      "priceCurrency": "USD"
+    },
+    "author": [
+      {"@type": "Person", "name": "Jason Liang"},
+      {"@type": "Person", "name": "Elliot Meyerson"},
+      {"@type": "Person", "name": "Risto Miikkulainen", "affiliation": {"@type": "Organization", "name": "The University of Texas at Austin"}}
+    ],
+    "keywords": "AI agent, LLM, RAG, agentic RAG, deep research, autonomous agent, knowledge graph, research agent"
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis",
+    "author": [
+      {"@type": "Person", "name": "Jason Liang"},
+      {"@type": "Person", "name": "Elliot Meyerson"},
+      {"@type": "Person", "name": "Risto Miikkulainen"}
+    ],
+    "datePublished": "2026-03",
+    "identifier": {"@type": "PropertyValue", "propertyID": "DOI", "value": "10.48550/arXiv.2604.20855"},
+    "url": "https://arxiv.org/abs/2604.20855",
+    "sameAs": "https://doi.org/10.48550/arXiv.2604.20855",
+    "about": ["Autonomous AI agents", "Retrieval-augmented generation", "Knowledge graph reasoning", "Creative answer synthesis"],
+    "abstract": "Caesar is an agentic LLM architecture designed to bridge the gap between information gathering and synthesis of new insights, leveraging a dynamic knowledge graph and adversarial draft refinement to foster associative reasoning across disparate concepts."
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "How is Caesar different from ChatGPT Deep Research or Perplexity?",
+        "acceptedAnswer": {
+          "@type": "Answer",
+          "text": "ChatGPT Deep Research, Perplexity, and Gemini Deep Research treat the web as a flat sequence of documents. Caesar builds a dynamic knowledge graph during exploration, then refines its answer through an adversarial Generator-Verifier loop. In blinded creativity evaluations, Caesar scored 25.29 vs Gemini 3 Deep Research's 22.27 and GPT-5.2 Deep Research's 15.40 (p<0.001)."
+        }
+      },
+      {
+        "@type": "Question",
+        "name": "Which LLMs does Caesar support?",
+        "acceptedAnswer": {"@type": "Answer", "text": "OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5, 4.6, 4.7), Google (Gemini 3 Pro), and any OpenAI-compatible endpoint. Model selection is per-subsystem via YAML config."}
+      },
+      {
+        "@type": "Question",
+        "name": "Do I need GPUs to run Caesar?",
+        "acceptedAnswer": {"@type": "Answer", "text": "No. Caesar uses hosted LLM APIs. A local ChromaDB instance handles the vector store. Runs comfortably on a laptop."}
+      },
+      {
+        "@type": "Question",
+        "name": "What does a typical Caesar run cost?",
+        "acceptedAnswer": {"@type": "Answer", "text": "A 5-iteration test run with Claude Haiku 4.5 costs roughly $0.30 and 10 minutes. A 250-iteration deep research run with GPT-5.4-mini is typically $5-$10."}
+      },
+      {
+        "@type": "Question",
+        "name": "What use cases is Caesar good for?",
+        "acceptedAnswer": {"@type": "Answer", "text": "Open-ended creative and cross-disciplinary research: hypothesis generation, literature synthesis, competitive intelligence, counterfactual reasoning, and novel solution ideation. Not ideal for quick factual lookups or latency-sensitive applications."}
+      }
+    ]
+  }
+  </script>
+
+  <style>
+    :root {
+      --fg: #111827;
+      --fg-soft: #4b5563;
+      --fg-muted: #6b7280;
+      --bg: #ffffff;
+      --accent: #1e40af;
+      --accent-soft: #eff6ff;
+      --accent-border: #bfdbfe;
+      --border: #e5e7eb;
+      --code-bg: #f6f7f9;
+    }
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      font-size: 17px;
+      line-height: 1.65;
+      color: var(--fg);
+      background: var(--bg);
+      margin: 0;
+      padding: 0;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      text-rendering: optimizeLegibility;
+    }
+    ::selection { background: var(--accent-soft); color: var(--accent); }
+    main {
+      max-width: 780px;
+      margin: 0 auto;
+      padding: 2.5rem 1.25rem 3rem;
+    }
+    header { text-align: center; margin-bottom: 2.5rem; }
+    h1, h2, h3 { line-height: 1.25; }
+    h1 { font-size: 2.25rem; margin: 0.4rem 0 0.6rem; letter-spacing: -0.02em; }
+    h2 {
+      font-size: 1.45rem;
+      border-bottom: 1px solid var(--border);
+      padding-bottom: 0.4rem;
+      margin-top: 3rem;
+      letter-spacing: -0.01em;
+      scroll-margin-top: 1.5rem;
+    }
+    h3 {
+      font-size: 1.18rem;
+      font-weight: 600;
+      margin-top: 1.75rem;
+      scroll-margin-top: 1.5rem;
+    }
+    p { margin: 0.85rem 0; }
+    ul, ol { padding-left: 1.4rem; }
+    li { margin: 0.35rem 0; }
+    li::marker { color: var(--accent); }
+
+    .tagline {
+      color: var(--fg-soft);
+      font-size: 1.15rem;
+      line-height: 1.5;
+      margin: 0.5rem auto 0.75rem;
+      max-width: 620px;
+    }
+    .byline {
+      font-size: 0.95rem;
+      color: var(--fg-soft);
+      margin: 0.25rem 0 1rem;
+    }
+    .byline .lead-author { font-weight: 600; color: var(--fg); }
+
+    .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0 1.25rem; }
+    .badges a { text-decoration: none; }
+    .badges img { display: block; height: 22px; }
+
+    .stat-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.5rem;
+      margin: 1.25rem 0 0;
+      padding: 1rem 0.75rem;
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      border-radius: 8px;
+    }
+    .stat { text-align: center; padding: 0 0.25rem; }
+    .stat-num {
+      font-size: 1.55rem;
+      font-weight: 700;
+      color: var(--accent);
+      letter-spacing: -0.02em;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+    }
+    .stat-label {
+      font-size: 0.72rem;
+      color: var(--fg-soft);
+      margin-top: 0.35rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      font-weight: 500;
+    }
+    @media (max-width: 540px) {
+      .stat-strip { grid-template-columns: 1fr; gap: 0.75rem; padding: 1rem; }
+      .stat-num { font-size: 1.4rem; }
+    }
+
+    .hero-img { width: 100%; max-width: 720px; margin: 1rem auto; display: block; }
+    figure.hero-figure { margin: 0 auto 0.5rem; max-width: 720px; padding: 0; }
+    figure.hero-figure .hero-img { margin: 1rem auto 0.5rem; }
+    figure.hero-figure figcaption { font-size: 0.85rem; color: #666; line-height: 1.45; text-align: left; padding: 0 0.25rem; }
+    figure.hero-figure figcaption strong { color: #222; }
+    figure.paper-figure { margin: 1.75rem 0; padding: 0; }
+    figure.paper-figure img { width: 100%; height: auto; display: block; border: 1px solid #e6e8eb; border-radius: 6px; background: #fff; }
+    figure.paper-figure figcaption { font-size: 0.9rem; color: #555; margin-top: 0.6rem; line-height: 1.45; }
+    figure.paper-figure figcaption strong { color: #222; }
+    .example-output { margin: 1.5rem 0; }
+    .example-output blockquote { background: #f7f8fa; border-left: 3px solid #c8ccd1; padding: 0.85rem 1.1rem; margin: 0.6rem 0 1rem; font-size: 0.95rem; line-height: 1.55; color: #2d2f33; border-radius: 0 6px 6px 0; }
+    .example-output blockquote.caesar { border-left-color: #2563eb; }
+    .example-output blockquote.baseline { border-left-color: #9ca3af; }
+    .example-output .label { font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.04em; color: #6b7280; margin: 0.6rem 0 0.2rem; }
+    .example-output .label.caesar { color: #2563eb; }
+    .example-output .query { font-style: italic; color: #444; margin: 0.4rem 0 0.8rem; }
+    ul.query-list { list-style: none; padding: 0; margin: 0.8rem 0 1.2rem; }
+    ul.query-list li { padding: 0.45rem 0; border-bottom: 1px solid #eef0f2; font-size: 0.93rem; line-height: 1.5; }
+    ul.query-list li:last-child { border-bottom: none; }
+    ul.query-list .qtag { display: inline-block; min-width: 1.5rem; font-weight: 600; color: #2563eb; }
+    ul.query-list .qname { font-weight: 600; color: #222; }
+    ul.query-list .qprompt { color: #555; font-style: italic; }
+    a { color: var(--accent); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+    a:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+      border-radius: 2px;
+    }
+
+    pre, code { font-family: "SF Mono", Menlo, Monaco, Consolas, monospace; }
+    pre {
+      background: var(--code-bg);
+      padding: 1rem;
+      border-radius: 6px;
+      overflow-x: auto;
+      font-size: 0.9rem;
+      line-height: 1.55;
+      border: 1px solid var(--border);
+    }
+    code {
+      background: var(--code-bg);
+      padding: 0.1rem 0.35rem;
+      border-radius: 3px;
+      font-size: 0.92em;
+    }
+    pre code { background: none; padding: 0; border: 0; }
+
+    .table-scroll { overflow-x: auto; margin: 1.25rem 0; -webkit-overflow-scrolling: touch; }
+    .table-scroll table { margin: 0; }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 1.25rem 0;
+      font-size: 0.95rem;
+    }
+    th, td {
+      border-bottom: 1px solid var(--border);
+      padding: 0.6rem 0.75rem;
+      text-align: left;
+    }
+    th {
+      background: transparent;
+      font-weight: 600;
+      color: var(--fg);
+      border-bottom: 2px solid var(--fg);
+      text-align: center;
+    }
+    th:first-child { text-align: left; }
+    td.num { text-align: center; font-variant-numeric: tabular-nums; }
+    tr.caesar-row td {
+      background: var(--accent-soft);
+    }
+    tr.caesar-row td:first-child {
+      box-shadow: inset 3px 0 0 var(--accent);
+    }
+
+    blockquote { border-left: 4px solid var(--accent); padding: 0.5rem 1rem; margin: 1rem 0; background: #f8fafc; }
+
+    .paper-callout {
+      background: var(--accent-soft);
+      border: 1px solid var(--accent-border);
+      border-left: 4px solid var(--accent);
+      padding: 0.85rem 1rem;
+      border-radius: 6px;
+      margin: 1.5rem 0;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      margin-top: 3.5rem;
+      padding-top: 1.5rem;
+      border-top: 1px solid var(--border);
+      color: var(--fg-muted);
+      font-size: 0.9rem;
+    }
+    footer p { margin: 0.4rem 0; }
+  </style>
+</head>
+<body>
+<main>
+  <header>
+    <h1>Caesar</h1>
+    <p class="tagline">Autonomous AI research agent. Caesar explores the web as a knowledge graph and refines its answer through adversarial self-critique — writing deeper, more creative syntheses than today's deep-research tools.</p>
+    <p class="byline">By <a href="https://jasonzliang.github.io/" class="lead-author">Jason Liang</a>, Elliot Meyerson, and Risto Miikkulainen</p>
+    <div class="badges">
+      <a href="https://arxiv.org/abs/2604.20855"><img src="https://img.shields.io/badge/arXiv-2604.20855-b31b1b?logo=arxiv&logoColor=white" alt="arXiv"></a>
+      <!-- <a href="https://doi.org/10.48550/arXiv.2604.20855"><img src="https://img.shields.io/badge/DOI-10.48550%2FarXiv.2604.20855-006699?logo=doi&logoColor=white" alt="DOI"></a> -->
+      <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img src="https://img.shields.io/badge/ResearchGate-Caesar-00ccbb?logo=researchgate&logoColor=white" alt="ResearchGate"></a>
+      <!-- <a href="https://github.com/jasonzliang/caesar-agent"><img src="https://img.shields.io/badge/GitHub-caesar--agent-181717?logo=github&logoColor=white" alt="GitHub"></a> -->
+      <!-- <a href="https://www.python.org/downloads/"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&logoColor=white" alt="Python 3.10+"></a> -->
+      <!-- <a href="https://github.com/jasonzliang/caesar-agent/blob/main/LICENSE"><img src="https://img.shields.io/badge/license-MIT-green" alt="License"></a> -->
+      <!-- <a href="https://github.com/jasonzliang/caesar-agent/releases/tag/0.3.1"><img src="https://img.shields.io/badge/release-0.3.1-brightgreen" alt="Release"></a> -->
+    </div>
+    <figure class="hero-figure">
+      <img class="hero-img" src="caesar.png" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
+      <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1 — Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2 — Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
+    </figure>
+    <div class="stat-strip" aria-label="Headline benchmark results">
+      <div class="stat">
+        <div class="stat-num">25.29 / 30</div>
+        <div class="stat-label">Creativity score</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">+14%</div>
+        <div class="stat-label">vs. top baseline (Gemini 3 Deep Research)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-num">p &lt; 0.001</div>
+        <div class="stat-label">Mann–Whitney U</div>
+      </div>
+    </div>
+  </header>
+
+  <article>
+
+  <div class="paper-callout">
+    <strong>Read the paper:</strong> <a href="https://arxiv.org/abs/2604.20855"><em>Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis</em></a> &middot; <a href="https://jasonzliang.github.io/">Liang</a>, Meyerson, Miikkulainen, 2026 &middot; <a href="https://doi.org/10.48550/arXiv.2604.20855">DOI</a> &middot; <a href="https://arxiv.org/abs/2604.20855">PDF</a>
+  </div>
+
+  <p><strong>Caesar</strong> is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph — building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.</p>
+
+  <h2 id="why-caesar">Why Caesar?</h2>
+  <p>Today's deep-research agents — <strong>ChatGPT Deep Research</strong>, <strong>Perplexity</strong>, <strong>Gemini Deep Research</strong>, <strong>GPT Researcher</strong> — optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from <em>navigational amnesia</em>, and converge on derivative, consensus-driven outputs.</p>
+  <p>Caesar is built differently:</p>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th>Capability</th><th>Caesar</th><th>ChatGPT Deep Research</th><th>Perplexity</th><th>GPT Researcher</th></tr>
+    </thead>
+    <tbody>
+      <tr><td>Builds a knowledge graph as it explores</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">❌</td></tr>
+      <tr><td>Adversarial self-critique on its own draft</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">❌</td></tr>
+      <tr><td>Multiple drafts, then merged into one</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">🟡</td></tr>
+      <tr><td>Backtracks when an exploration path stalls</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">❌</td></tr>
+      <tr><td>Multi-provider (OpenAI / Anthropic / Gemini)</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">✅</td></tr>
+      <tr><td>Reproducible run logs (JSON)</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">🟡</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <h2 id="benchmarks">Benchmark Results</h2>
+  <p>Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scored 0–10 across three creativity dimensions: <strong>New</strong>, <strong>Useful</strong>, <strong>Surprising</strong>.</p>
+
+  <div class="table-scroll">
+  <table>
+    <thead>
+      <tr><th>Agent</th><th>New</th><th>Useful</th><th>Surprising</th><th>Total</th></tr>
+    </thead>
+    <tbody>
+      <tr class="caesar-row"><td><strong>Caesar</strong></td><td class="num"><strong>8.64</strong></td><td class="num"><strong>8.38</strong></td><td class="num"><strong>8.27</strong></td><td class="num"><strong>25.29</strong></td></tr>
+      <tr><td>Gemini 3 Deep Research</td><td class="num">7.69</td><td class="num">7.09</td><td class="num">7.49</td><td class="num">22.27</td></tr>
+      <tr><td>Sonnet 4.5 Deep Research</td><td class="num">6.96</td><td class="num">7.20</td><td class="num">6.73</td><td class="num">20.89</td></tr>
+      <tr><td>GPT-5.2 Deep Research</td><td class="num">5.02</td><td class="num">6.02</td><td class="num">4.36</td><td class="num">15.40</td></tr>
+    </tbody>
+  </table>
+  </div>
+
+  <p>Mann–Whitney U across all settings: <strong>p &lt; 0.001</strong>. Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
+
+  <h2 id="example">Example Output</h2>
+  <p>To make the difference concrete, here are excerpts from a Cross-Domain Synthesis query — a test of structural isomorphism rather than surface metaphor.</p>
+
+  <div class="example-output">
+    <p class="query"><strong>Query:</strong> Apply the mathematical structure of calculus (not the concepts, but the formal relationships) to cooking. What would a "derivative" of a recipe mean? An "integral"? Show the parallel structure.</p>
+
+    <p class="label caesar">Caesar</p>
+    <blockquote class="caesar">
+      Imagine a recipe as a machine with knobs you can turn (amounts, times, temperatures) and gauges you read at the end (taste, texture, yield). … <em>Derivative</em> is sensitivity: stack the knob-to-gauge nudges into a <strong>Jacobian</strong>; sensitivities pass through subrecipes by chain, product, and quotient rules. <em>Integral</em> is accumulation along the cooking path. … When loops do not cancel (order matters), the nonzero loop totals are <strong>curvature</strong>. You can cure that by adding the smallest extra state — an accumulator — so increments telescope again, turning history into explicit memory.
+    </blockquote>
+
+    <p class="label">Claude Sonnet 4.5 (baseline)</p>
+    <blockquote class="baseline">
+      A derivative asks: "If I change this slightly, what happens?" For delicate cake, two extra minutes transforms perfection into dryness — the time derivative is steep. … Integrals measure what accumulated over the entire cooking time. … Different cooking paths can integrate to the same result. This is why sous vide works: low temperature × long time = high temperature × short time.
+    </blockquote>
+  </div>
+
+  <p><strong>Quick analysis.</strong></p>
+  <ul>
+    <li><strong>Caesar builds a structural model.</strong> Derivatives become a <em>Jacobian sensitivity matrix</em> mapping multiple inputs to multiple outputs — a multivariate control framework, not a scalar rate of change.</li>
+    <li><strong>Caesar makes a lateral leap.</strong> It identifies process non-commutativity (AB ≠ BA) as <em>geometric curvature</em>, then proposes an actionable fix: add an accumulator state so increments telescope again. The baseline notes order matters but stops there.</li>
+    <li><strong>Caesar borrows the grammar; the baseline borrows the vocabulary.</strong> Sonnet's answer is a competent textbook analogy ("derivative = sensitivity"); Caesar fuses cooking, control theory, and differential geometry into a unified framework — exactly the cross-cluster traversal Phase 1 is designed to enable.</li>
+  </ul>
+  <p>Full listings, the recursive insight chain that produced this answer, and per-criterion judge scores are in <a href="https://arxiv.org/abs/2604.20855">Appendices A and C of the paper</a>.</p>
+
+  <h2 id="how-it-works">How It Works</h2>
+  <p>The architecture diagram at the top of the page shows the two-phase loop. Here is what each phase actually does — and why each piece earns its place.</p>
+
+  <h3>1. Deep Web Exploration — stateful graph traversal</h3>
+  <p>Caesar treats exploration as a graph traversal problem rather than a sequence of isolated retrievals. Given a user query, it bootstraps a starting page, generates a task-specific persona to focus reasoning, and then runs a recursive <strong>Perceive–Think–Act</strong> loop until its budget is exhausted.</p>
+  <ul>
+    <li><strong>Dual-memory design.</strong> A directed graph <em>G</em> tracks the navigational topology (which URLs were visited, in what order); a separate vector store <em>KB</em> indexes the extracted insights. Decoupling navigation from retention lets the agent maximize coverage before it commits to a narrative.</li>
+    <li><strong>Insights conditioned on neighborhood, not pages.</strong> Each new page is analyzed against the insights already attached to predecessor and neighbor nodes — the LLM is prompted to identify how the new content <em>builds on or contradicts</em> the local context, not to summarize the page in isolation. This is the mechanism behind cross-cluster bridges.</li>
+    <li><strong>Dynamic policy with backtracking.</strong> A navigational stack supports depth-first drill-down until information gain plateaus, then pops back to explore orthogonal branches. The action policy scores candidate URLs using both a global query against <em>KB</em> and the local episodic context — letting Caesar abandon low-value paths the way a human researcher would.</li>
+  </ul>
+
+  <h3>2. Adversarial Artifact Synthesis — Generator–Verifier loop</h3>
+  <p>Rather than a single-pass summary, Phase 2 runs as a self-correcting Generator–Verifier loop driven by the knowledge base built in Phase 1.</p>
+  <ul>
+    <li><strong>Recursive insight discovery.</strong> The agent maintains a running context and, at each round, the LLM produces the next critical sub-question (q<sub>t+1</sub>) conditioned on the answer to the previous one (a<sub>t</sub>). Each sub-question is answered by retrieval against <em>KB</em>, so the dependency chain stays grounded in observed sources.</li>
+    <li><strong>Adversarial query refinement.</strong> An independent verifier inspects the current draft for logical weaknesses, missing citations, and unsupported claims, then formulates <em>orthogonal</em> queries that target those weaknesses. These queries seed the next draft. This is the mechanism that escapes the consensus basin that traps single-pass LLMs.</li>
+    <li><strong>Generative draft merging.</strong> Multiple independent drafts are produced and then merged by the LLM into a single artifact, which is post-processed (e.g., into an ELI5 summary) for the final output. Caesar's output is a cited research artifact plus a serialized exploration graph and a JSON run summary — auditable and reproducible.</li>
+  </ul>
+  <p>The exact algorithms (URL scoring, persona generation, insight prompting, verifier prompts) are in Sections 3–4 of <a href="https://arxiv.org/abs/2604.20855">the paper</a>.</p>
+
+  <!--
+  <h2 id="quickstart">Quickstart</h2>
+  <pre><code>git clone https://github.com/jasonzliang/caesar-agent.git
+cd caesar-agent
+pip install -e .
+
+export OPENAI_API_KEY=your_key
+export BRAVE_API_KEY=your_key      # optional (falls back to DDGS if unset)
+export ANTHROPIC_API_KEY=your_key  # optional, for Claude-based agents
+
+cd caesar
+python run_agent.py config/config_preset/regular.yaml -q "your research question"</code></pre>
+  <p>The agent explores the web, builds a knowledge graph on disk, synthesizes a final artifact, and emits <code>exp_summary.json</code> with tokens used, cost, wall-time, pages visited, and paths to generated artifacts.</p>
+  -->
+
+  <h2 id="exploration">What Exploration Looks Like</h2>
+  <p>The exploration policy is query-aware: the shape of the knowledge graph adapts to the kind of question being asked. The benchmark uses five query categories, each chosen to stress a distinct creative failure mode of standard LLMs.</p>
+
+  <ul class="query-list">
+    <li><span class="qtag">(a)</span> <span class="qname">Constrained Synthesis</span> — invent a new emotion humans don't experience. <span class="qprompt">Tests conceptual expansion under logical constraints; LLMs default to renaming existing emotions.</span></li>
+    <li><span class="qtag">(b)</span> <span class="qname">Counterfactual Reasoning</span> — if humans evolved with echolocation instead of color vision, how would painting, architecture, and math change? <span class="qprompt">Tests whether the model can suppress strong factual associations in favor of a counterfactual premise.</span></li>
+    <li><span class="qtag">(c)</span> <span class="qname">Cross-Domain Synthesis</span> — apply the formal structure of calculus to cooking. <span class="qprompt">Tests structural isomorphism (deep analogy) rather than surface metaphor — same query as the Example Output above.</span></li>
+    <li><span class="qtag">(d)</span> <span class="qname">Meta-Creativity</span> — design a creativity metric for AI that doesn't rely on human judgment, novelty, usefulness, or surprise. <span class="qprompt">Adversarial to RLHF: forces reasoning outside the human-preference space the model was tuned on.</span></li>
+    <li><span class="qtag">(e)</span> <span class="qname">Open-Ended Synthesis</span> — invent a completely original business idea. <span class="qprompt">Targets mode collapse: LLMs converge on the most probable answer; originality is statistically unlikely.</span></li>
+  </ul>
+
+  <figure class="paper-figure">
+    <img src="figure2.png" alt="Five knowledge graphs Caesar built during exploration, one per query category: Constrained Synthesis, Counterfactual Reasoning, Cross-Domain Synthesis, Meta-Creativity, and Open-Ended Synthesis. Some queries produce many short branches radiating from the root; others produce long linear chains. Cyan nodes mark sources cited in the final artifact.">
+    <figcaption><strong>Figure 2.</strong> Knowledge graphs Caesar builds during exploration, one per query category. Brighter colors indicate deeper exploration from the root (red); cyan nodes are sources cited in the final artifact. Constrained (a), Cross-Domain (c), and Meta-Creativity (d) produce starburst topologies — breadth-first traversal across disjoint semantic clusters to find novel intersections. Counterfactual (b) and Open-Ended (e) produce long linear chains — depth-first traversal that drills into a specific causal path or niche.</figcaption>
+  </figure>
+
+  <figure class="paper-figure">
+    <img src="figure3.png" alt="Six panels showing the evolution of a single knowledge graph for an open-ended query across 1000 exploration steps (100, 200, 400, 600, 800) plus a t-SNE plot of topic embeddings. The graph transitions from a long depth-first chain into multi-directional breadth-first branching as exploration progresses.">
+    <figcaption><strong>Figure 3.</strong> A single exploration trajectory across 1000 steps for an open-ended question. Caesar starts depth-first (steps 100–400, a long linear descent), then backtracks and branches breadth-first once the initial path is exhausted (steps 600–800). The final t-SNE panel shows the diversity of topics ultimately captured in the knowledge base.</figcaption>
+  </figure>
+
+  <h2 id="use-cases">Use Cases</h2>
+  <p>Caesar is built for open-ended, creative, cross-disciplinary research — the questions retrieval alone cannot answer.</p>
+  <ul>
+    <li><strong>Hypothesis generation</strong>: novel cross-domain connections (e.g., bridging materials science and biology).</li>
+    <li><strong>Literature synthesis</strong>: graph-grounded review that surfaces tensions and gaps between papers.</li>
+    <li><strong>Competitive intelligence</strong>: deep mapping of a technical or market landscape.</li>
+    <li><strong>Counterfactual and meta-creative reasoning</strong>: "what if X was different?" style inquiry.</li>
+    <li><strong>Novel solution ideation</strong>: e.g., ARC-AGI-style problem exploration.</li>
+  </ul>
+
+  <h2 id="faq">FAQ</h2>
+
+  <h3>How is Caesar different from LangGraph, CrewAI, or AutoGen?</h3>
+  <p>Those are orchestration frameworks: they help you wire up agents. Rome (the framework Caesar is built on) is an opinionated runtime for <em>how</em> agents should reason — graph-structured exploration, adversarial verification, episodic memory. Caesar is a concrete research agent built on top.</p>
+
+  <h3>Do I need GPUs?</h3>
+  <p>No. Caesar uses hosted LLM APIs (OpenAI, Anthropic, Gemini). A local ChromaDB instance handles the vector store. Runs comfortably on a laptop.</p>
+
+  <h3>Which models are supported?</h3>
+  <p>OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6 / 4.7), Google (Gemini 3 Pro), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.</p>
+
+  <h3>How much does a typical run cost?</h3>
+  <p>A 5-iteration exploration with Claude Haiku 4.5 runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically <strong>$5–$10</strong>.</p>
+
+  <h3>Is Caesar a good ChatGPT Deep Research alternative?</h3>
+  <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation, Caesar scored 25.29 vs ChatGPT Deep Research's 15.40 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
+
+  <h3>What does a Caesar run produce?</h3>
+  <p>A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance — enough to audit, reproduce, or pipe the result into a downstream system.</p>
+
+  <h2 id="citation">Citation</h2>
+  <pre><code>@misc{liang26caesar,
+  title={Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis},
+  author={Jason Liang and Elliot Meyerson and Risto Miikkulainen},
+  year={2026},
+  eprint={2604.20855},
+  archivePrefix={arXiv},
+  primaryClass={cs.IR},
+  url={https://arxiv.org/abs/2604.20855},
+}</code></pre>
+
+  </article>
+
+  <footer>
+    <p>By <a href="https://jasonzliang.github.io/">Jason Liang</a>, Elliot Meyerson, and Risto Miikkulainen</p>
+    <p><a href="https://arxiv.org/abs/2604.20855">arXiv:2604.20855</a><!-- &middot; <a href="https://github.com/jasonzliang/caesar-agent">GitHub</a> &middot; <a href="https://github.com/jasonzliang/caesar-agent/issues">Issues</a> &middot; <a href="https://github.com/jasonzliang/caesar-agent/discussions">Discussions</a> --></p>
+  </footer>
+</main>
+</body>
+</html>
