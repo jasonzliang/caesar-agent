@@ -1,0 +1,71 @@
+name: IndexNow ping
+
+# Pings IndexNow (Bing / Yandex / DuckDuckGo / others) so newly-pushed content
+# gets indexed within minutes instead of waiting for the next crawl.
+# Verification key file lives at the repo root (8ec2557553f62b0ca93ef023481b8787.txt).
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '**.html'
+      - '**.png'
+      - '**.jpg'
+      - '**.svg'
+      - 'sitemap.xml'
+      - 'robots.txt'
+  # Allow manual re-pings without pushing
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: indexnow-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  ping:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Wait for GitHub Pages to publish the new content
+        # Pages typically deploys within ~30s of a push; give it a buffer so
+        # the URLs we ping are actually serving the new content.
+        run: sleep 60
+
+      - name: Submit sitemap URLs to IndexNow
+        env:
+          INDEXNOW_KEY: 8ec2557553f62b0ca93ef023481b8787
+        run: |
+          set -euo pipefail
+          PAYLOAD=$(cat <<EOF
+          {
+            "host": "jasonzliang.github.io",
+            "key": "${INDEXNOW_KEY}",
+            "keyLocation": "https://jasonzliang.github.io/caesar-agent/${INDEXNOW_KEY}.txt",
+            "urlList": [
+              "https://jasonzliang.github.io/caesar-agent/",
+              "https://jasonzliang.github.io/caesar-agent/#why-caesar",
+              "https://jasonzliang.github.io/caesar-agent/#benchmarks",
+              "https://jasonzliang.github.io/caesar-agent/#example",
+              "https://jasonzliang.github.io/caesar-agent/#how-it-works",
+              "https://jasonzliang.github.io/caesar-agent/#exploration",
+              "https://jasonzliang.github.io/caesar-agent/#use-cases",
+              "https://jasonzliang.github.io/caesar-agent/#faq"
+            ]
+          }
+          EOF
+          )
+          echo "Submitting to IndexNow…"
+          response=$(curl -sS -o /tmp/indexnow.body -w "%{http_code}" \
+            -X POST "https://api.indexnow.org/IndexNow" \
+            -H "Content-Type: application/json" \
+            --data "${PAYLOAD}")
+          echo "HTTP ${response}"
+          cat /tmp/indexnow.body || true
+          # 200 = OK, 202 = Accepted (queued). Anything else is a failure.
+          case "${response}" in
+            200|202) exit 0 ;;
+            *) exit 1 ;;
+          esac
