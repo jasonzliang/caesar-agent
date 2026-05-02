@@ -203,6 +203,7 @@
       --accent: #1e40af;
       --accent-soft: #eff6ff;
       --accent-border: #bfdbfe;
+      --link: #2563eb; /* 3.37:1 vs body text — passes WCAG link contrast */
       --border: #e5e7eb;
       --code-bg: #f6f7f9;
     }
@@ -320,8 +321,9 @@
     ul.query-list .qtag { display: inline-block; min-width: 1.5rem; font-weight: 600; color: #2563eb; }
     ul.query-list .qname { font-weight: 600; color: #222; }
     ul.query-list .qprompt { color: #555; font-style: italic; }
-    a { color: var(--accent); text-decoration: none; }
+    a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
+    footer a { text-decoration: underline; } /* non-color cue against gray surrounding text */
     a:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
