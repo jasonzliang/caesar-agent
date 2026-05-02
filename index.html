@@ -5,12 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Caesar: Autonomous AI Research Agent — Deep Research Alternative</title>
-  <meta name="description" content="Caesar is an autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis. Outperforms GPT-5.2 Deep Research and Gemini 3 Deep Research on creative reasoning (p<0.001).">
+  <meta name="description" content="Caesar — autonomous AI research agent. Graph-based deep web exploration with adversarial answer synthesis. Outperforms GPT-5 and Gemini Deep Research.">
   <meta name="keywords" content="AI agent, LLM, RAG, agentic RAG, deep research, autonomous agent, knowledge graph, research agent, ChatGPT Deep Research alternative, Perplexity alternative, Gemini Deep Research alternative, GPT-5, Claude, retrieval augmented generation, scientific discovery">
   <meta name="author" content="Jason Liang, Elliot Meyerson, Risto Miikkulainen">
+  <link rel="author" href="https://jasonzliang.github.io/">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
 
   <link rel="canonical" href="https://jasonzliang.github.io/caesar-agent/">
+  <link rel="preconnect" href="https://img.shields.io" crossorigin>
+  <link rel="dns-prefetch" href="https://img.shields.io">
+
+  <meta name="theme-color" content="#1e40af">
+  <meta name="color-scheme" content="light">
+
+  <!-- Google Scholar citation metadata (academic indexing) -->
+  <meta name="citation_title" content="Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis">
+  <meta name="citation_author" content="Liang, Jason">
+  <meta name="citation_author" content="Meyerson, Elliot">
+  <meta name="citation_author" content="Miikkulainen, Risto">
+  <meta name="citation_publication_date" content="2026/03">
+  <meta name="citation_online_date" content="2026/03">
+  <meta name="citation_arxiv_id" content="2604.20855">
+  <meta name="citation_doi" content="10.48550/arXiv.2604.20855">
+  <meta name="citation_pdf_url" content="https://arxiv.org/pdf/2604.20855">
+  <meta name="citation_abstract_html_url" content="https://arxiv.org/abs/2604.20855">
+  <meta name="citation_keywords" content="Agentic Web Exploration; Knowledge Graph Memory; Adversarial Synthesis; Iterative RAG; Computational Creativity">
 
   <meta property="og:type" content="website">
   <meta property="og:site_name" content="Caesar Agent">
@@ -19,8 +38,11 @@
   <meta property="og:url" content="https://jasonzliang.github.io/caesar-agent/">
   <meta property="og:image" content="https://jasonzliang.github.io/caesar-agent/caesar.png">
   <meta property="og:image:alt" content="Caesar autonomous research agent architecture diagram">
-  <meta property="og:image:width" content="1200">
-  <meta property="og:image:height" content="630">
+  <meta property="og:image:width" content="2008">
+  <meta property="og:image:height" content="624">
+  <meta property="og:image:type" content="image/png">
+
+  <meta name="twitter:image:alt" content="Caesar autonomous research agent architecture diagram">
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Caesar: Autonomous AI Research Agent">
@@ -42,15 +64,37 @@
     "softwareVersion": "0.3.2",
     "license": "https://opensource.org/licenses/MIT",
     "programmingLanguage": "Python",
+    "datePublished": "2025-05-06",
+    "dateModified": "2026-05-01",
     "offers": {
       "@type": "Offer",
       "price": "0",
       "priceCurrency": "USD"
     },
     "author": [
-      {"@type": "Person", "name": "Jason Liang"},
-      {"@type": "Person", "name": "Elliot Meyerson"},
-      {"@type": "Person", "name": "Risto Miikkulainen", "affiliation": {"@type": "Organization", "name": "The University of Texas at Austin"}}
+      {
+        "@type": "Person",
+        "name": "Jason Liang",
+        "url": "https://jasonzliang.github.io/",
+        "sameAs": [
+          "https://jasonzliang.github.io/",
+          "https://github.com/jasonzliang"
+        ],
+        "affiliation": {"@type": "Organization", "name": "Cognizant AI Lab"}
+      },
+      {
+        "@type": "Person",
+        "name": "Elliot Meyerson",
+        "affiliation": {"@type": "Organization", "name": "Cognizant AI Lab"}
+      },
+      {
+        "@type": "Person",
+        "name": "Risto Miikkulainen",
+        "affiliation": [
+          {"@type": "Organization", "name": "Cognizant AI Lab"},
+          {"@type": "Organization", "name": "The University of Texas at Austin"}
+        ]
+      }
     ],
     "keywords": "AI agent, LLM, RAG, agentic RAG, deep research, autonomous agent, knowledge graph, research agent"
   }
@@ -72,6 +116,38 @@
     "sameAs": "https://doi.org/10.48550/arXiv.2604.20855",
     "about": ["Autonomous AI agents", "Retrieval-augmented generation", "Knowledge graph reasoning", "Creative answer synthesis"],
     "abstract": "Caesar is an agentic LLM architecture designed to bridge the gap between information gathering and synthesis of new insights, leveraging a dynamic knowledge graph and adversarial draft refinement to foster associative reasoning across disparate concepts."
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "WebSite",
+    "name": "Caesar — Autonomous AI Research Agent",
+    "alternateName": "Caesar Agent",
+    "url": "https://jasonzliang.github.io/caesar-agent/",
+    "inLanguage": "en",
+    "publisher": {
+      "@type": "Organization",
+      "name": "Cognizant AI Lab"
+    }
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ItemList",
+    "name": "Caesar Benchmark Results — Creative Reasoning (LLM-as-a-Judge)",
+    "description": "Blinded 3-model LLM-as-a-Judge panel scoring creativity (New + Useful + Surprising, max 30) across deep-research agents.",
+    "itemListOrder": "https://schema.org/ItemListOrderDescending",
+    "numberOfItems": 4,
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Caesar", "value": 25.29},
+      {"@type": "ListItem", "position": 2, "name": "Gemini 3 Deep Research", "value": 22.27},
+      {"@type": "ListItem", "position": 3, "name": "Sonnet 4.5 Deep Research", "value": 20.89},
+      {"@type": "ListItem", "position": 4, "name": "GPT-5.2 Deep Research", "value": 15.40}
+    ]
   }
   </script>
 
@@ -332,7 +408,7 @@
       <!-- <a href="https://github.com/jasonzliang/caesar-agent/releases/tag/0.3.1"><img src="https://img.shields.io/badge/release-0.3.1-brightgreen" alt="Release"></a> -->
     </div>
     <figure class="hero-figure">
-      <img class="hero-img" src="caesar.png" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
+      <img class="hero-img" src="caesar.png" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
       <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1 — Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2 — Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
     </figure>
     <div class="stat-strip" aria-label="Headline benchmark results">
@@ -470,12 +546,12 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   </ul>
 
   <figure class="paper-figure">
-    <img src="figure2.png" alt="Five knowledge graphs Caesar built during exploration, one per query category: Constrained Synthesis, Counterfactual Reasoning, Cross-Domain Synthesis, Meta-Creativity, and Open-Ended Synthesis. Some queries produce many short branches radiating from the root; others produce long linear chains. Cyan nodes mark sources cited in the final artifact.">
+    <img src="figure2.png" width="1351" height="680" loading="lazy" decoding="async" alt="Five knowledge graphs Caesar built during exploration, one per query category: Constrained Synthesis, Counterfactual Reasoning, Cross-Domain Synthesis, Meta-Creativity, and Open-Ended Synthesis. Some queries produce many short branches radiating from the root; others produce long linear chains. Cyan nodes mark sources cited in the final artifact.">
     <figcaption><strong>Figure 2.</strong> Knowledge graphs Caesar builds during exploration, one per query category. Brighter colors indicate deeper exploration from the root (red); cyan nodes are sources cited in the final artifact. Constrained (a), Cross-Domain (c), and Meta-Creativity (d) produce starburst topologies — breadth-first traversal across disjoint semantic clusters to find novel intersections. Counterfactual (b) and Open-Ended (e) produce long linear chains — depth-first traversal that drills into a specific causal path or niche.</figcaption>
   </figure>
 
   <figure class="paper-figure">
-    <img src="figure3.png" alt="Six panels showing the evolution of a single knowledge graph for an open-ended query across 1000 exploration steps (100, 200, 400, 600, 800) plus a t-SNE plot of topic embeddings. The graph transitions from a long depth-first chain into multi-directional breadth-first branching as exploration progresses.">
+    <img src="figure3.png" width="1350" height="683" loading="lazy" decoding="async" alt="Six panels showing the evolution of a single knowledge graph for an open-ended query across 1000 exploration steps (100, 200, 400, 600, 800) plus a t-SNE plot of topic embeddings. The graph transitions from a long depth-first chain into multi-directional breadth-first branching as exploration progresses.">
     <figcaption><strong>Figure 3.</strong> A single exploration trajectory across 1000 steps for an open-ended question. Caesar starts depth-first (steps 100–400, a long linear descent), then backtracks and branches breadth-first once the initial path is exhausted (steps 600–800). The final t-SNE panel shows the diversity of topics ultimately captured in the knowledge base.</figcaption>
   </figure>
 
