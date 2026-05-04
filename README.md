@@ -57,4 +57,4 @@ Mann–Whitney U across all settings: **p < 0.001**. See the [paper](https://arx
 
 By [Jason Liang](https://jasonzliang.github.io/), Elliot Meyerson, and Risto Miikkulainen — Cognizant AI Lab and The University of Texas at Austin.
 
-MIT licensed.
+Apache License 2.0.
