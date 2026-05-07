@@ -35,7 +35,7 @@
   <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="Caesar Agent">
   <meta property="og:title" content="Caesar — Open-Source Autonomous AI Research Agent">
-  <meta property="og:description" content="Deep research agent with graph-based exploration and adversarial synthesis. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
+  <meta property="og:description" content="Deep research agent with graph-based exploration and adversarial synthesis. 13–23% improvement over Gemini 3 / Sonnet 4.5 / GPT-5.2 Deep Research on creative reasoning (Cliff's δ ≥ 0.76).">
   <meta property="og:url" content="https://jasonzliang.github.io/caesar-agent/">
   <meta property="og:image" content="https://jasonzliang.github.io/caesar-agent/caesar.webp">
   <meta property="og:image:alt" content="Caesar autonomous research agent architecture diagram">
@@ -53,7 +53,7 @@
 
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Caesar — Open-Source Autonomous AI Research Agent">
-  <meta name="twitter:description" content="Deep research agent. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
+  <meta name="twitter:description" content="Deep research agent. 13–23% improvement over GPT-5.2 / Gemini 3 / Sonnet 4.5 Deep Research on creative reasoning (Cliff's δ ≥ 0.76).">
   <meta name="twitter:image" content="https://jasonzliang.github.io/caesar-agent/caesar.webp">
   <meta name="twitter:image:alt" content="Caesar autonomous research agent architecture diagram">
 
@@ -160,10 +160,10 @@
     "itemListOrder": "https://schema.org/ItemListOrderDescending",
     "numberOfItems": 4,
     "itemListElement": [
-      {"@type": "ListItem", "position": 1, "name": "Caesar", "value": 25.29},
-      {"@type": "ListItem", "position": 2, "name": "Gemini 3 Deep Research", "value": 22.27},
-      {"@type": "ListItem", "position": 3, "name": "Sonnet 4.5 Deep Research", "value": 20.89},
-      {"@type": "ListItem", "position": 4, "name": "GPT-5.2 Deep Research", "value": 15.40}
+      {"@type": "ListItem", "position": 1, "name": "Caesar", "value": 26.96},
+      {"@type": "ListItem", "position": 2, "name": "Gemini 3 Deep Research", "value": 23.78},
+      {"@type": "ListItem", "position": 3, "name": "Sonnet 4.5 Deep Research", "value": 20.64},
+      {"@type": "ListItem", "position": 4, "name": "GPT-5.2 Deep Research", "value": 15.74}
     ]
   }
   </script>
@@ -178,7 +178,7 @@
         "name": "How is Caesar different from ChatGPT Deep Research or Perplexity?",
         "acceptedAnswer": {
           "@type": "Answer",
-          "text": "ChatGPT Deep Research, Perplexity, and Gemini Deep Research treat the web as a flat sequence of documents. Caesar builds a dynamic knowledge graph during exploration, then refines its answer through an adversarial Generator-Verifier loop. In blinded creativity evaluations, Caesar scored 25.29 vs Gemini 3 Deep Research's 22.27 and GPT-5.2 Deep Research's 15.40 (p<0.001)."
+          "text": "ChatGPT Deep Research, Perplexity, and Gemini Deep Research treat the web as a flat sequence of documents. Caesar builds a dynamic knowledge graph during exploration, then refines its answer through an adversarial Generator-Verifier loop. In blinded creativity evaluations on full-answer tasks, Caesar scored 26.96 vs Gemini 3 Deep Research's 23.78 and GPT-5.2 Deep Research's 15.74 (Cliff's δ ≥ 0.76, large effect)."
         }
       },
       {
@@ -209,7 +209,7 @@
       {
         "@type": "Question",
         "name": "Is Caesar a good ChatGPT Deep Research alternative?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation, Caesar scored 25.29 vs ChatGPT Deep Research's 15.40 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios."}
+        "acceptedAnswer": {"@type": "Answer", "text": "Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation, Caesar scored 26.96 vs ChatGPT Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios."}
       }
     ]
   }
@@ -517,16 +517,16 @@
     </figure>
     <div class="stat-strip" aria-label="Headline benchmark results">
       <div class="stat">
-        <div class="stat-num">25.29 / 30</div>
-        <div class="stat-label">Creativity score</div>
+        <div class="stat-num">26.96 / 30</div>
+        <div class="stat-label">Creativity score (full answers)</div>
       </div>
       <div class="stat">
-        <div class="stat-num">+14%</div>
-        <div class="stat-label">vs. top baseline (Gemini 3 Deep Research)</div>
+        <div class="stat-num">13–23%</div>
+        <div class="stat-label">improvement over top deep-research baseline</div>
       </div>
       <div class="stat">
-        <div class="stat-num">p &lt; 0.001</div>
-        <div class="stat-label">Mann–Whitney U</div>
+        <div class="stat-num">δ ≥ 0.76</div>
+        <div class="stat-label">Cliff's Delta (large effect, all baselines)</div>
       </div>
     </div>
   </header>
@@ -568,15 +568,15 @@
       <tr><th>Agent</th><th>New</th><th>Useful</th><th>Surprising</th><th>Total</th></tr>
     </thead>
     <tbody>
-      <tr class="caesar-row"><td><strong>Caesar</strong></td><td class="num"><strong>8.64</strong></td><td class="num"><strong>8.38</strong></td><td class="num"><strong>8.27</strong></td><td class="num"><strong>25.29</strong></td></tr>
-      <tr><td>Gemini 3 Deep Research</td><td class="num">7.69</td><td class="num">7.09</td><td class="num">7.49</td><td class="num">22.27</td></tr>
-      <tr><td>Sonnet 4.5 Deep Research</td><td class="num">6.96</td><td class="num">7.20</td><td class="num">6.73</td><td class="num">20.89</td></tr>
-      <tr><td>GPT-5.2 Deep Research</td><td class="num">5.02</td><td class="num">6.02</td><td class="num">4.36</td><td class="num">15.40</td></tr>
+      <tr class="caesar-row"><td><strong>Caesar</strong></td><td class="num"><strong>9.11</strong></td><td class="num"><strong>8.87</strong></td><td class="num"><strong>8.98</strong></td><td class="num"><strong>26.96</strong></td></tr>
+      <tr><td>Gemini 3 Deep Research</td><td class="num">8.09</td><td class="num">7.60</td><td class="num">8.09</td><td class="num">23.78</td></tr>
+      <tr><td>Sonnet 4.5 Deep Research</td><td class="num">6.73</td><td class="num">7.49</td><td class="num">6.42</td><td class="num">20.64</td></tr>
+      <tr><td>GPT-5.2 Deep Research</td><td class="num">5.07</td><td class="num">6.31</td><td class="num">4.36</td><td class="num">15.74</td></tr>
     </tbody>
   </table>
   </div>
 
-  <p>Mann–Whitney U across all settings: <strong>p &lt; 0.001</strong>. Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
+  <p>Cliff's Delta effect sizes are uniformly large (<strong>δ ≥ 0.76</strong>, well above the 0.47 large-effect threshold) across all baselines and output formats; <strong>δ = 1.00</strong> against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a 23-rater human A/B study (Caesar preferred 56.25%, odds ratio 1.29). Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
 
   <h2 id="example">Example Output</h2>
   <p>To make the difference concrete, here are excerpts from a Cross-Domain Synthesis query — a test of structural isomorphism rather than surface metaphor.</p>
@@ -684,7 +684,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <p>A 5-iteration exploration with Claude Haiku 4.5 runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically <strong>$5–$10</strong>.</p>
 
   <h3>Is Caesar a good ChatGPT Deep Research alternative?</h3>
-  <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation, Caesar scored 25.29 vs ChatGPT Deep Research's 15.40 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
+  <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs ChatGPT Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
 
   <h3>What does a Caesar run produce?</h3>
   <p>A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance — enough to audit, reproduce, or pipe the result into a downstream system.</p>
