@@ -325,22 +325,27 @@
 
     .toc {
       margin: 0 0 2rem;
-      padding: 0.85rem 1rem;
+      padding: 0.85rem 0;
       border-bottom: 1px solid var(--border);
-      font-size: 0.92rem;
+      font-size: 0.88rem;
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+      scrollbar-width: thin;
     }
     .toc ul {
       list-style: none;
-      padding: 0;
+      padding: 0 1rem;
       margin: 0;
       display: flex;
-      flex-wrap: wrap;
-      gap: 0.35rem 1.1rem;
+      flex-wrap: nowrap;
+      gap: 0 0.9rem;
       justify-content: center;
+      width: max-content;
+      min-width: 100%;
     }
     .toc li { margin: 0; }
     .toc li::marker { content: ""; }
-    .toc a { color: var(--fg-soft); }
+    .toc a { color: var(--fg-soft); white-space: nowrap; }
     .toc a:hover, .toc a:focus-visible { color: var(--link); }
 
     .stat-strip {
