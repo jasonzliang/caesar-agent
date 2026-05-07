@@ -37,7 +37,7 @@
   <meta property="og:title" content="Caesar: Autonomous AI Research Agent">
   <meta property="og:description" content="Deep research agent with graph-based exploration and adversarial synthesis. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
   <meta property="og:url" content="https://jasonzliang.github.io/caesar-agent/">
-  <meta property="og:image" content="https://jasonzliang.github.io/caesar-agent/caesar.png">
+  <meta property="og:image" content="https://jasonzliang.github.io/caesar-agent/caesar.webp">
   <meta property="og:image:alt" content="Caesar autonomous research agent architecture diagram">
   <meta property="og:image:width" content="2008">
   <meta property="og:image:height" content="624">
@@ -56,7 +56,7 @@
   <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Caesar: Autonomous AI Research Agent">
   <meta name="twitter:description" content="Deep research agent. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
-  <meta name="twitter:image" content="https://jasonzliang.github.io/caesar-agent/caesar.png">
+  <meta name="twitter:image" content="https://jasonzliang.github.io/caesar-agent/caesar.webp">
 
   <script type="application/ld+json">
   {
@@ -496,10 +496,7 @@
       <!-- <a href="https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.3.1"><img src="https://img.shields.io/badge/release-0.3.1-brightgreen" alt="Release"></a> -->
     </div>
     <figure class="hero-figure">
-      <picture>
-        <source srcset="caesar.webp" type="image/webp">
-        <img class="hero-img" src="caesar.png" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
-      </picture>
+      <img class="hero-img" src="caesar.webp" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
       <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1 — Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2 — Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
     </figure>
     <div class="stat-strip" aria-label="Headline benchmark results">
@@ -650,12 +647,12 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   </ul>
 
   <figure class="paper-figure">
-    <img src="figure2.png" width="1351" height="680" loading="lazy" decoding="async" alt="Five knowledge graphs Caesar built during exploration, one per query category: Constrained Synthesis, Counterfactual Reasoning, Cross-Domain Synthesis, Meta-Creativity, and Open-Ended Synthesis. Some queries produce many short branches radiating from the root; others produce long linear chains. Cyan nodes mark sources cited in the final artifact.">
+    <img src="figure2.webp" width="1351" height="680" loading="lazy" decoding="async" alt="Five knowledge graphs Caesar built during exploration, one per query category: Constrained Synthesis, Counterfactual Reasoning, Cross-Domain Synthesis, Meta-Creativity, and Open-Ended Synthesis. Some queries produce many short branches radiating from the root; others produce long linear chains. Cyan nodes mark sources cited in the final artifact.">
     <figcaption><strong>Figure 2.</strong> Knowledge graphs Caesar builds during exploration, one per query category. Brighter colors indicate deeper exploration from the root (red); cyan nodes are sources cited in the final artifact. Constrained (a), Cross-Domain (c), and Meta-Creativity (d) produce starburst topologies — breadth-first traversal across disjoint semantic clusters to find novel intersections. Counterfactual (b) and Open-Ended (e) produce long linear chains — depth-first traversal that drills into a specific causal path or niche.</figcaption>
   </figure>
 
   <figure class="paper-figure">
-    <img src="figure3.png" width="1350" height="683" loading="lazy" decoding="async" alt="Six panels showing the evolution of a single knowledge graph for an open-ended query across 1000 exploration steps (100, 200, 400, 600, 800) plus a t-SNE plot of topic embeddings. The graph transitions from a long depth-first chain into multi-directional breadth-first branching as exploration progresses.">
+    <img src="figure3.webp" width="1350" height="683" loading="lazy" decoding="async" alt="Six panels showing the evolution of a single knowledge graph for an open-ended query across 1000 exploration steps (100, 200, 400, 600, 800) plus a t-SNE plot of topic embeddings. The graph transitions from a long depth-first chain into multi-directional breadth-first branching as exploration progresses.">
     <figcaption><strong>Figure 3.</strong> A single exploration trajectory across 1000 steps for an open-ended question. Caesar starts depth-first (steps 100–400, a long linear descent), then backtracks and branches breadth-first once the initial path is exhausted (steps 600–800). The final t-SNE panel shows the diversity of topics ultimately captured in the knowledge base.</figcaption>
   </figure>
 
