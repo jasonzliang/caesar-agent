@@ -6,7 +6,6 @@
 
   <title>Caesar: Autonomous AI Research Agent — Deep Research Alternative</title>
   <meta name="description" content="Caesar — autonomous AI research agent. Graph-based deep web exploration with adversarial answer synthesis. Outperforms GPT-5 and Gemini Deep Research.">
-  <meta name="keywords" content="AI agent, LLM, RAG, agentic RAG, deep research, autonomous agent, knowledge graph, research agent, ChatGPT Deep Research alternative, Perplexity alternative, Gemini Deep Research alternative, GPT-5, Claude, retrieval augmented generation, scientific discovery">
   <meta name="author" content="Jason Liang, Elliot Meyerson, Risto Miikkulainen">
   <link rel="author" href="https://jasonzliang.github.io/">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -32,7 +31,8 @@
   <meta name="citation_abstract_html_url" content="https://arxiv.org/abs/2604.20855">
   <meta name="citation_keywords" content="Agentic Web Exploration; Knowledge Graph Memory; Adversarial Synthesis; Iterative RAG; Computational Creativity">
 
-  <meta property="og:type" content="website">
+  <meta property="og:type" content="article">
+  <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="Caesar Agent">
   <meta property="og:title" content="Caesar: Autonomous AI Research Agent">
   <meta property="og:description" content="Deep research agent with graph-based exploration and adversarial synthesis. Outperforms GPT-5.2 Deep Research on creative reasoning (p<0.001).">
@@ -42,6 +42,14 @@
   <meta property="og:image:width" content="2008">
   <meta property="og:image:height" content="624">
   <meta property="og:image:type" content="image/png">
+  <meta property="article:published_time" content="2025-05-06">
+  <meta property="article:modified_time" content="2026-05-06">
+  <meta property="article:author" content="https://jasonzliang.github.io/">
+  <meta property="article:section" content="AI Research">
+  <meta property="article:tag" content="AI agent">
+  <meta property="article:tag" content="deep research">
+  <meta property="article:tag" content="knowledge graph">
+  <meta property="article:tag" content="agentic RAG">
 
   <meta name="twitter:image:alt" content="Caesar autonomous research agent architecture diagram">
 
@@ -66,7 +74,7 @@
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "programmingLanguage": "Python",
     "datePublished": "2025-05-06",
-    "dateModified": "2026-05-01",
+    "dateModified": "2026-05-06",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -101,7 +109,8 @@
     "codeRepository": "https://github.com/cognizant-ai-lab/caesar-agent",
     "sameAs": [
       "https://github.com/cognizant-ai-lab/caesar-agent",
-      "https://arxiv.org/abs/2604.20855"
+      "https://arxiv.org/abs/2604.20855",
+      "https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"
     ]
   }
   </script>
@@ -119,7 +128,10 @@
     "datePublished": "2026-03",
     "identifier": {"@type": "PropertyValue", "propertyID": "DOI", "value": "10.48550/arXiv.2604.20855"},
     "url": "https://arxiv.org/abs/2604.20855",
-    "sameAs": "https://doi.org/10.48550/arXiv.2604.20855",
+    "sameAs": [
+      "https://doi.org/10.48550/arXiv.2604.20855",
+      "https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"
+    ],
     "about": ["Autonomous AI agents", "Retrieval-augmented generation", "Knowledge graph reasoning", "Creative answer synthesis"],
     "abstract": "Caesar is an agentic LLM architecture designed to bridge the gap between information gathering and synthesis of new insights, leveraging a dynamic knowledge graph and adversarial draft refinement to foster associative reasoning across disparate concepts."
   }
@@ -189,7 +201,39 @@
         "@type": "Question",
         "name": "What use cases is Caesar good for?",
         "acceptedAnswer": {"@type": "Answer", "text": "Open-ended creative and cross-disciplinary research: hypothesis generation, literature synthesis, competitive intelligence, counterfactual reasoning, and novel solution ideation. Not ideal for quick factual lookups or latency-sensitive applications."}
+      },
+      {
+        "@type": "Question",
+        "name": "How is Caesar different from LangGraph, CrewAI, or AutoGen?",
+        "acceptedAnswer": {"@type": "Answer", "text": "Those are orchestration frameworks: they help you wire up agents. Rome (the framework Caesar is built on) is an opinionated runtime for how agents should reason — graph-structured exploration, adversarial verification, episodic memory. Caesar is a concrete research agent built on top."}
+      },
+      {
+        "@type": "Question",
+        "name": "Is Caesar a good ChatGPT Deep Research alternative?",
+        "acceptedAnswer": {"@type": "Answer", "text": "Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation, Caesar scored 25.29 vs ChatGPT Deep Research's 15.40 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios."}
       }
+    ]
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Cognizant AI Lab",
+    "alternateName": "Cognizant Advanced AI Lab",
+    "description": "AI research lab at Cognizant focused on evolutionary AI, multi-agent systems, and decision intelligence.",
+    "parentOrganization": {"@type": "Organization", "name": "Cognizant"}
+  }
+  </script>
+
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "BreadcrumbList",
+    "itemListElement": [
+      {"@type": "ListItem", "position": 1, "name": "Jason Liang", "item": "https://jasonzliang.github.io/"},
+      {"@type": "ListItem", "position": 2, "name": "Caesar Agent", "item": "https://jasonzliang.github.io/caesar-agent/"}
     ]
   }
   </script>
@@ -209,6 +253,19 @@
     }
     * { box-sizing: border-box; }
     html { scroll-behavior: smooth; }
+    .skip-link {
+      position: absolute;
+      left: -9999px;
+      top: 0;
+      background: var(--accent);
+      color: #fff;
+      padding: 0.5rem 0.85rem;
+      z-index: 100;
+      border-radius: 0 0 4px 0;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    .skip-link:focus { left: 0; text-decoration: none; }
     body {
       font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
       font-size: 17px;
@@ -266,6 +323,27 @@
     .badges { display: flex; flex-wrap: wrap; gap: 0.5rem; justify-content: center; margin: 1rem 0 1.25rem; }
     .badges a { text-decoration: none; }
     .badges img { display: block; height: 22px; }
+
+    .toc {
+      margin: 2rem 0 0;
+      padding: 0.85rem 1rem;
+      border-top: 1px solid var(--border);
+      border-bottom: 1px solid var(--border);
+      font-size: 0.92rem;
+    }
+    .toc ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.35rem 1.1rem;
+      justify-content: center;
+    }
+    .toc li { margin: 0; }
+    .toc li::marker { content: ""; }
+    .toc a { color: var(--fg-soft); }
+    .toc a:hover, .toc a:focus-visible { color: var(--link); }
 
     .stat-strip {
       display: grid;
@@ -401,10 +479,11 @@
   </style>
 </head>
 <body>
+<a href="#main-content" class="skip-link">Skip to main content</a>
 <main>
   <header>
-    <h1>Caesar</h1>
-    <p class="tagline">Autonomous AI research agent. Caesar explores the web as a knowledge graph and refines its answer through adversarial self-critique — writing deeper, more creative syntheses than today's deep-research tools.</p>
+    <h1>Caesar: Autonomous AI Research Agent</h1>
+    <p class="tagline">Caesar explores the web as a dynamic knowledge graph and refines its answer through adversarial self-critique — writing deeper, more creative syntheses than today's deep-research tools.</p>
     <p class="byline">By <a href="https://jasonzliang.github.io/" class="lead-author">Jason Liang</a>, Elliot Meyerson, and Risto Miikkulainen</p>
     <div class="badges">
       <a href="https://arxiv.org/abs/2604.20855"><img src="https://img.shields.io/badge/arXiv-2604.20855-b31b1b?logo=arxiv&logoColor=white" alt="arXiv" width="146" height="22"></a>
@@ -417,7 +496,10 @@
       <!-- <a href="https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.3.1"><img src="https://img.shields.io/badge/release-0.3.1-brightgreen" alt="Release"></a> -->
     </div>
     <figure class="hero-figure">
-      <img class="hero-img" src="caesar.png" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
+      <picture>
+        <source srcset="caesar.webp" type="image/webp">
+        <img class="hero-img" src="caesar.png" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
+      </picture>
       <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1 — Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2 — Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
     </figure>
     <div class="stat-strip" aria-label="Headline benchmark results">
@@ -436,7 +518,20 @@
     </div>
   </header>
 
-  <article>
+  <nav class="toc" aria-label="On this page">
+    <ul>
+      <li><a href="#why-caesar">Why Caesar?</a></li>
+      <li><a href="#benchmarks">Benchmarks</a></li>
+      <li><a href="#example">Example output</a></li>
+      <li><a href="#how-it-works">How it works</a></li>
+      <li><a href="#exploration">Exploration</a></li>
+      <li><a href="#use-cases">Use cases</a></li>
+      <li><a href="#faq">FAQ</a></li>
+      <li><a href="#citation">Citation</a></li>
+    </ul>
+  </nav>
+
+  <article id="main-content">
 
   <div class="paper-callout">
     <strong>Read the paper:</strong> <a href="https://arxiv.org/abs/2604.20855"><em>Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis</em></a> &middot; <a href="https://jasonzliang.github.io/">Liang</a>, Meyerson, Miikkulainen, 2026 &middot; <a href="https://doi.org/10.48550/arXiv.2604.20855">DOI</a> &middot; <a href="https://arxiv.org/abs/2604.20855">PDF</a>
