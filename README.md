@@ -21,16 +21,16 @@ Caesar is built differently:
 
 ## Benchmark results
 
-Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scoring across creativity dimensions (New, Useful, Surprising):
+Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scored 0–10 across three creativity dimensions: **New**, **Useful**, **Surprising**.
 
-| Agent | Total |
-| --- | --- |
-| **Caesar** | **25.29 / 30** |
-| Gemini 3 Deep Research | 22.27 |
-| Sonnet 4.5 Deep Research | 20.89 |
-| GPT-5.2 Deep Research | 15.40 |
+| Agent | New | Useful | Surprising | Total |
+| --- | --- | --- | --- | --- |
+| **Caesar** | **9.11** | **8.87** | **8.98** | **26.96** |
+| Gemini 3 Deep Research | 8.09 | 7.60 | 8.09 | 23.78 |
+| Sonnet 4.5 Deep Research | 6.73 | 7.49 | 6.42 | 20.64 |
+| GPT-5.2 Deep Research | 5.07 | 6.31 | 4.36 | 15.74 |
 
-Mann–Whitney U across all settings: **p < 0.001**. See the [paper](https://arxiv.org/abs/2604.20855) for full methodology, ablations, and judge bias analysis.
+Cliff's Delta effect sizes are uniformly large (**δ ≥ 0.76**, well above the 0.47 large-effect threshold) across all baselines and output formats; **δ = 1.00** against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a 23-rater human A/B study (Caesar preferred 56.25%, odds ratio 1.29). Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the [paper](https://arxiv.org/abs/2604.20855) for full methodology, exploration-budget ablation, and judge bias analysis.
 
 ## Read more
 
