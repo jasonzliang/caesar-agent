@@ -191,7 +191,7 @@
       {
         "@type": "Question",
         "name": "How much does a typical run cost?",
-        "acceptedAnswer": {"@type": "Answer", "text": "A 5-iteration exploration with Claude Haiku 4.5 runs at roughly $0.30 and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically $5–$10. The benchmark runs reported on this page are more expensive than either: GPT-5.2 at 1000 iterations, costing $50–$70 per query and taking 60 to 90 minutes."}
+        "acceptedAnswer": {"@type": "Answer", "text": "A 5-iteration exploration with Claude Haiku 4.5 runs at roughly $0.30 and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically $5–$10. A full 1000-iteration run, the configuration behind the benchmark results on this page, costs around $30 and takes 60 to 90 minutes."}
       },
       {
         "@type": "Question",
@@ -611,7 +611,7 @@
       <tr><th colspan="5" scope="colgroup" class="rowgroup">What you give up to get it</th></tr>
       <tr><td>Works with no setup and no API keys</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">❌</td></tr>
       <tr><td>Typical time to an answer</td><td class="num">10 min to 1.5 hours</td><td class="num">5–30 min</td><td class="num">under 3 min</td><td class="num">2–5 min</td></tr>
-      <tr><td>Cost per query</td><td class="num">$0.30–$60 by configuration</td><td class="num">subscription</td><td class="num">subscription</td><td class="num">API spend</td></tr>
+      <tr><td>Cost per query</td><td class="num">$0.30–$30 by configuration</td><td class="num">subscription</td><td class="num">subscription</td><td class="num">API spend</td></tr>
       <tr><td>Browser and mobile access</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">🟡</td></tr>
       <tr><td>Maturity</td><td class="num">research prototype</td><td class="num">GA product</td><td class="num">GA product</td><td class="num">established open source</td></tr>
     </tbody>
@@ -819,7 +819,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <p>OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6 / 4.7), Google (Gemini 3 Pro), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.</p>
 
   <h3>How much does a typical run cost?</h3>
-  <p>A 5-iteration exploration with Claude Haiku 4.5 runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically <strong>$5–$10</strong>. The benchmark runs reported on this page are more expensive than either: GPT-5.2 at 1000 iterations, costing <strong>$50–$70</strong> per query and taking 60 to 90 minutes.</p>
+  <p>A 5-iteration exploration with Claude Haiku 4.5 runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically <strong>$5–$10</strong>. A full 1000-iteration run, the configuration behind the benchmark results on this page, costs around <strong>$30</strong> and takes 60 to 90 minutes.</p>
 
   <h3>Is Caesar a good ChatGPT Deep Research alternative?</h3>
   <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs GPT-5.2 Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
