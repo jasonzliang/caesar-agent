@@ -1,6 +1,6 @@
-# Caesar — Autonomous AI Research Agent
+# Caesar: Autonomous AI Research Agent
 
-Caesar is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph — building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.
+Caesar is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph, building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.
 
 **Live site:** <https://jasonzliang.github.io/caesar-agent/>
 
@@ -8,16 +8,16 @@ This repository hosts the public landing page only. It is built and served via G
 
 ## What Caesar does
 
-Today's deep-research agents — ChatGPT Deep Research, Perplexity, Gemini Deep Research, GPT Researcher — optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from *navigational amnesia*, and converge on derivative, consensus-driven outputs.
+Today's deep-research agents (ChatGPT Deep Research, Perplexity, Gemini Deep Research, GPT Researcher) optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from *navigational amnesia*, and converge on derivative, consensus-driven outputs.
 
 Caesar is built differently:
 
-- **Builds a knowledge graph as it explores** — each new page is analyzed against insights already attached to predecessor and neighbor nodes.
-- **Adversarial self-critique on its own draft** — an independent verifier formulates orthogonal queries that target weaknesses in the current draft, escaping the consensus basin that traps single-pass LLMs.
-- **Multiple drafts, then merged into one** — each draft chains off the previous one until a final merge.
-- **Backtracks when an exploration path stalls** — depth-first drill-down with a stack to pop back and explore orthogonal branches.
-- **Multi-provider** — OpenAI, Anthropic, Google Gemini, or any OpenAI-compatible endpoint.
-- **Reproducible run logs (JSON)** — tokens, cost, wall-time, pages visited, per-draft provenance.
+- **Builds a knowledge graph as it explores.** Each new page is analyzed against insights already attached to predecessor and neighbor nodes.
+- **Adversarial self-critique on its own draft.** An independent verifier formulates orthogonal queries that target weaknesses in the current draft, escaping the consensus basin that traps single-pass LLMs.
+- **Multiple drafts, then merged into one.** Each draft chains off the previous one until a final merge.
+- **Backtracks when an exploration path stalls.** Depth-first drill-down with a stack to pop back and explore orthogonal branches.
+- **Multi-provider.** OpenAI, Anthropic, Google Gemini, or any OpenAI-compatible endpoint.
+- **Reproducible run logs (JSON).** Tokens, cost, wall-time, pages visited, per-draft provenance.
 
 ## Benchmark results
 
@@ -55,6 +55,6 @@ Cliff's Delta effect sizes are uniformly large (**δ ≥ 0.76**, well above the 
 
 ## Authors
 
-By [Jason Liang](https://jasonzliang.github.io/), Elliot Meyerson, and Risto Miikkulainen — Cognizant AI Lab and The University of Texas at Austin.
+By [Jason Liang](https://jasonzliang.github.io/), Elliot Meyerson, and Risto Miikkulainen, Cognizant AI Lab and The University of Texas at Austin.
 
 Apache License 2.0.
