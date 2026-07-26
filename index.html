@@ -4,8 +4,8 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <title>Caesar — Creative Autonomous AI Research Agent</title>
-  <meta name="description" content="Caesar — autonomous AI research agent. Graph-based deep web exploration with adversarial answer synthesis. Outperforms GPT-5 and Gemini Deep Research.">
+  <title>Caesar: Creative Autonomous AI Research Agent</title>
+  <meta name="description" content="Caesar: autonomous AI research agent. Graph-based deep web exploration with adversarial answer synthesis. Outperforms GPT-5 and Gemini Deep Research.">
   <meta name="author" content="Jason Liang, Elliot Meyerson, Risto Miikkulainen">
   <link rel="author" href="https://jasonzliang.github.io/">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -34,7 +34,7 @@
   <meta property="og:type" content="article">
   <meta property="og:locale" content="en_US">
   <meta property="og:site_name" content="Caesar Agent">
-  <meta property="og:title" content="Caesar — Open-Source Autonomous AI Research Agent">
+  <meta property="og:title" content="Caesar: Open-Source Autonomous AI Research Agent">
   <meta property="og:description" content="Deep research agent with graph-based exploration and adversarial synthesis. 13–23% improvement over Gemini 3 / Sonnet 4.5 / GPT-5.2 Deep Research on creative reasoning (Cliff's δ ≥ 0.76).">
   <meta property="og:url" content="https://jasonzliang.github.io/caesar-agent/">
   <meta property="og:image" content="https://jasonzliang.github.io/caesar-agent/caesar.webp">
@@ -52,7 +52,7 @@
   <meta property="article:tag" content="agentic RAG">
 
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Caesar — Open-Source Autonomous AI Research Agent">
+  <meta name="twitter:title" content="Caesar: Open-Source Autonomous AI Research Agent">
   <meta name="twitter:description" content="Deep research agent. 13–23% improvement over GPT-5.2 / Gemini 3 / Sonnet 4.5 Deep Research on creative reasoning (Cliff's δ ≥ 0.76).">
   <meta name="twitter:image" content="https://jasonzliang.github.io/caesar-agent/caesar.webp">
   <meta name="twitter:image:alt" content="Caesar autonomous research agent architecture diagram">
@@ -140,7 +140,7 @@
   {
     "@context": "https://schema.org",
     "@type": "WebSite",
-    "name": "Caesar — Autonomous AI Research Agent",
+    "name": "Caesar: Autonomous AI Research Agent",
     "alternateName": "Caesar Agent",
     "url": "https://jasonzliang.github.io/caesar-agent/",
     "inLanguage": "en",
@@ -155,7 +155,7 @@
   {
     "@context": "https://schema.org",
     "@type": "ItemList",
-    "name": "Caesar Benchmark Results — Creative Reasoning (LLM-as-a-Judge)",
+    "name": "Caesar Benchmark Results: Creative Reasoning (LLM-as-a-Judge)",
     "description": "Blinded 3-model LLM-as-a-Judge panel scoring creativity (New + Useful + Surprising, max 30) across deep-research agents.",
     "itemListOrder": "https://schema.org/ItemListOrderDescending",
     "numberOfItems": 4,
@@ -176,7 +176,7 @@
       {
         "@type": "Question",
         "name": "How is Caesar different from LangGraph, CrewAI, or AutoGen?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Those are orchestration frameworks: they help you wire up agents. Rome (the framework Caesar is built on) is an opinionated runtime for how agents should reason — graph-structured exploration, adversarial verification, episodic memory. Caesar is a concrete research agent built on top."}
+        "acceptedAnswer": {"@type": "Answer", "text": "Those are orchestration frameworks: they help you wire up agents. Rome (the framework Caesar is built on) is an opinionated runtime for how agents should reason: graph-structured exploration, adversarial verification, episodic memory. Caesar is a concrete research agent built on top."}
       },
       {
         "@type": "Question",
@@ -201,7 +201,7 @@
       {
         "@type": "Question",
         "name": "What does a Caesar run produce?",
-        "acceptedAnswer": {"@type": "Answer", "text": "A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance — enough to audit, reproduce, or pipe the result into a downstream system."}
+        "acceptedAnswer": {"@type": "Answer", "text": "A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance, enough to audit, reproduce, or pipe the result into a downstream system."}
       }
     ]
   }
@@ -238,7 +238,7 @@
       --accent: #1e40af;
       --accent-soft: #eff6ff;
       --accent-border: #bfdbfe;
-      --link: #2563eb; /* 3.37:1 vs body text — passes WCAG link contrast */
+      --link: #2563eb; /* 3.37:1 vs body text, passes WCAG link contrast */
       --border: #e5e7eb;
       --code-bg: #f6f7f9;
     }
@@ -551,7 +551,7 @@
   <header>
     <p class="commercial-note">Our human agents are building Caesar into a service, stay tuned for the source code release! <a href="cog.html" rel="noopener">&#128521;</a></p>
     <h1>Caesar: Autonomous AI Research Agent</h1>
-    <p class="tagline">Caesar explores the web as a knowledge graph and refines its answer through adversarial self-critique — for creative, novel synthesis.</p>
+    <p class="tagline">Caesar explores the web as a knowledge graph and refines its answer through adversarial self-critique, for creative, novel synthesis.</p>
     <p class="byline">By <a href="https://jasonzliang.github.io/" target="_blank" rel="noopener" class="lead-author">Jason Liang</a>, Elliot Meyerson, and Risto Miikkulainen</p>
     <div class="badges">
       <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/arXiv-2604.20855-b31b1b?logo=arxiv&amp;logoColor=white" alt="arXiv" width="146" height="22"></a>
@@ -565,7 +565,7 @@
     </div>
     <figure class="hero-figure">
       <img class="hero-img" src="caesar.webp" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
-      <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1 — Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2 — Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
+      <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1: Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2: Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
     </figure>
     <div class="stat-strip" aria-label="Headline benchmark results">
       <div class="stat">
@@ -589,10 +589,10 @@
     <strong>Read the paper:</strong> <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener"><em>Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis</em></a> &middot; <a href="https://jasonzliang.github.io/" target="_blank" rel="noopener">Liang</a>, Meyerson, Miikkulainen, 2026 &middot; <a href="https://doi.org/10.48550/arXiv.2604.20855" target="_blank" rel="noopener">DOI</a> &middot; <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">PDF</a>
   </div>
 
-  <p><strong>Caesar</strong> is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph — building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.</p>
+  <p><strong>Caesar</strong> is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph, building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.</p>
 
   <h2 id="why-caesar">Why Caesar?</h2>
-  <p>Today's deep-research agents — <strong>ChatGPT Deep Research</strong>, <strong>Perplexity</strong>, <strong>Gemini Deep Research</strong>, <strong>GPT Researcher</strong> — optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from <em>navigational amnesia</em>, and converge on derivative, consensus-driven outputs.</p>
+  <p>Today's deep-research agents (<strong>ChatGPT Deep Research</strong>, <strong>Perplexity</strong>, <strong>Gemini Deep Research</strong>, <strong>GPT Researcher</strong>) optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from <em>navigational amnesia</em>, and converge on derivative, consensus-driven outputs.</p>
   <p>Caesar is built differently:</p>
 
   <div class="table-scroll">
@@ -631,38 +631,38 @@
   <p>Cliff's Delta effect sizes are uniformly large (<strong>δ ≥ 0.76</strong>, well above the 0.47 large-effect threshold) across all baselines and output formats; <strong>δ = 1.00</strong> against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a 21-rater blinded human A/B study, where raters preferred Caesar's Cross-Domain Synthesis answer 90.5% of the time (Holm-corrected p = 0.001). Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
 
   <h2 id="example">Example Outputs</h2>
-  <p>To make the difference concrete, here are excerpts from four of the five benchmark categories described under <a href="#exploration">What Exploration Looks Like</a> — each stressing a different creative failure mode. Every pair sets Caesar against <strong>the highest-scoring Deep Research baseline on that query</strong>, which is why the opponent changes between examples. Under each pair is the blinded judge panel's score for that item, out of 30. These excerpts come from the 450-word output condition, so their scores run lower than the full-length totals in the table above and are not directly comparable with them. Both sides are abridged; ellipses mark omitted text.</p>
+  <p>To make the difference concrete, here are excerpts from four of the five benchmark categories described under <a href="#exploration">What Exploration Looks Like</a>, each stressing a different creative failure mode. Every pair sets Caesar against <strong>the highest-scoring Deep Research baseline on that query</strong>, which is why the opponent changes between examples. Under each pair is the blinded judge panel's score for that item, out of 30. These excerpts come from the 450-word output condition, so their scores run lower than the full-length totals in the table above and are not directly comparable with them. Both sides are abridged; ellipses mark omitted text.</p>
 
-  <h3 id="example-cross-domain">Cross-Domain Synthesis — calculus applied to cooking</h3>
+  <h3 id="example-cross-domain">Cross-Domain Synthesis: calculus applied to cooking</h3>
   <div class="example-output" role="group" aria-labelledby="example-cross-domain">
     <p class="query"><strong>Query:</strong> Apply the mathematical structure of calculus (not the concepts, but the formal relationships) to cooking. What would a 'derivative' of a recipe mean? An 'integral'? Show the parallel structure.</p>
 
     <p class="label caesar" id="ex-cd-caesar">Caesar</p>
     <blockquote class="caesar" aria-labelledby="ex-cd-caesar">
-      Imagine a recipe as a machine with knobs you can turn (amounts, times, temperatures) and gauges you read at the end (taste, texture, yield, cost, risk). … <em>Derivative</em>, in this setting, means sensitivity. Move a knob a tiny bit; how do the gauges nudge? Stack those nudges for all knob-gauge pairs and you get a sensitivity table (the <strong>Jacobian</strong>). … <em>Integral</em> means accumulation along the path you actually take while cooking. … When loops do not cancel (order matters), the nonzero loop totals are <strong>curvature</strong>. You can cure that by adding the smallest extra state (an accumulator) so increments telescope again — turning history into explicit memory.
+      Imagine a recipe as a machine with knobs you can turn (amounts, times, temperatures) and gauges you read at the end (taste, texture, yield, cost, risk). … <em>Derivative</em>, in this setting, means sensitivity. Move a knob a tiny bit; how do the gauges nudge? Stack those nudges for all knob-gauge pairs and you get a sensitivity table (the <strong>Jacobian</strong>). … <em>Integral</em> means accumulation along the path you actually take while cooking. … When loops do not cancel (order matters), the nonzero loop totals are <strong>curvature</strong>. You can cure that by adding the smallest extra state (an accumulator) so increments telescope again - turning history into explicit memory.
     </blockquote>
 
     <p class="label" id="ex-cd-base">Sonnet 4.5 Deep Research (baseline)</p>
     <blockquote class="baseline" aria-labelledby="ex-cd-base">
-      A derivative asks: "If I change this slightly, what happens?" For delicate cake, two extra minutes transforms perfection into dryness — the time derivative is steep. … Integrals measure what accumulated over the entire cooking time. … Different cooking paths can integrate to the same result. … This is why sous vide works: low temperature × long time = high temperature × short time.
+      A derivative asks: "If I change this slightly, what happens?" For delicate cake, two extra minutes transforms perfection into dryness: the time derivative is steep. … Integrals measure what accumulated over the entire cooking time. … Different cooking paths can integrate to the same result. … This is why sous vide works: low temperature × long time = high temperature × short time.
     </blockquote>
     <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 25.78</strong> · Sonnet 4.5 Deep Research 17.67 (9 reviews).</p>
 
     <p><strong>Quick analysis.</strong></p>
     <ul>
-      <li><strong>Caesar builds a structural model.</strong> Derivatives become a <em>Jacobian</em> — one table holding how every knob moves every gauge at once, rather than a single rate of change for one variable at a time.</li>
-      <li><strong>Caesar handles the case the baseline assumes away.</strong> Sonnet's excerpt argues path-<em>independence</em>: "different cooking paths can integrate to the same result." Caesar takes on the exception — when reordering steps does change the total, that leftover is <em>curvature</em> — and offers a fix: add one accumulator so each step's increment cancels against the next again.</li>
-      <li><strong>Caesar borrows the grammar; the baseline borrows the vocabulary.</strong> Sonnet's answer is a competent textbook analogy ("derivative = sensitivity") with a genuinely useful example in sous vide. Caesar instead imports the formal apparatus — Jacobians, path integrals, loop defects — exactly the cross-cluster traversal <a href="#how-it-works">Phase 1</a> is designed to enable.</li>
+      <li><strong>Caesar builds a structural model.</strong> Derivatives become a <em>Jacobian</em>: one table holding how every knob moves every gauge at once, rather than a single rate of change for one variable at a time.</li>
+      <li><strong>Caesar handles the case the baseline assumes away.</strong> Sonnet's excerpt argues path-<em>independence</em>: "different cooking paths can integrate to the same result." Caesar takes on the exception (when reordering steps does change the total, that leftover is <em>curvature</em>) and offers a fix: add one accumulator so each step's increment cancels against the next again.</li>
+      <li><strong>Caesar borrows the grammar; the baseline borrows the vocabulary.</strong> Sonnet's answer is a competent textbook analogy ("derivative = sensitivity") with a genuinely useful example in sous vide. Caesar instead imports the formal apparatus (Jacobians, path integrals, loop defects), exactly the cross-cluster traversal <a href="#how-it-works">Phase 1</a> is designed to enable.</li>
     </ul>
   </div>
 
-  <h3 id="example-constrained">Constrained Synthesis — an emotion humans don't experience</h3>
+  <h3 id="example-constrained">Constrained Synthesis: an emotion humans don't experience</h3>
   <div class="example-output" role="group" aria-labelledby="example-constrained">
     <p class="query"><strong>Query:</strong> Invent a new emotion that humans don't experience. Describe when it occurs, what causes it, and why evolution hasn't produced it in us.</p>
 
     <p class="label caesar" id="ex-cs-caesar">Caesar</p>
     <blockquote class="caesar" aria-labelledby="ex-cs-caesar">
-      Imagine your mind keeps three notebooks. One is for facts about the world ("it rained"). One is for social rules and debts ("I owe you," "you're allowed to order me"). One is for reputation ("she's trustworthy," "he's dangerous"). … Now picture a species that evolved an emotion whose main job is not to feel good or bad, but to control <strong>write-permission</strong> for those notebooks. … It can still act, but it will not let a dubious situation <em>harden into belief, obligation, or stigma</em>. … Instead, we built external versions — courts, audits, peer review, and "just for practice" disclaimers — to do the separating our bodies don't automatically do.
+      Imagine your mind keeps three notebooks. One is for facts about the world ("it rained"). One is for social rules and debts ("I owe you," "you're allowed to order me"). One is for reputation ("she's trustworthy," "he's dangerous"). … Now picture a species that evolved an emotion whose main job is not to feel good or bad, but to control <strong>write-permission</strong> for those notebooks. … It can still act, but it will not let a dubious situation <em>harden into belief, obligation, or stigma</em>. … Instead, we built external versions (courts, audits, peer review, and "just for practice" disclaimers) to do the separating our bodies don't automatically do.
     </blockquote>
 
     <p class="label" id="ex-cs-base">Gemini 3 Deep Research (baseline)</p>
@@ -673,13 +673,13 @@
 
     <p><strong>Quick analysis.</strong></p>
     <ul>
-      <li><strong>Caesar invents an emotion with no valence.</strong> It does not feel good or bad. Its entire job is to control <em>write-permission</em> over three separate registers — so believing something happened no longer forces a verdict about who is guilty, or what you now owe them.</li>
+      <li><strong>Caesar invents an emotion with no valence.</strong> It does not feel good or bad. Its entire job is to control <em>write-permission</em> over three separate registers, so believing something happened no longer forces a verdict about who is guilty, or what you now owe them.</li>
       <li><strong>Caesar borrows from the wrong field on purpose.</strong> The mechanism comes from access control, not zoology, which is what lets the creature act on a dubious situation without letting it "harden into belief, obligation, or stigma." Gemini borrows from biology and lands on a capability that birds, turtles, and fish already have.</li>
-      <li><strong>Caesar invents an emotion; the baseline restores a sense.</strong> Gemini's is the crisper answer to <em>why not</em> — "we have the antenna, but evolution never plugged it in" is a real mechanism, and Caesar's appeal to courts and peer review relocates the question more than it settles it. But magnetoreception is a channel that already exists in nature; Caesar's state has no animal to borrow from, which is the kind of distant-cluster bridge <a href="#how-it-works">graph exploration</a> is built to surface.</li>
+      <li><strong>Caesar invents an emotion; the baseline restores a sense.</strong> Gemini's is the crisper answer to <em>why not</em>: "we have the antenna, but evolution never plugged it in" is a real mechanism, and Caesar's appeal to courts and peer review relocates the question more than it settles it. But magnetoreception is a channel that already exists in nature; Caesar's state has no animal to borrow from, which is the kind of distant-cluster bridge <a href="#how-it-works">graph exploration</a> is built to surface.</li>
     </ul>
   </div>
 
-  <h3 id="example-counterfactual">Counterfactual Reasoning — echolocation instead of color vision</h3>
+  <h3 id="example-counterfactual">Counterfactual Reasoning: echolocation instead of color vision</h3>
   <details class="example-more">
     <summary>Both answers: Caesar makes privacy an unsolvable inverse problem; Gemini 3 builds soundproof rooms</summary>
     <div class="example-output" role="group" aria-labelledby="example-counterfactual">
@@ -694,18 +694,18 @@
       <blockquote class="baseline" aria-labelledby="ex-cf-base">
         <strong>Texture is Color:</strong> Instead of using pigments like red or blue, artists would use materials that bounce sound differently. A smooth, polished surface would sound "bright" and harsh, while felt or foam would sound "dark" and soft. … To ensure privacy, you wouldn't just close a curtain; you would retreat into heavy, soundproof <strong>"Shadow Zones"</strong> where no active sonar pulse could reach you. … Their mathematics would likely be built on <strong>Harmonics</strong> (the math of music and frequency).
       </blockquote>
-      <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 25.89</strong> · Gemini 3 Deep Research 23.78 (9 reviews) — the narrowest margin of the four.</p>
+      <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 25.89</strong> · Gemini 3 Deep Research 23.78 (9 reviews), the narrowest margin of the four.</p>
 
       <p><strong>Quick analysis.</strong></p>
       <ul>
-        <li><strong>Caesar discards the organizing variable; the baseline renames it.</strong> Gemini's own heading is "Texture is Color" — pigment maps onto acoustic reflectivity and the medium survives intact. Caesar's "Painting is not about mixing colors; it is about shaping returns" throws the surface away and makes the work a planned pattern of echoes.</li>
-        <li><strong>Same sub-question, opposite mechanism.</strong> Both answers reach privacy. Gemini keeps the visual solution — retreat into soundproof "Shadow Zones" where no pulse can reach you, which is hiding. Caesar inverts it: stay fully audible, but shape the home so reconstruction is <em>ill conditioned</em>, since the same echoes could match many layouts — while it still has to remain safe to navigate.</li>
-        <li><strong>The baseline changes which mathematics gets discovered; Caesar changes what a proof is.</strong> Gemini's prediction of a civilization built on Harmonics rather than geometry is a genuine, checkable claim, and the more concrete of the two. Caesar goes a level up: proofs turn <em>protocol explicit</em>, carrying their own admissible probes and noise budget, and beauty abandons pure symmetry because symmetric bodies return confusable echoes — the sort of consequence you only reach by drilling down one causal path, the traversal shape <a href="#exploration">this category produces</a>.</li>
+        <li><strong>Caesar discards the organizing variable; the baseline renames it.</strong> Gemini's own heading is "Texture is Color": pigment maps onto acoustic reflectivity and the medium survives intact. Caesar's "Painting is not about mixing colors; it is about shaping returns" throws the surface away and makes the work a planned pattern of echoes.</li>
+        <li><strong>Same sub-question, opposite mechanism.</strong> Both answers reach privacy. Gemini keeps the visual solution: retreat into soundproof "Shadow Zones" where no pulse can reach you, which is hiding. Caesar inverts it: stay fully audible, but shape the home so reconstruction is <em>ill conditioned</em>, since the same echoes could match many layouts, while it still has to remain safe to navigate.</li>
+        <li><strong>The baseline changes which mathematics gets discovered; Caesar changes what a proof is.</strong> Gemini's prediction of a civilization built on Harmonics rather than geometry is a genuine, checkable claim, and the more concrete of the two. Caesar goes a level up: proofs turn <em>protocol explicit</em>, carrying their own admissible probes and noise budget, and beauty abandons pure symmetry because symmetric bodies return confusable echoes, the sort of consequence you only reach by drilling down one causal path, the traversal shape <a href="#exploration">this category produces</a>.</li>
       </ul>
     </div>
   </details>
 
-  <h3 id="example-meta-creativity">Meta-Creativity — a creativity metric without human judgment</h3>
+  <h3 id="example-meta-creativity">Meta-Creativity: a creativity metric without human judgment</h3>
   <details class="example-more">
     <summary>Both answers: Caesar scores the behavior log; Sonnet's metric re-imports the banned criteria</summary>
     <div class="example-output" role="group" aria-labelledby="example-meta-creativity">
@@ -718,15 +718,15 @@
 
       <p class="label" id="ex-mc-base">Sonnet 4.5 Deep Research (baseline)</p>
       <blockquote class="baseline" aria-labelledby="ex-mc-base">
-        <strong>Critical Dynamics</strong>: Systems poised between perfect order and total chaos can exhibit the most complex behavior. Creative outputs operate at this "edge of chaos" — neither boringly predictable nor randomly chaotic. … <strong>Conceptual Bridging</strong>: Highly creative people's mental networks connect normally separate ideas. We can measure this in AI outputs by building semantic networks and counting connections between distant conceptual clusters. … These five components are multiplied together. This creates crucial selectivity: if ANY component is near zero, the total score crashes. … The ideal mathematical measures are uncomputable, so we use approximations.
+        <strong>Critical Dynamics</strong>: Systems poised between perfect order and total chaos can exhibit the most complex behavior. Creative outputs operate at this "edge of chaos", neither boringly predictable nor randomly chaotic. … <strong>Conceptual Bridging</strong>: Highly creative people's mental networks connect normally separate ideas. We can measure this in AI outputs by building semantic networks and counting connections between distant conceptual clusters. … These five components are multiplied together. This creates crucial selectivity: if ANY component is near zero, the total score crashes. … The ideal mathematical measures are uncomputable, so we use approximations.
       </blockquote>
       <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 26.22</strong> · Sonnet 4.5 Deep Research 20.11 (9 reviews).</p>
 
       <p><strong>Quick analysis.</strong></p>
       <ul>
-        <li><strong>The baseline smuggles the banned criteria back in — check it against the quote.</strong> The query bars novelty, surprise, and human judgment. Sonnet's "edge of chaos" is surprise renamed, and "Conceptual Bridging" measures novelty by counting connections between distant clusters, calibrated on what "highly creative people's mental networks" do. This is the one claim on this page you can verify without trusting us.</li>
-        <li><strong>Caesar moves the measurement off the artifact entirely.</strong> Creativity becomes a <em>process capability</em> scored from logged interaction — explicitly "not from reading or rating the produced artifacts" — so there is no output left for a human-calibrated proxy to grade.</li>
-        <li><strong>Caesar builds in a null control.</strong> Its Causal Control leg counts only if the improvement <em>vanishes</em> on surrogate traces where actions are shuffled to destroy causality — a falsification test separating real steering from coincidence. Sonnet multiplies its five components so any near-zero one crashes the score, which punishes weakness but cannot tell a real result from a lucky one. To Sonnet's credit it concedes its ideal measures are "uncomputable"; Caesar makes no comparable admission. Hunting one's own loopholes is what <a href="#how-it-works">Phase 2's adversarial verifier</a> is for.</li>
+        <li><strong>The baseline smuggles the banned criteria back in; check it against the quote.</strong> The query bars novelty, surprise, and human judgment. Sonnet's "edge of chaos" is surprise renamed, and "Conceptual Bridging" measures novelty by counting connections between distant clusters, calibrated on what "highly creative people's mental networks" do. This is the one claim on this page you can verify without trusting us.</li>
+        <li><strong>Caesar moves the measurement off the artifact entirely.</strong> Creativity becomes a <em>process capability</em> scored from logged interaction (explicitly "not from reading or rating the produced artifacts"), so there is no output left for a human-calibrated proxy to grade.</li>
+        <li><strong>Caesar builds in a null control.</strong> Its Causal Control leg counts only if the improvement <em>vanishes</em> on surrogate traces where actions are shuffled to destroy causality, a falsification test separating real steering from coincidence. Sonnet multiplies its five components so any near-zero one crashes the score, which punishes weakness but cannot tell a real result from a lucky one. To Sonnet's credit it concedes its ideal measures are "uncomputable"; Caesar makes no comparable admission. Hunting one's own loopholes is what <a href="#how-it-works">Phase 2's adversarial verifier</a> is for.</li>
       </ul>
     </div>
   </details>
@@ -734,22 +734,22 @@
   <p>Full listings, the recursive insight chains that produced these answers, and per-criterion judge scores are in <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">Appendices A and C of the paper</a>.</p>
 
   <h2 id="how-it-works">How It Works</h2>
-  <p>The architecture diagram at the top of the page shows the two-phase loop. Here is what each phase actually does — and why each piece earns its place.</p>
+  <p>The architecture diagram at the top of the page shows the two-phase loop. Here is what each phase actually does, and why each piece earns its place.</p>
 
-  <h3>1. Deep Web Exploration — stateful graph traversal</h3>
+  <h3>1. Deep Web Exploration: stateful graph traversal</h3>
   <p>Caesar treats exploration as a graph traversal problem rather than a sequence of isolated retrievals. Given a user query, it bootstraps a starting page, generates a task-specific persona to focus reasoning, and then runs a recursive <strong>Perceive–Think–Act</strong> loop until its budget is exhausted.</p>
   <ul>
     <li><strong>Dual-memory design.</strong> A directed graph <em>G</em> tracks the navigational topology (which URLs were visited, in what order); a separate vector store <em>KB</em> indexes the extracted insights. Decoupling navigation from retention lets the agent maximize coverage before it commits to a narrative.</li>
-    <li><strong>Insights conditioned on neighborhood, not pages.</strong> Each new page is analyzed against the insights already attached to predecessor and neighbor nodes — the LLM is prompted to identify how the new content <em>builds on or contradicts</em> the local context, not to summarize the page in isolation. This is the mechanism behind cross-cluster bridges.</li>
-    <li><strong>Dynamic policy with backtracking.</strong> A navigational stack supports depth-first drill-down until information gain plateaus, then pops back to explore orthogonal branches. The action policy scores candidate URLs using both a global query against <em>KB</em> and the local episodic context — letting Caesar abandon low-value paths the way a human researcher would.</li>
+    <li><strong>Insights conditioned on neighborhood, not pages.</strong> Each new page is analyzed against the insights already attached to predecessor and neighbor nodes: the LLM is prompted to identify how the new content <em>builds on or contradicts</em> the local context, not to summarize the page in isolation. This is the mechanism behind cross-cluster bridges.</li>
+    <li><strong>Dynamic policy with backtracking.</strong> A navigational stack supports depth-first drill-down until information gain plateaus, then pops back to explore orthogonal branches. The action policy scores candidate URLs using both a global query against <em>KB</em> and the local episodic context, letting Caesar abandon low-value paths the way a human researcher would.</li>
   </ul>
 
-  <h3>2. Adversarial Artifact Synthesis — Generator–Verifier loop</h3>
+  <h3>2. Adversarial Artifact Synthesis: Generator–Verifier loop</h3>
   <p>Rather than a single-pass summary, Phase 2 runs as a self-correcting Generator–Verifier loop driven by the knowledge base built in Phase 1.</p>
   <ul>
     <li><strong>Recursive insight discovery.</strong> The agent maintains a running context and, at each round, the LLM produces the next critical sub-question (q<sub>t+1</sub>) conditioned on the answer to the previous one (a<sub>t</sub>). Each sub-question is answered by retrieval against <em>KB</em>, so the dependency chain stays grounded in observed sources.</li>
     <li><strong>Adversarial query refinement.</strong> An independent verifier inspects the current draft for logical weaknesses, missing citations, and unsupported claims, then formulates <em>orthogonal</em> queries that target those weaknesses. These queries seed the next draft. This is the mechanism that escapes the consensus basin that traps single-pass LLMs.</li>
-    <li><strong>Generative draft merging.</strong> Multiple independent drafts are produced and then merged by the LLM into a single artifact, which is post-processed (e.g., into an ELI5 summary) for the final output. Caesar's output is a cited research artifact plus a serialized exploration graph and a JSON run summary — auditable and reproducible.</li>
+    <li><strong>Generative draft merging.</strong> Multiple independent drafts are produced and then merged by the LLM into a single artifact, which is post-processed (e.g., into an ELI5 summary) for the final output. Caesar's output is a cited research artifact plus a serialized exploration graph and a JSON run summary, auditable and reproducible.</li>
   </ul>
   <p>The exact algorithms (URL scoring, persona generation, insight prompting, verifier prompts) are in Sections 3–4 of <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">the paper</a>.</p>
 
@@ -772,16 +772,16 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <p>The exploration policy is query-aware: the shape of the knowledge graph adapts to the kind of question being asked. The benchmark uses five query categories, each chosen to stress a distinct creative failure mode of standard LLMs.</p>
 
   <ul class="query-list">
-    <li><span class="qtag">(a)</span> <span class="qname">Constrained Synthesis</span> — invent a new emotion humans don't experience. <span class="qprompt">Tests conceptual expansion under logical constraints; LLMs default to renaming existing emotions.</span> <a class="qlink" href="#example-constrained">See example ↑</a></li>
-    <li><span class="qtag">(b)</span> <span class="qname">Counterfactual Reasoning</span> — if humans evolved with echolocation instead of color vision, how would painting, architecture, and math change? <span class="qprompt">Tests whether the model can suppress strong factual associations in favor of a counterfactual premise.</span> <a class="qlink" href="#example-counterfactual">See example ↑</a></li>
-    <li><span class="qtag">(c)</span> <span class="qname">Cross-Domain Synthesis</span> — apply the formal structure of calculus to cooking. <span class="qprompt">Tests structural isomorphism (deep analogy) rather than surface metaphor.</span> <a class="qlink" href="#example-cross-domain">See example ↑</a></li>
-    <li><span class="qtag">(d)</span> <span class="qname">Meta-Creativity</span> — design a creativity metric for AI that doesn't rely on human judgment, novelty, usefulness, or surprise. <span class="qprompt">Adversarial to RLHF: forces reasoning outside the human-preference space the model was tuned on.</span> <a class="qlink" href="#example-meta-creativity">See example ↑</a></li>
-    <li><span class="qtag">(e)</span> <span class="qname">Open-Ended Synthesis</span> — invent a completely original business idea. <span class="qprompt">Targets mode collapse: LLMs converge on the most probable answer; originality is statistically unlikely.</span></li>
+    <li><span class="qtag">(a)</span> <span class="qname">Constrained Synthesis</span>: invent a new emotion humans don't experience. <span class="qprompt">Tests conceptual expansion under logical constraints; LLMs default to renaming existing emotions.</span> <a class="qlink" href="#example-constrained">See example ↑</a></li>
+    <li><span class="qtag">(b)</span> <span class="qname">Counterfactual Reasoning</span>: if humans evolved with echolocation instead of color vision, how would painting, architecture, and math change? <span class="qprompt">Tests whether the model can suppress strong factual associations in favor of a counterfactual premise.</span> <a class="qlink" href="#example-counterfactual">See example ↑</a></li>
+    <li><span class="qtag">(c)</span> <span class="qname">Cross-Domain Synthesis</span>: apply the formal structure of calculus to cooking. <span class="qprompt">Tests structural isomorphism (deep analogy) rather than surface metaphor.</span> <a class="qlink" href="#example-cross-domain">See example ↑</a></li>
+    <li><span class="qtag">(d)</span> <span class="qname">Meta-Creativity</span>: design a creativity metric for AI that doesn't rely on human judgment, novelty, usefulness, or surprise. <span class="qprompt">Adversarial to RLHF: forces reasoning outside the human-preference space the model was tuned on.</span> <a class="qlink" href="#example-meta-creativity">See example ↑</a></li>
+    <li><span class="qtag">(e)</span> <span class="qname">Open-Ended Synthesis</span>: invent a completely original business idea. <span class="qprompt">Targets mode collapse: LLMs converge on the most probable answer; originality is statistically unlikely.</span></li>
   </ul>
 
   <figure class="paper-figure">
     <img src="figure2.webp" width="1351" height="680" loading="lazy" decoding="async" alt="Five knowledge graphs Caesar built during exploration, one per query category: Constrained Synthesis, Counterfactual Reasoning, Cross-Domain Synthesis, Meta-Creativity, and Open-Ended Synthesis. Some queries produce many short branches radiating from the root; others produce long linear chains. Cyan nodes mark sources cited in the final artifact.">
-    <figcaption><strong>Figure 2.</strong> Knowledge graphs Caesar builds during exploration, one per query category. Brighter colors indicate deeper exploration from the root (red); cyan nodes are sources cited in the final artifact. Constrained (a), Cross-Domain (c), and Meta-Creativity (d) produce starburst topologies — breadth-first traversal across disjoint semantic clusters to find novel intersections. Counterfactual (b) and Open-Ended (e) produce long linear chains — depth-first traversal that drills into a specific causal path or niche.</figcaption>
+    <figcaption><strong>Figure 2.</strong> Knowledge graphs Caesar builds during exploration, one per query category. Brighter colors indicate deeper exploration from the root (red); cyan nodes are sources cited in the final artifact. Constrained (a), Cross-Domain (c), and Meta-Creativity (d) produce starburst topologies: breadth-first traversal across disjoint semantic clusters to find novel intersections. Counterfactual (b) and Open-Ended (e) produce long linear chains: depth-first traversal that drills into a specific causal path or niche.</figcaption>
   </figure>
 
   <figure class="paper-figure">
@@ -790,7 +790,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   </figure>
 
   <h2 id="use-cases">Use Cases</h2>
-  <p>Caesar is built for open-ended, creative, cross-disciplinary research — the questions retrieval alone cannot answer.</p>
+  <p>Caesar is built for open-ended, creative, cross-disciplinary research: the questions retrieval alone cannot answer.</p>
   <ul>
     <li><strong>Hypothesis generation</strong>: novel cross-domain connections (e.g., bridging materials science and biology).</li>
     <li><strong>Literature synthesis</strong>: graph-grounded review that surfaces tensions and gaps between papers.</li>
@@ -802,7 +802,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <h2 id="faq">FAQ</h2>
 
   <h3>How is Caesar different from LangGraph, CrewAI, or AutoGen?</h3>
-  <p>Those are orchestration frameworks: they help you wire up agents. Rome (the framework Caesar is built on) is an opinionated runtime for <em>how</em> agents should reason — graph-structured exploration, adversarial verification, episodic memory. Caesar is a concrete research agent built on top.</p>
+  <p>Those are orchestration frameworks: they help you wire up agents. Rome (the framework Caesar is built on) is an opinionated runtime for <em>how</em> agents should reason: graph-structured exploration, adversarial verification, episodic memory. Caesar is a concrete research agent built on top.</p>
 
   <h3>Do I need GPUs?</h3>
   <p>No. Caesar uses hosted LLM APIs (OpenAI, Anthropic, Gemini). A local ChromaDB instance handles the vector store. Runs comfortably on a laptop.</p>
@@ -817,7 +817,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs ChatGPT Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
 
   <h3>What does a Caesar run produce?</h3>
-  <p>A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance — enough to audit, reproduce, or pipe the result into a downstream system.</p>
+  <p>A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance, enough to audit, reproduce, or pipe the result into a downstream system.</p>
 
   <h2 id="citation">Citation</h2>
   <pre><code>@misc{liang26caesar,
