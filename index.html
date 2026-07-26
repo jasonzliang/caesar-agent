@@ -450,6 +450,8 @@
     ul.query-list .qname { font-weight: 600; color: #222; }
     ul.query-list .qprompt { color: #555; font-style: italic; }
     ul.query-list .qlink { font-size: 0.88rem; white-space: nowrap; }
+    th.rowgroup { text-align: left; font-size: 0.78rem; text-transform: uppercase; letter-spacing: 0.05em; color: #6b7280; background: transparent; border-bottom: 1px solid #e6e8eb; padding-top: 1rem; font-weight: 600; }
+    p.table-note { font-size: 0.82rem; color: #6b7280; line-height: 1.5; margin: 0.7rem 0 0; }
     a { color: var(--link); text-decoration: none; }
     a:hover { text-decoration: underline; }
     footer a { text-decoration: underline; } /* non-color cue against gray surrounding text */
@@ -593,24 +595,30 @@
   <p><strong>Caesar</strong> is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph, building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.</p>
 
   <h2 id="why-caesar">Why Caesar?</h2>
-  <p>Today's deep-research agents (<strong>ChatGPT Deep Research</strong>, <strong>Perplexity</strong>, <strong>Gemini Deep Research</strong>, <strong>GPT Researcher</strong>) optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from <em>navigational amnesia</em>, and converge on derivative, consensus-driven outputs.</p>
-  <p>Caesar is built differently:</p>
+  <p>Today's deep-research agents (<strong>ChatGPT Deep Research</strong>, <strong>Perplexity</strong>, <strong>Gemini Deep Research</strong>, <strong>GPT Researcher</strong>) optimize retrieval precision over a flat sequence of documents. On the five creative-reasoning categories in our benchmark we found their answers competent but convergent: they settle early, lose track of what earlier steps established, and land on the consensus reading.</p>
+  <p>Caesar makes a different trade. It is slower and costs more, and buys depth and an audit trail with it:</p>
 
   <div class="table-scroll">
   <table>
     <thead>
-      <tr><th>Capability</th><th>Caesar</th><th>ChatGPT Deep Research</th><th>Perplexity</th><th>GPT Researcher</th></tr>
+      <tr><th>Design choice</th><th>Caesar</th><th>ChatGPT / Gemini Deep Research</th><th>Perplexity Research</th><th>GPT Researcher</th></tr>
     </thead>
     <tbody>
-      <tr><td>Builds a knowledge graph as it explores</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">❌</td></tr>
-      <tr><td>Adversarial self-critique on its own draft</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">❌</td></tr>
-      <tr><td>Multiple drafts, then merged into one</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">🟡</td></tr>
-      <tr><td>Backtracks when an exploration path stalls</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">❌</td></tr>
-      <tr><td>Multi-provider (OpenAI / Anthropic / Gemini)</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">✅</td></tr>
-      <tr><td>Reproducible run logs (JSON)</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">🟡</td></tr>
+      <tr><th colspan="5" scope="colgroup" class="rowgroup">What Caesar does differently</th></tr>
+      <tr><td>Persistent knowledge graph built during exploration</td><td class="num">✅</td><td class="num">not published</td><td class="num">not published</td><td class="num">❌</td></tr>
+      <tr><td>Adversarial generator–verifier loop over its own drafts</td><td class="num">✅</td><td class="num">not published</td><td class="num">🟡</td><td class="num">🟡</td></tr>
+      <tr><td>Serialized graph and JSON run log you keep</td><td class="num">✅</td><td class="num">🟡</td><td class="num">🟡</td><td class="num">🟡</td></tr>
+      <tr><td>Runs on your own keys and hardware</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">✅</td></tr>
+      <tr><th colspan="5" scope="colgroup" class="rowgroup">What you give up to get it</th></tr>
+      <tr><td>Works with no setup and no API keys</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">❌</td></tr>
+      <tr><td>Typical time to an answer</td><td class="num">10 min to hours</td><td class="num">5–30 min</td><td class="num">under 3 min</td><td class="num">2–5 min</td></tr>
+      <tr><td>Cost per query</td><td class="num">$0.30–$10 in API spend</td><td class="num">subscription</td><td class="num">subscription</td><td class="num">API spend</td></tr>
+      <tr><td>Browser and mobile access</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">🟡</td></tr>
+      <tr><td>Maturity</td><td class="num">research prototype</td><td class="num">GA product</td><td class="num">GA product</td><td class="num">established open source</td></tr>
     </tbody>
   </table>
   </div>
+  <p class="table-note">Compared as of July 2026 against each product's then-current tier. "Not published" means the vendor has not documented the mechanism, which is not the same as its absence: these are closed systems and we can report only what they disclose. ChatGPT and Deep Research are trademarks of OpenAI, Perplexity of Perplexity AI, Gemini of Google; Caesar is not affiliated with or endorsed by any of them.</p>
 
   <h2 id="benchmarks">Benchmark Results</h2>
   <p>Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scored 0–10 across three creativity dimensions: <strong>New</strong>, <strong>Useful</strong>, <strong>Surprising</strong>.</p>
