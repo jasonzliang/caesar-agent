@@ -631,7 +631,7 @@
   <p>Cliff's Delta effect sizes are uniformly large (<strong>δ ≥ 0.76</strong>, well above the 0.47 large-effect threshold) across all baselines and output formats; <strong>δ = 1.00</strong> against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a 21-rater blinded human A/B study, where raters preferred Caesar's Cross-Domain Synthesis answer 90.5% of the time (Holm-corrected p = 0.001). Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
 
   <h2 id="example">Example Outputs</h2>
-  <p>Head-to-head excerpts from four of the five <a href="#exploration">benchmark categories</a>, each against the strongest Deep Research baseline on that query. The pattern that recurs: the baseline stops at the first good consequence of its premise, and Caesar keeps deriving from it.</p>
+  <p>Head-to-head excerpts from four of the five <a href="#exploration">benchmark categories</a>, each against the strongest Deep Research baseline on that query. Each baseline draws one good conclusion from the premise and stops. Caesar keeps going, and that is where the two pull apart.</p>
 
   <h3 id="example-cross-domain">Cross-Domain Synthesis: calculus applied to cooking</h3>
   <div class="example-output" role="group" aria-labelledby="example-cross-domain">
