@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <title>Caesar: Creative Autonomous AI Research Agent</title>
-  <meta name="description" content="Caesar: autonomous AI research agent. Graph-based deep web exploration with adversarial answer synthesis. Outperforms GPT-5 and Gemini Deep Research.">
+  <meta name="description" content="Caesar: autonomous AI research agent. Graph-based deep web exploration with adversarial answer synthesis. Outperforms GPT-5.2 and Gemini 3 Deep Research.">
   <meta name="author" content="Jason Liang, Elliot Meyerson, Risto Miikkulainen">
   <link rel="author" href="https://jasonzliang.github.io/">
   <meta name="robots" content="index, follow, max-snippet:-1, max-image-preview:large">
@@ -66,7 +66,7 @@
     "applicationCategory": "DeveloperApplication",
     "applicationSubCategory": "AI Research Agent",
     "operatingSystem": "Cross-platform (Python 3.10+)",
-    "description": "Autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis. Outperforms ChatGPT Deep Research, Perplexity, and Gemini Deep Research on creative reasoning.",
+    "description": "Autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis. Outperforms Gemini 3, Sonnet 4.5 and GPT-5.2 Deep Research on creative reasoning benchmarks.",
     "url": "https://jasonzliang.github.io/caesar-agent/",
     "downloadUrl": "https://jasonzliang.github.io/caesar-agent/",
     "softwareVersion": "0.3.2",
@@ -196,7 +196,7 @@
       {
         "@type": "Question",
         "name": "Is Caesar a good ChatGPT Deep Research alternative?",
-        "acceptedAnswer": {"@type": "Answer", "text": "Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs ChatGPT Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios."}
+        "acceptedAnswer": {"@type": "Answer", "text": "Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs GPT-5.2 Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios."}
       },
       {
         "@type": "Question",
@@ -815,7 +815,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <p>A 5-iteration exploration with Claude Haiku 4.5 runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically <strong>$5–$10</strong>.</p>
 
   <h3>Is Caesar a good ChatGPT Deep Research alternative?</h3>
-  <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs ChatGPT Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
+  <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs GPT-5.2 Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
 
   <h3>What does a Caesar run produce?</h3>
   <p>A cited research artifact (abstract plus body, with inline references to every source URL visited), a serialized knowledge graph of the exploration trajectory, and a JSON run summary capturing tokens, cost, wall-time, pages visited, and per-draft provenance, enough to audit, reproduce, or pipe the result into a downstream system.</p>
