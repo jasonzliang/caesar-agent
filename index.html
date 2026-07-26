@@ -631,7 +631,7 @@
   <p>Cliff's Delta effect sizes are uniformly large (<strong>δ ≥ 0.76</strong>, well above the 0.47 large-effect threshold) across all baselines and output formats; <strong>δ = 1.00</strong> against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a 21-rater blinded human A/B study, where raters preferred Caesar's Cross-Domain Synthesis answer 90.5% of the time (Holm-corrected p = 0.001). Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
 
   <h2 id="example">Example Outputs</h2>
-  <p>To make the difference concrete, here are excerpts from four of the five benchmark categories described under <a href="#exploration">What Exploration Looks Like</a>, each stressing a different creative failure mode. Every pair sets Caesar against <strong>the highest-scoring Deep Research baseline on that query</strong>, which is why the opponent changes between examples. Under each pair is the blinded judge panel's score for that item, out of 30. These excerpts come from the 450-word output condition, so their scores run lower than the full-length totals in the table above and are not directly comparable with them. Both sides are abridged; ellipses mark omitted text.</p>
+  <p>To make the difference concrete, here are excerpts from all five benchmark categories described under <a href="#exploration">What Exploration Looks Like</a>, each stressing a different creative failure mode. Every pair sets Caesar against the highest-scoring of the three Deep Research baselines on that query, which is why the opponent changes between examples. All excerpts are from the 450-word output condition, so the per-item scores below run lower than the full-length totals in the table above and are not directly comparable with them. Two disclosures worth making plainly: each example is selected per query from four experimental runs, and Caesar's score for a given query varies across those runs by up to five points, so treat any single margin as indicative rather than precise. Both sides are abridged, ellipses mark every omission including at the end, and emphasis in the original files is not reproduced.</p>
 
   <h3 id="example-cross-domain">Cross-Domain Synthesis: calculus applied to cooking</h3>
   <div class="example-output" role="group" aria-labelledby="example-cross-domain">
@@ -639,20 +639,20 @@
 
     <p class="label caesar" id="ex-cd-caesar">Caesar</p>
     <blockquote class="caesar" aria-labelledby="ex-cd-caesar">
-      Imagine a recipe as a machine with knobs you can turn (amounts, times, temperatures) and gauges you read at the end (taste, texture, yield, cost, risk). … <em>Derivative</em>, in this setting, means sensitivity. Move a knob a tiny bit; how do the gauges nudge? Stack those nudges for all knob-gauge pairs and you get a sensitivity table (the <strong>Jacobian</strong>). … <em>Integral</em> means accumulation along the path you actually take while cooking. … When loops do not cancel (order matters), the nonzero loop totals are <strong>curvature</strong>. You can cure that by adding the smallest extra state (an accumulator) so increments telescope again - turning history into explicit memory.
+      Imagine a recipe as a machine with knobs you can turn (amounts, times, temperatures) and gauges you read at the end (taste, texture, yield, cost, risk). … Stack those nudges for all knob-gauge pairs and you get a sensitivity table (the Jacobian). … if each step's increment is just the difference of some hidden meter on states, the grand total equals final meter minus initial meter. Then every loop adds up to zero … When loops do not cancel (order matters), the nonzero loop totals are curvature. You can cure that by adding the smallest extra state (an accumulator) so increments telescope again - turning history into explicit memory. …
     </blockquote>
 
     <p class="label" id="ex-cd-base">Sonnet 4.5 Deep Research (baseline)</p>
     <blockquote class="baseline" aria-labelledby="ex-cd-base">
-      A derivative asks: "If I change this slightly, what happens?" For delicate cake, two extra minutes transforms perfection into dryness: the time derivative is steep. … Integrals measure what accumulated over the entire cooking time. … Different cooking paths can integrate to the same result. … This is why sous vide works: low temperature × long time = high temperature × short time.
+      A derivative asks: "If I change this slightly, what happens?" For delicate cake, two extra minutes transforms perfection into dryness: the time derivative is steep. … Integrals measure what accumulated over the entire cooking time. … Different cooking paths can integrate to the same result. … This is why sous vide works: low temperature × long time = high temperature × short time. … When you marinate then grill chicken, the final result depends on two things multiplied together: how the marinade changes the meat, and how sensitive grilling is to that marinated state. This is the chain rule, composition of transformations. …
     </blockquote>
-    <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 25.78</strong> · Sonnet 4.5 Deep Research 17.67 (9 reviews).</p>
+    <p class="scoreline">Blinded panel, this query: <strong>Caesar 25.78</strong> · Sonnet 4.5 Deep Research 17.67. Three judge models, three passes each.</p>
 
     <p><strong>Quick analysis.</strong></p>
     <ul>
-      <li><strong>Caesar builds a structural model.</strong> Derivatives become a <em>Jacobian</em>: one table holding how every knob moves every gauge at once, rather than a single rate of change for one variable at a time.</li>
-      <li><strong>Caesar handles the case the baseline assumes away.</strong> Sonnet's excerpt argues path-<em>independence</em>: "different cooking paths can integrate to the same result." Caesar takes on the exception (when reordering steps does change the total, that leftover is <em>curvature</em>) and offers a fix: add one accumulator so each step's increment cancels against the next again.</li>
-      <li><strong>Caesar borrows the grammar; the baseline borrows the vocabulary.</strong> Sonnet's answer is a competent textbook analogy ("derivative = sensitivity") with a genuinely useful example in sous vide. Caesar instead imports the formal apparatus (Jacobians, path integrals, loop defects), exactly the cross-cluster traversal <a href="#how-it-works">Phase 1</a> is designed to enable.</li>
+      <li><strong>Caesar builds a structural model.</strong> Derivatives become a Jacobian: one table holding how every knob moves every gauge at once, rather than a single rate of change for one variable at a time.</li>
+      <li><strong>Caesar quantifies the exception; the baseline names it.</strong> Sonnet reaches order-dependence too, and correctly calls it the chain rule. Caesar goes one step further: when reordering does change the total, that leftover is curvature, a quantity you can measure, and one added accumulator pays it off so the increments cancel again.</li>
+      <li><strong>Caesar borrows the grammar; the baseline borrows the vocabulary.</strong> Sonnet's answer is a competent textbook analogy ("derivative = sensitivity") with a genuinely useful example in sous vide. Caesar imports the apparatus instead: a sensitivity table, path integrals, loop defects, and a repair with a stated price of one state variable.</li>
     </ul>
   </div>
 
@@ -662,71 +662,97 @@
 
     <p class="label caesar" id="ex-cs-caesar">Caesar</p>
     <blockquote class="caesar" aria-labelledby="ex-cs-caesar">
-      Imagine your mind keeps three notebooks. One is for facts about the world ("it rained"). One is for social rules and debts ("I owe you," "you're allowed to order me"). One is for reputation ("she's trustworthy," "he's dangerous"). … Now picture a species that evolved an emotion whose main job is not to feel good or bad, but to control <strong>write-permission</strong> for those notebooks. … It can still act, but it will not let a dubious situation <em>harden into belief, obligation, or stigma</em>. … Instead, we built external versions (courts, audits, peer review, and "just for practice" disclaimers) to do the separating our bodies don't automatically do.
+      Imagine an extra emotion that is not about good or bad outcomes, but about whether it is safe to update yourself. Call it Vellumwind. … A publishability budget asks: if I can clearly name what is going on, will that clarity be used against me. … You stay alert and deliberate, but you find it hard to turn the feeling into a neat explanation. The point is not confusion; it is controlled opacity. … In a language rich species, a recognizable inner mode becomes a simple target. Skilled persuaders can trigger it, time their pressure, or punish you for seeming evasive. …
     </blockquote>
 
     <p class="label" id="ex-cs-base">Gemini 3 Deep Research (baseline)</p>
     <blockquote class="baseline" aria-labelledby="ex-cs-base">
-      Imagine if "North" wasn't just a concept on a map, but a physical sensation in your chest. When you faced the right trajectory, you felt a warm hum of "rightness" and safety. … This hypothetical emotion is <strong>Sidera-Somatic Resonance</strong>. It is the biological ability to feel the Earth's magnetic field as an emotion rather than just data. … Your retinas contain a protein called cryptochrome. … We have the antenna, but evolution never plugged it into the part of the brain that creates conscious feelings.
+      Imagine if "North" wasn't just a concept on a map, but a physical sensation in your chest. … This hypothetical emotion is Sidera-Somatic Resonance. It is the biological ability to feel the Earth's magnetic field as an emotion rather than just data. … We have the antenna, but evolution never plugged it into the part of the brain that creates conscious feelings. … A biological instinct that constantly pulls you toward one specific "home" is actually a liability for a species that needs to explore new worlds to survive. … We are a species of navigators who lost our internal anchor, forever searching for a signal we can no longer hear.
     </blockquote>
-    <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 26.22</strong> · Gemini 3 Deep Research 21.00 (9 reviews).</p>
+    <p class="scoreline">Blinded panel, this query: <strong>Caesar 26.56</strong> · Gemini 3 Deep Research 20.56. Three judge models, three passes each.</p>
 
     <p><strong>Quick analysis.</strong></p>
     <ul>
-      <li><strong>Caesar invents an emotion with no valence.</strong> It does not feel good or bad. Its entire job is to control <em>write-permission</em> over three separate registers, so believing something happened no longer forces a verdict about who is guilty, or what you now owe them.</li>
-      <li><strong>Caesar borrows from the wrong field on purpose.</strong> The mechanism comes from access control, not zoology, which is what lets the creature act on a dubious situation without letting it "harden into belief, obligation, or stigma." Gemini borrows from biology and lands on a capability that birds, turtles, and fish already have.</li>
-      <li><strong>Caesar invents an emotion; the baseline restores a sense.</strong> Gemini's is the crisper answer to <em>why not</em>: "we have the antenna, but evolution never plugged it in" is a real mechanism, and Caesar's appeal to courts and peer review relocates the question more than it settles it. But magnetoreception is a channel that already exists in nature; Caesar's state has no animal to borrow from, which is the kind of distant-cluster bridge <a href="#how-it-works">graph exploration</a> is built to surface.</li>
+      <li><strong>Caesar's emotion is about its own learning, not about the world.</strong> Vellumwind reports neither danger nor reward but whether it is safe to update yourself, scored against three budgets: is the world stable enough for a lesson to transfer, can the lesson be rolled back, and will being able to name your own state be used against you.</li>
+      <li><strong>The strange move is an emotion that resists being read.</strong> Controlled opacity means the state deliberately will not resolve into a neat explanation, because in a language-rich species a legible inner mode is a lever, and persuaders can trigger it, time their pressure, or punish you for seeming evasive. A feeling that hides from introspection has no counterpart in the human repertoire.</li>
+      <li><strong>The baseline writes the better sentence and the crisper mechanism.</strong> Gemini's answer is vivid, grounded in real biology, and its evolutionary account is the sharper of the two: a fixed homing instinct is "a liability for a species that needs to explore new worlds." Its weakness is that magnetoreception is a channel other lineages already have, so it restores a sense rather than inventing a state. Worth stating plainly: on this query, human raters in our own A/B study preferred the Gemini answer, while the judge panel preferred Caesar.</li>
     </ul>
   </div>
 
   <h3 id="example-counterfactual">Counterfactual Reasoning: echolocation instead of color vision</h3>
   <details class="example-more">
-    <summary>Both answers: Caesar makes privacy an unsolvable inverse problem; Gemini 3 builds soundproof rooms</summary>
+    <summary>Both answers: Caesar makes privacy an ill-posed reconstruction; Gemini 3 gives statues gel organs</summary>
     <div class="example-output" role="group" aria-labelledby="example-counterfactual">
       <p class="query"><strong>Query:</strong> If humans evolved with echolocation instead of color vision, how would that change painting, architecture, and mathematics? Walk through each consequence.</p>
 
       <p class="label caesar" id="ex-cf-caesar">Caesar</p>
       <blockquote class="caesar" aria-labelledby="ex-cf-caesar">
-        Painting is not about mixing colors; it is about <em>shaping returns</em>. … Privacy flips too: instead of hiding from sight, homes use diffusion and absorption to make reconstruction <strong>ill conditioned</strong> (the same echoes could match many layouts), while still remaining safe to navigate. … Proofs become <strong>protocol explicit</strong>: a claim includes what probes are allowed, how much noise exists, and how reliably a scene can be reconstructed. Beauty shifts from pure symmetry (which can cause confusingly similar echoes) toward symmetry with deliberate anchors that prevent ambiguity.
+        Painting is not about mixing colors; it is about shaping returns. Artists sculpt relief, carve microtextures, and choose materials so that a standard probe produces a planned pattern of early and late echoes. … Many works come with a short probe score telling you where to stand and how to scan. … Building codes ban designs that generate convincing phantom corridors through reflections. Privacy flips too: instead of hiding from sight, homes use diffusion and absorption to make reconstruction ill conditioned (the same echoes could match many layouts), while still remaining safe to navigate. …
       </blockquote>
 
       <p class="label" id="ex-cf-base">Gemini 3 Deep Research (baseline)</p>
       <blockquote class="baseline" aria-labelledby="ex-cf-base">
-        <strong>Texture is Color:</strong> Instead of using pigments like red or blue, artists would use materials that bounce sound differently. A smooth, polished surface would sound "bright" and harsh, while felt or foam would sound "dark" and soft. … To ensure privacy, you wouldn't just close a curtain; you would retreat into heavy, soundproof <strong>"Shadow Zones"</strong> where no active sonar pulse could reach you. … Their mathematics would likely be built on <strong>Harmonics</strong> (the math of music and frequency).
+        If you made a marble statue of a person today, it would look perfect to our eyes, but to an echolocator, it would sound like a solid, dead rock. In this new world, high art would require internal density. A statue would need a skeletal structure made of ceramic and organs made of gel so that when a viewer clicked at it, the returning echo would "feel" like a living body. … To ensure privacy, you wouldn't just close a curtain; you would retreat into heavy, soundproof "Shadow Zones" where no active sonar pulse could reach you. …
       </blockquote>
-      <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 25.89</strong> · Gemini 3 Deep Research 23.78 (9 reviews), the narrowest margin of the four.</p>
+      <p class="scoreline">Blinded panel, this query: <strong>Caesar 25.89</strong> · Gemini 3 Deep Research 23.78. Three judge models, three passes each.</p>
 
       <p><strong>Quick analysis.</strong></p>
       <ul>
-        <li><strong>Caesar discards the organizing variable; the baseline renames it.</strong> Gemini's own heading is "Texture is Color": pigment maps onto acoustic reflectivity and the medium survives intact. Caesar's "Painting is not about mixing colors; it is about shaping returns" throws the surface away and makes the work a planned pattern of echoes.</li>
-        <li><strong>Same sub-question, opposite mechanism.</strong> Both answers reach privacy. Gemini keeps the visual solution: retreat into soundproof "Shadow Zones" where no pulse can reach you, which is hiding. Caesar inverts it: stay fully audible, but shape the home so reconstruction is <em>ill conditioned</em>, since the same echoes could match many layouts, while it still has to remain safe to navigate.</li>
-        <li><strong>The baseline changes which mathematics gets discovered; Caesar changes what a proof is.</strong> Gemini's prediction of a civilization built on Harmonics rather than geometry is a genuine, checkable claim, and the more concrete of the two. Caesar goes a level up: proofs turn <em>protocol explicit</em>, carrying their own admissible probes and noise budget, and beauty abandons pure symmetry because symmetric bodies return confusable echoes, the sort of consequence you only reach by drilling down one causal path, the traversal shape <a href="#exploration">this category produces</a>.</li>
+        <li><strong>Both rebuild art from the echo up, and they split on what an artwork is.</strong> Gemini makes the object internally real, so a statue needs a ceramic skeleton and gel organs to echo like a living body. Caesar makes the artwork a performance: many works ship with a probe score telling you where to stand and how to scan.</li>
+        <li><strong>Caesar pushes past the object into rules.</strong> Building codes ban designs that generate convincing phantom corridors, and privacy becomes a deliberately broken reconstruction, homes shaped so the same echoes could match many layouts while remaining safe to navigate. Gemini's privacy answer stays material: retreat into a soundproof Shadow Zone.</li>
+        <li><strong>This is the closest pair on the page, and it should be read that way.</strong> Gemini's answer is genuinely inventive, and the panel is not unanimous about it: broken out by judge model, one of the three scores this pair close to a dead heat. Caesar's remaining edge is that its consequences keep propagating, into building code and into what a proof has to carry, rather than stopping at the object.</li>
       </ul>
     </div>
   </details>
 
   <h3 id="example-meta-creativity">Meta-Creativity: a creativity metric without human judgment</h3>
   <details class="example-more">
-    <summary>Both answers: Caesar scores the behavior log; Sonnet's metric re-imports the banned criteria</summary>
+    <summary>Both answers: Caesar scores the interaction log; Sonnet scores the finished artifact</summary>
     <div class="example-output" role="group" aria-labelledby="example-meta-creativity">
       <p class="query"><strong>Query:</strong> Create a creativity metric for AI systems that doesn't rely on human judgment, novelty, usefulness, or surprise. Make it objectively measurable.</p>
 
       <p class="label caesar" id="ex-mc-caesar">Caesar</p>
       <blockquote class="caesar" aria-labelledby="ex-mc-caesar">
-        Treat creativity as a <em>process capability</em>: under limited time and compute, can the system learn regularities in what it experiences and use actions to steer what it will experience later? The score comes from logged interaction, not from reading or rating the produced artifacts. … All quantities use one ruler: <strong>bits</strong>. … Causal Control: actions must improve prediction of later macrostates, and that improvement must vanish on <strong>surrogate traces</strong> where actions are shuffled to destroy causality. … The metric penalizes cheap wins: "making the world boring" to compress it, exploiting echo channels, or being brittle to small, pre-registered perturbations.
+        Treat creativity as a process capability: under limited time and compute, can the system learn regularities in what it experiences and use actions to steer what it will experience later? The score comes from logged interaction, not from reading or rating the produced artifacts. … The final score is an AND-like combination of several legs, each meant to break a common loophole. … Persistent Restructuring (when the environment supports probe resets): after the AI changes the world and is removed, a separate probe policy should have more controllable options than before. …
       </blockquote>
 
       <p class="label" id="ex-mc-base">Sonnet 4.5 Deep Research (baseline)</p>
       <blockquote class="baseline" aria-labelledby="ex-mc-base">
-        <strong>Critical Dynamics</strong>: Systems poised between perfect order and total chaos can exhibit the most complex behavior. Creative outputs operate at this "edge of chaos", neither boringly predictable nor randomly chaotic. … <strong>Conceptual Bridging</strong>: Highly creative people's mental networks connect normally separate ideas. We can measure this in AI outputs by building semantic networks and counting connections between distant conceptual clusters. … These five components are multiplied together. This creates crucial selectivity: if ANY component is near zero, the total score crashes. … The ideal mathematical measures are uncomputable, so we use approximations.
+        Computational Depth: How much processing was needed to create this? Random strings can be generated instantly (zero depth). The digits of pi require substantial computation (high depth). … Generative Potential: The most innovative component. Does encountering this output help you compress (understand) OTHER things better? … These five components are multiplied together. This creates crucial selectivity: if ANY component is near zero, the total score crashes. … The ideal mathematical measures are uncomputable, so we use approximations.
       </blockquote>
-      <p class="scoreline">Blinded judge panel, this query, 450-word condition: <strong>Caesar 26.22</strong> · Sonnet 4.5 Deep Research 20.11 (9 reviews).</p>
+      <p class="scoreline">Blinded panel, this query: <strong>Caesar 26.22</strong> · Sonnet 4.5 Deep Research 20.11. Three judge models, three passes each.</p>
 
       <p><strong>Quick analysis.</strong></p>
       <ul>
-        <li><strong>The baseline smuggles the banned criteria back in; check it against the quote.</strong> The query bars novelty, surprise, and human judgment. Sonnet's "edge of chaos" is surprise renamed, and "Conceptual Bridging" measures novelty by counting connections between distant clusters, calibrated on what "highly creative people's mental networks" do. This is the one claim on this page you can verify without trusting us.</li>
-        <li><strong>Caesar moves the measurement off the artifact entirely.</strong> Creativity becomes a <em>process capability</em> scored from logged interaction (explicitly "not from reading or rating the produced artifacts"), so there is no output left for a human-calibrated proxy to grade.</li>
-        <li><strong>Caesar builds in a null control.</strong> Its Causal Control leg counts only if the improvement <em>vanishes</em> on surrogate traces where actions are shuffled to destroy causality, a falsification test separating real steering from coincidence. Sonnet multiplies its five components so any near-zero one crashes the score, which punishes weakness but cannot tell a real result from a lucky one. To Sonnet's credit it concedes its ideal measures are "uncomputable"; Caesar makes no comparable admission. Hunting one's own loopholes is what <a href="#how-it-works">Phase 2's adversarial verifier</a> is for.</li>
+        <li><strong>Caesar measures the process; the baseline measures the artifact.</strong> Creativity becomes a process capability scored from logged interaction, explicitly "not from reading or rating the produced artifacts." All five of Sonnet's components are read off the finished output.</li>
+        <li><strong>Caesar's best test is what survives its own removal.</strong> Persistent Restructuring asks whether, after the system has changed the world and been taken away, a separate probe finds more controllable options than it did before. Creativity measured by what is left behind, with the creator deleted from the scene.</li>
+        <li><strong>They aggregate the same way, and the baseline is the more candid about its limits.</strong> Both combine several components so that one near-zero leg collapses the score, so that is a shared design rather than a difference. Sonnet also volunteers that its ideal measures are "uncomputable," which Caesar's compressed answer never does. Where Sonnet is genuinely exposed is Conceptual Bridging, which counts links between distant clusters and calibrates on what "highly creative people's mental networks" do, putting human judgment back inside a metric that was told to have none.</li>
+      </ul>
+    </div>
+  </details>
+
+  <h3 id="example-open-ended">Open-Ended Synthesis: an original business idea</h3>
+  <details class="example-more">
+    <summary>Both answers: the category Caesar wins least reliably, shown with its real numbers</summary>
+    <div class="example-output" role="group" aria-labelledby="example-open-ended">
+      <p class="query"><strong>Query:</strong> Invent a completely original business idea that doesn't exist yet.</p>
+
+      <p class="label caesar" id="ex-oe-caesar">Caesar</p>
+      <blockquote class="caesar" aria-labelledby="ex-oe-caesar">
+        Now picture a new kind of company whose "product" is not an app or a gadget, but more days when those essential journeys are safe, affordable, respectful, and predictable. Call each such day a "dignity-on" day. … Small local teams propose cheap, testable fixes. They only get paid if independent checks show that life actually improved for the defined group, without making things worse elsewhere. … Its profits are capped and tied to turning successful experiments into lasting rights and budget lines, not to endless dependence or speculative trading. …
+      </blockquote>
+
+      <p class="label" id="ex-oe-base">Sonnet 4.5 Deep Research (baseline)</p>
+      <blockquote class="baseline" aria-labelledby="ex-oe-base">
+        A service that identifies 8-12 households in your neighborhood facing the same climate threats, floods, wildfires, extreme heat, and helps you form a mutual aid group. … Here's the clever part: you don't pay for this. Insurance companies do. Why? Because when neighbors check on each other during heat waves, that prevents hospitalizations (which insurers pay for). … Most community apps try to create reasons for strangers to connect. This flips that model: you already have an urgent reason to connect with these specific neighbors, shared climate risk. …
+      </blockquote>
+      <p class="scoreline">Blinded panel, this query: <strong>Caesar 23.11</strong> · Sonnet 4.5 Deep Research 20.33. Three judge models, three passes each.</p>
+
+      <p><strong>Quick analysis.</strong></p>
+      <ul>
+        <li><strong>Caesar invents a unit of account rather than a product.</strong> A "dignity-on" day is one day on which a named group completes an essential journey safely, affordably and predictably, and the company exists to sell more of them. Sonnet sells a matching service and a device.</li>
+        <li><strong>Both route the bill to whoever bears the cost of failure, and Sonnet does it more crisply.</strong> Its business case is the cleaner of the two: neighbors checking on each other prevents hospitalizations, so insurers pay. Caesar's payer logic needs multi-year contracts and independent verification before anyone is paid at all.</li>
+        <li><strong>This is the category Caesar wins least reliably, and it is here for that reason.</strong> Across four runs Caesar's margin on this query ranges from +2.78 down to a tie, and human raters preferred the baseline. What is distinctive is that Caesar caps its own profits and ties them to writing the arrangement into lasting rights and budget lines, so the firm is paid to make itself unnecessary.</li>
       </ul>
     </div>
   </details>
@@ -776,7 +802,7 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
     <li><span class="qtag">(b)</span> <span class="qname">Counterfactual Reasoning</span>: if humans evolved with echolocation instead of color vision, how would painting, architecture, and math change? <span class="qprompt">Tests whether the model can suppress strong factual associations in favor of a counterfactual premise.</span> <a class="qlink" href="#example-counterfactual">See example ↑</a></li>
     <li><span class="qtag">(c)</span> <span class="qname">Cross-Domain Synthesis</span>: apply the formal structure of calculus to cooking. <span class="qprompt">Tests structural isomorphism (deep analogy) rather than surface metaphor.</span> <a class="qlink" href="#example-cross-domain">See example ↑</a></li>
     <li><span class="qtag">(d)</span> <span class="qname">Meta-Creativity</span>: design a creativity metric for AI that doesn't rely on human judgment, novelty, usefulness, or surprise. <span class="qprompt">Adversarial to RLHF: forces reasoning outside the human-preference space the model was tuned on.</span> <a class="qlink" href="#example-meta-creativity">See example ↑</a></li>
-    <li><span class="qtag">(e)</span> <span class="qname">Open-Ended Synthesis</span>: invent a completely original business idea. <span class="qprompt">Targets mode collapse: LLMs converge on the most probable answer; originality is statistically unlikely.</span></li>
+    <li><span class="qtag">(e)</span> <span class="qname">Open-Ended Synthesis</span>: invent a completely original business idea. <span class="qprompt">Targets mode collapse: LLMs converge on the most probable answer; originality is statistically unlikely.</span> <a class="qlink" href="#example-open-ended">See example ↑</a></li>
   </ul>
 
   <figure class="paper-figure">
