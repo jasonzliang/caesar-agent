@@ -203,7 +203,7 @@ JSONL format (one JSON object per line, "config" is required):
                             '`python -m caesar.image_generator <run_dir>` post-hoc. '
                             'Default 0 skips.')
     parser.add_argument('--image-model', type=str, default=None,
-                       help='Image-gen model for --generate-image (default: gpt-image-1)')
+                       help='Image-gen model for --generate-image (default: gpt-image-2)')
     parser.add_argument('--image-refs', type=int, default=None,
                        help='Refs per image for --generate-image (default: 4)')
     parser.add_argument('--version', action='version',

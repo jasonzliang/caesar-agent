@@ -27,9 +27,9 @@ CaesarAgent:
     max_completion_tokens: 8192
     timeout: 120
 
-  overwrite_role_file: config/role/self_transcend_role_v1.txt
+  overwrite_role_file: config/custom_role/self_transcend_role_v1.txt
   adapt_role: false
-  adapt_role_file: config/role/self_transcend_insights_v1.txt
+  adapt_role_file: config/custom_role/self_transcend_insights_v1.txt
 
 ArtifactSynthesizer:
   synthesis_iterations: 5

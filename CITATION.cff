@@ -16,8 +16,8 @@ authors:
 repository-code: "https://github.com/jasonzliang/caesar-agent"
 url: "https://github.com/jasonzliang/caesar-agent"
 license: Apache-2.0
-version: "0.4.11"
-date-released: "2026-08-06"
+version: "0.4.12"
+date-released: "2026-08-07"
 keywords:
   - "ai-agents"
   - "llm"

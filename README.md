@@ -9,18 +9,18 @@
 </p>
 
 <p align="center">
-  <a href="#quickstart"><img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue"></a>
+  <a href="#quickstart"><img alt="Python 3.10-3.13" src="https://img.shields.io/badge/python-3.10--3.13-blue"></a>
   <a href="https://arxiv.org/abs/2604.20855"><img alt="Paper" src="https://img.shields.io/badge/paper-arXiv%202604.20855-b31b1b"></a>
   <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00CCBB?logo=researchgate&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache_2.0-blue"></a>
   <a href="https://github.com/jasonzliang/caesar-agent/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/jasonzliang/caesar-agent"></a>
 </p>
 
-**Caesar** is an autonomous AI research agent that navigates the web, reasons over a dynamic knowledge graph, and synthesizes novel, grounded answers. In blinded LLM-as-a-Judge creativity evaluations, Caesar scored **26.96 / 30** on the headline full-answers configuration, beating the runner-up (Gemini 3 Deep Research, 23.78) by **3.18 points** and outscoring GPT-5.2 Deep Research (15.74) by over **11 points**. Statistically significant at **p < 0.001** with large Cliff's δ effect sizes (≥ 0.76), and validated by an independent 23-rater human study.
+**Caesar** is an autonomous AI research agent that navigates the web, reasons over a dynamic knowledge graph, and synthesizes novel, grounded answers. In blinded LLM-as-a-Judge creativity evaluations, Caesar scored **26.96 / 30** on the headline full-answers configuration, beating the runner-up (Gemini 3 Deep Research, 23.78) by **3.18 points** and outscoring GPT-5.2 Deep Research (15.74) by over **11 points**. Cliff's δ effect sizes are uniformly large (**≥ 0.76**, well above the 0.47 large-effect threshold), and the result is corroborated by an independent 23-rater human study.
 
 If you're looking for an **agentic RAG system that goes beyond retrieval** (graph-based exploration, adversarial verification, and multi-draft synthesis), this is it.
 
-> 📄 **Read the paper:** [*Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis*](https://arxiv.org/abs/2604.20855) (Liang, Meyerson, Miikkulainen, 2026) · [DOI: 10.48550/arXiv.2604.20855](https://doi.org/10.48550/arXiv.2604.20855) · [PDF](https://arxiv.org/abs/2604.20855)
+> 📄 **Read the paper:** [*Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis*](https://arxiv.org/abs/2604.20855) (Liang, Meyerson, Miikkulainen, 2026 — **v3**, 8 May 2026) · [DOI: 10.48550/arXiv.2604.20855](https://doi.org/10.48550/arXiv.2604.20855) · [PDF](https://arxiv.org/pdf/2604.20855v3)
 
 ## Quickstart
 
@@ -43,7 +43,7 @@ python caesar/run_agent.py regular -q "your research question"
 
 **Setup notes:**
 
-- **Presets** — `nano` (fast, ~$0.30), `mini` (balanced, ~$1), `regular` (deep, ~$3)
+- **Presets** — `nano` (fast, ~$0.30), `mini` (balanced, ~$1), `regular` (deep, ~$5–$10)
 - **Output** — `~/.caesar/result/` when installed from PyPI; `caesar/result/` when run from a source checkout. Override either with `CAESAR_RESULT_DIR`.
 - **Optional API keys** — `BRAVE_API_KEY` (higher-quality web search), `ANTHROPIC_API_KEY` (Claude), `GOOGLE_API_KEY` (Gemini)
 - **More** — see [`caesar/README.md`](caesar/README.md) for the full env-var list, custom configs in `~/.caesar/configs/`, and the `pygraphviz` / system graphviz dependency.
@@ -103,7 +103,7 @@ Rather than a single-pass summary, Caesar runs as a recursive self-correction en
 
 ## Benchmark Results
 
-Evaluated with a blinded **3-model LLM-as-a-Judge panel** (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) across three creativity dimensions (**New**, **Useful**, **Surprising**), scored 0–10 each. Headline configuration: full answers, unconstrained length.
+Evaluated with a blinded **3-model LLM-as-a-Judge panel** (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) across three creativity dimensions (**New**, **Useful**, **Surprising**), scored 1–10 each. Headline configuration: full answers, unconstrained length.
 
 | Agent | New | Useful | Surprising | **Total** | Cliff's δ |
 |---|:-:|:-:|:-:|:-:|:-:|
@@ -112,13 +112,13 @@ Evaluated with a blinded **3-model LLM-as-a-Judge panel** (Claude Sonnet 4.5, GP
 | Sonnet 4.5 Deep Research | 6.73 | 7.49 | 6.42 | 20.64 | 1.00 |
 | GPT-5.2 Deep Research | 5.07 | 6.31 | 4.36 | 15.74 | 1.00 |
 
-Mann–Whitney U **p < 0.001** across all settings — a **13–23% improvement over state-of-the-art deep research agents**, with Caesar leading across all three output formats (Full, ELI5, ELI5-450W). Cliff's δ ≥ 0.76 in every comparison (well above the 0.47 large-effect threshold); δ = 1.00 vs. Sonnet 4.5 and GPT-5.2 Deep Research denotes strict dominance.
+A **13–23% improvement over state-of-the-art deep research agents**, with Caesar leading across all three output formats (Full, ELI5, ELI5-450W). Cliff's δ ≥ 0.76 in every comparison (well above the 0.47 large-effect threshold); δ = 1.00 vs. Sonnet 4.5 and GPT-5.2 Deep Research denotes strict dominance. The paper frames these results by magnitude of difference rather than null-hypothesis testing: with n = 5 challenges per group, δ estimates stochastic dominance and no p-values are reported.
 
 **Compute-controlled comparison.** At a matched ~$5/challenge budget (T=250 with GPT-5-mini), Caesar still wins: 26.16 vs. Gemini 3 Deep 24.37, Sonnet 4.5 Deep 21.00, GPT-5.2 Deep 16.16. The lead is not an artifact of larger compute.
 
 **Human evaluation.** 23 raters preferred Caesar in 63 of 112 pairwise A/B matchups vs. Gemini 3 Deep Research (56.25%, odds ratio 1.29), independently corroborating the LLM-judge findings.
 
-Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary (large effect sizes, δ ≥ 0.52). See the [paper](https://arxiv.org/abs/2604.20855) for full methodology, per-output-format tables, exploration-budget ablation, and judge bias analysis.
+Ablations isolate what each component contributes. Removing the knowledge graph costs δ = 0.52 (large), and restricting traversal to a single hop costs the same; shallow exploration costs δ = 0.92 on total score. Adversarial refinement is a trade rather than a uniform gain — it lifts Surprising (+1.76) and New at the expense of Useful, and the generative merge recovers utility (7.04 → 8.28) while keeping the discovered insights. See the [paper](https://arxiv.org/abs/2604.20855) for full methodology, per-output-format tables, exploration-budget ablation, and judge bias analysis.
 
 ## Example Output
 
@@ -168,10 +168,10 @@ Those are orchestration frameworks: they help you wire up agents. Rome is an opi
 No. Caesar uses hosted LLM APIs (OpenAI, Anthropic). A local ChromaDB instance handles the vector store. Runs on a laptop.
 
 **Which models are supported?**
-OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6 / 4.7), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.
+OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6), Google (Gemini 3.x), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.
 
 **How much does a typical run cost?**
-A 5-iteration exploration with Claude Haiku 4.5 runs at roughly $0.30 and 10 minutes. A 250-iteration deep run with the `regular` preset (`gpt-5.6-terra`) is typically $5–$10.
+A 5-iteration exploration with GPT-5.4-mini (`caesar/config/config_test/single_agent_test.yaml`) runs at roughly $0.30 and 10 minutes. A 250-iteration deep run with the `regular` preset (`gpt-5.6-terra`) is typically $5–$10.
 
 **Can I reproduce the benchmarks?**
 Yes. Configs, judge rubrics, and evaluation scripts are in `caesar/config/` and `caesar/analysis/`.
