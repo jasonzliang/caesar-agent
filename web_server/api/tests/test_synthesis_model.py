@@ -18,9 +18,11 @@ async def test_models_endpoint_lists_openai_only(client):
     r = await client.get("/models")
     assert r.status_code == 200
     ids = [m["id"] for m in r.json()]
-    # Newly-added GPT-5.6 family is present...
-    assert "gpt-5.6" in ids
+    # Newly-added GPT-5.6 family is present as concrete tiers...
     assert "gpt-5.6-sol" in ids
+    # ...but the bare alias is gone entirely: it routed to -sol, so carrying it
+    # offered one model under two names and hid which tier was being bought.
+    assert "gpt-5.6" not in ids
     assert "gpt-5.6-terra" in ids
     assert "gpt-5.6-luna" in ids
     # ...alongside an existing default and older models.
@@ -58,11 +60,14 @@ async def test_new_models_priced_and_sized(client):
     # so this test was holding the error in place: correcting the table failed
     # it. Do not "restore" these without checking the vendor page.
     expected = {
-        "gpt-5.6": (5.0, 30.0),
         "gpt-5.6-sol": (5.0, 30.0),
         "gpt-5.6-terra": (2.0, 12.0),
         "gpt-5.6-luna": (0.2, 1.2),
     }
+    # The alias is absent from every table, not merely unlisted. No run ever
+    # recorded it, and litellm's live map prices it if one somehow arrives.
+    assert "gpt-5.6" not in LLMHandler.MODEL_PRICING
+    assert "gpt-5.6" not in LLMHandler.MODEL_CONTEXT_SIZE
     for mid, (inp, out) in expected.items():
         assert LLMHandler.MODEL_PRICING[mid] == {"input": inp, "output": out}
         assert LLMHandler.MODEL_CONTEXT_SIZE[mid] == 1050000
@@ -103,7 +108,7 @@ async def test_public_submit_accepts_known_model(client, monkeypatch):
             "query": make_query(),
             "preset": "fast",
             "api_key": VALID_KEY,
-            "synthesis_model": "gpt-5.6",
+            "synthesis_model": "gpt-5.6-sol",
         },
     )
     assert r.status_code == 201
@@ -112,7 +117,7 @@ async def test_public_submit_accepts_known_model(client, monkeypatch):
     # (which otherwise reads the preset's default model).
     detail = await client.get(f"/runs/{run_id}", cookies=OWNER_COOKIE)
     assert detail.status_code == 200
-    assert detail.json()["llm_model"] == "gpt-5.6"
+    assert detail.json()["llm_model"] == "gpt-5.6-sol"
 
 
 @pytest.mark.asyncio
