@@ -40,6 +40,10 @@ Lightweight workflow for code exploration and analysis:
 1. **IDLE → CODE_LOADED**: Search and examine code files
 2. **CODE_LOADED → IDLE**: Reset and repeat for iterative analysis
 
+#### Knowledge Base FSM (7-State Cycle)
+`fsm_type: "knowledge_base"` — the simple lifecycle plus multiple action
+variants per phase and a knowledge-base save step before returning to IDLE.
+
 ## Key Features
 
 ### Advanced Agent Capabilities
@@ -47,7 +51,7 @@ Lightweight workflow for code exploration and analysis:
 - **Smart Action Selection**: Tournament-based and priority-driven action selection strategies
 - **Context Management**: Maintains execution context and history across iterations
 - **Intelligent Recovery**: Automatic fallback states and version management for failure scenarios
-- **Cost Management**: Built-in OpenAI API cost tracking and limits
+- **Cost Management**: Built-in LLM API cost tracking and limits
 - **Patience System**: Prevents infinite loops with configurable retry limits
 
 ### Repository Management
@@ -69,11 +73,11 @@ Lightweight workflow for code exploration and analysis:
 ### Core Components
 
 - **Agent**: Main orchestrator with FSM management, context handling, and execution control
-- **FSMSelector**: Factory for creating different FSM types (`minimal`, `simple`)
+- **FSMSelector**: Factory for creating different FSM types (`minimal`, `simple`, `knowledge_base`)
 - **ActionSelector**: Configurable strategies for intelligent action selection
 - **RepositoryManager**: File system operations and repository analysis
 - **VersionManager**: Code versioning and change tracking with database backend
-- **LLMHandler**: LLM interface with cost management and response parsing
+- **LLMHandler**: litellm-backed LLM interface (`openai`, `anthropic`, `gemini` providers) with cost management and response parsing
 - **AgentHistory**: Execution tracking and performance analytics
 
 ### States & Actions
@@ -99,9 +103,10 @@ Lightweight workflow for code exploration and analysis:
 
 ### Prerequisites
 
-- Linux or macOS with Python 3.10+
+- Linux or macOS with Python 3.10–3.13 (`requires-python = ">=3.10,<3.14"`)
 - OpenAI API key or compatible LLM endpoint
-- Optional: `graphviz` for FSM visualization
+- Optional: the system `graphviz` library for FSM visualization (the `graphviz` /
+  `pygraphviz` Python bindings are already in `requirements.txt`)
 
 ### Installation
 
@@ -111,26 +116,30 @@ Lightweight workflow for code exploration and analysis:
 git clone https://github.com/jasonzliang/caesar-agent.git
 cd caesar-agent
 pip install -e .
-pip install -e .[dev]  # Include development dependencies
+pip install -e ".[dev]"  # Include development dependencies (black, mypy, pytest-cov, ipython)
 ```
 
 #### Dependencies
 
+`pip install -e .` installs everything listed in `requirements.txt` — the core
+runtime (litellm, openai, networkx, numpy, scipy, tinydb, portalocker, psutil,
+colorama), the KB/memory stack (chromadb, llama-index, mem0ai), and the
+optional extras `evalplus`, `graphviz` and `tiktoken`.
+
+Not included, install separately if needed:
+
 ```bash
-# Core dependencies
-pip install openai pyyaml
-
-# Benchmarking (optional)
-pip install evalplus
-
-# Visualization (optional)
-pip install graphviz streamlit
+# Streamlit dashboard under web_app/
+pip install streamlit
 ```
 
 ### Environment Setup
 
 ```bash
 export OPENAI_API_KEY=your_api_key_here
+
+# Only needed for graph memory (AgentMemory.use_graph: true)
+export NEO4J_PASSWORD=your_neo4j_password
 ```
 
 ### Basic Usage
@@ -226,17 +235,27 @@ Agent:
 LLMHandler:
   model: "gpt-4o"
   temperature: 0.1
-  max_tokens: 8192
+  max_completion_tokens: 8192
   cost_limit: 50.0
+
+# Memory (optional: Mem0 + ChromaDB, plus an optional Neo4j graph store)
+AgentMemory:
+  enabled: false
+  use_graph: false
+  graph_url: "bolt://localhost:7687"
+  graph_username: "neo4j"
+  vector_host: "localhost"
+  vector_port: 8000
 
 # Action Configuration
 TournamentSearchAction:
-  batch_size: 5
+  batch_size: 5   # >= 1 means a file count; < 1 means a fraction of all files
 
-EditCodeAction:
-  max_iterations: 3
+RevertCodeAction:
+  num_versions: 10
 
-ExecuteCodeAction:
+# Code Execution
+Executor:
   timeout: 30
 
 # Repository Settings
@@ -251,6 +270,14 @@ Logger:
   include_caller_info: "rome"
 ```
 
+`AgentMemory.graph_password` deliberately has no default. It is resolved in
+`rome/agent_memory.py` from the `NEO4J_PASSWORD` environment variable, so the
+secret never lands in the merged config that gets exported or logged; an
+explicit `graph_password` in your YAML still wins. If `use_graph: true` and
+neither source supplies a password, graph memory is refused and the agent runs
+with memory disabled rather than falling back to a baked-in literal. Vector-only
+memory (`use_graph: false`) is unaffected.
+
 ## Advanced Features
 
 ### FSM Visualization
@@ -259,7 +286,8 @@ Generate visual representations of your agent's state machine:
 
 ```python
 # Automatic graph generation
-agent.draw_fsm_graph()  # Saves to <repository>/__rome__/agent_<name>_<pid>.fsm.png
+agent.draw_fsm_graph()  # Saves to <repository>/__rome__/agent_<name>.fsm.png
+                        # (agent_<name>_<pid>.fsm.png when Agent.log_pid is true)
 
 # Custom path
 agent.draw_fsm_graph("/path/to/output.png")
@@ -354,15 +382,12 @@ pytest test/ -v
 ### Development Tools
 
 ```bash
-# Code formatting
+# Code formatting (settings in pyproject.toml)
 black rome/
 isort rome/
 
 # Type checking
 mypy rome/
-
-# Linting
-flake8 rome/
 ```
 
 ## API Reference
@@ -404,7 +429,7 @@ GET /agent/fsm   # FSM structure and current state
 
 ## Limitations & Considerations
 
-- **LLM Dependencies**: Requires access to OpenAI API or compatible endpoints
+- **LLM Dependencies**: Requires access to an OpenAI, Anthropic or Gemini endpoint (`LLMHandler.provider`)
 - **Cost Management**: Monitor API usage with built-in cost limits and tracking
 - **File System Access**: Agents modify files directly (use with version control)
 - **Execution Safety**: Code execution happens in local environment (use containers for isolation)

@@ -2,6 +2,34 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.12] — 2026-08-07
+
+### Fixed
+
+- README claims corrected against the paper. The headline asserted statistical
+  significance (`p < 0.001`, Mann-Whitney U) that arXiv:2604.20855v3 does not
+  report -- Appendix B.5 states it uses magnitude-of-difference framing rather
+  than null-hypothesis testing. The ablation summary also collapsed several
+  distinct results into one effect size; it now reports each separately.
+- Documented config defaults corrected. `caesar/README.md` listed five
+  LLMHandler values from rome's `DEFAULT_CONFIG`, but Caesar deep-merges its own
+  over them, so none were the effective values for a Caesar run.
+  `rome/README.md` documented a `max_tokens` key and an
+  `EditCodeAction.max_iterations` that nothing reads.
+- `config_test/single_agent_test.yaml` pointed both role files at
+  `config/role/`; the directory is `config/custom_role/`, so the config could
+  not load.
+- `--image-model` help advertised `gpt-image-1`; the default is `gpt-image-2`.
+- Model IDs naming `claude-opus-4-7`, which exists nowhere in the code, and a
+  rubric scale given as 0-10 where every shipped rubric specifies 1-10.
+
+### Changed
+
+- `release.sh` mirrors the tagged source to a public repo given by `--repo`
+  (or `PUBLIC_REPO`), rewriting repo URLs to the mirror target and refusing to
+  publish if internal identifiers, personal addresses or credential-shaped
+  strings survive the scan.
+
 ## [0.4.11] — 2026-08-06
 
 ### Changed
@@ -220,6 +248,7 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
+[0.4.12]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.12
 [0.4.11]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.11
 [0.4.10]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.10
 [0.4.9]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.9

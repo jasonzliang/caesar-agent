@@ -59,7 +59,7 @@ Caesar operates as an "Insight Hunter" rather than a traditional search engine. 
 
 ### Prerequisites
 
-- Python 3.10+
+- Python 3.10-3.13 (`requires-python = ">=3.10,<3.14"`)
 - The `rome` parent framework (top-level of this repo)
 
 ### Install Dependencies
@@ -114,7 +114,7 @@ pip install pygraphviz
 
 ### Optional: ChromaDB Vector Database
 
-ChromaDB handles semantic storage and retrieval of insights. It runs in embedded mode by default. For shared multi-agent setups, run as a standalone server:
+ChromaDB handles semantic storage and retrieval of insights. Caesar auto-starts a local `chroma run` server on `localhost:8000` if one is not already listening, so no manual step is needed. To manage the server yourself (e.g. shared multi-agent setups), start it before the run:
 
 ```bash
 pip install chromadb
@@ -306,12 +306,12 @@ For full configs used in published experiments, see YAMLs under `config/config_c
 |---|---|---|
 | `provider` | `openai` | LLM provider: `openai`, `anthropic`, or `gemini` |
 | `model` | `gpt-5.4` | LLM model for synthesis (rome default `gpt-4o`, overridden to `gpt-5.4` by Caesar) |
-| `cost_limit` | 500.0 | Max API spend in USD before graceful stop |
+| `cost_limit` | 300.0 | Max API spend in USD before graceful stop (rome default 500.0) |
 | `temperature` | 0.1 | Temperature for synthesis (lower = focused) |
-| `timeout` | 60 | API timeout in seconds |
-| `reasoning_effort` | None | For reasoning models (`low`/`medium`/`high`); None to disable |
-| `max_completion_tokens` | 10000 | LLM response max tokens |
-| `max_retries` | 10 | Max retries on API failure |
+| `timeout` | 900 | API timeout in seconds (rome default 60) |
+| `reasoning_effort` | `medium` | For reasoning models (`low`/`medium`/`high`); None to disable (rome default None) |
+| `max_completion_tokens` | 50000 | LLM response max tokens (rome default 10000) |
+| `max_retries` | 2 | Max retries on API failure |
 
 ### Multi-Provider LLM Examples
 
@@ -327,7 +327,7 @@ LLMHandler:
 ```yaml
 LLMHandler:
   provider: anthropic
-  model: claude-haiku-4-5-20251001   # or claude-sonnet-4-5, claude-opus-4-7
+  model: claude-haiku-4-5-20251001   # or claude-sonnet-4-6, claude-opus-4-6
   temperature: 0.1
 ```
 
@@ -335,7 +335,7 @@ LLMHandler:
 ```yaml
 LLMHandler:
   provider: gemini
-  model: gemini-3-pro-latest
+  model: gemini-3.1-pro-preview
 ```
 
 ## Exploration Modes
@@ -438,8 +438,6 @@ All outputs land in the repository directory:
 
 ```
 repository/
-├── {agent_id}.experiment_summary.json     # Run summary (tokens, cost, wall-time, artifact paths)
-├── {agent_id}.checkpoint.json             # Resumable state
 ├── {agent_id}.graph_iter{N}.json.gz       # Knowledge graph snapshot (compressed)
 ├── {agent_id}.graph_iter{N}.png           # Graph visualization (if draw_graph: true)
 ├── {agent_id}.synthesis.{timestamp}/      # Multi-draft synthesis folder (when synthesis_drafts > 1)
@@ -448,11 +446,16 @@ repository/
 │   ├── {agent_id}.merged-2.{ts}.txt       # Merged artifact (if merge enabled)
 │   ├── {agent_id}.synth-eli5-1.{ts}.txt   # ELI5 per draft (if eli5 enabled)
 │   └── metadata.txt                       # Source citation metadata
-└── search_result/                         # Cached web search results
-    └── {query}_{hash}.html
+└── __rome__/                              # Agent log directory
+    ├── {agent_id}.exp_summary.json        # Run summary (tokens, cost, wall-time, artifact paths)
+    ├── {agent_id}.checkpoint.json         # Resumable state
+    ├── {agent_id}.config.yaml             # Resolved config snapshot
+    ├── {agent_id}.console.log             # Run log
+    └── search_result/                     # Cached web search results
+        └── {query}_{hash}.html
 ```
 
-The `experiment_summary.json` contains wall-time, token/cost totals, iterations elapsed, pages visited, artifact paths, and a config snapshot for reproducibility.
+The `exp_summary.json` contains wall-time, token/cost totals, iterations elapsed, pages visited, artifact paths, and a config snapshot for reproducibility.
 
 ## Example Configs
 
@@ -469,7 +472,7 @@ The `experiment_summary.json` contains wall-time, token/cost totals, iterations 
 
 ### Creative Benchmarks (`config/config_creative/`)
 
-Used in the paper's Creative Query Answering evaluation:
+Used in the paper's five creativity challenges:
 
 - `openended_creativity.yaml`: open-ended creative exploration
 - `crossdomain_synthesis.yaml`: cross-domain knowledge synthesis
@@ -595,7 +598,7 @@ The agent stops gracefully when the limit is approached.
 **Bot detection / 403 / Cloudflare blocks**
 - Caesar already uses `curl_cffi` with Chrome TLS impersonation and per-navigation Referer/Sec-Fetch-Site headers
 - For very aggressive bot walls, consider narrowing `allowed_domains` to friendlier sites
-- For academic sites (arxiv, nih, springer), the default 25s timeout should be enough; increase if needed
+- For academic sites (arxiv, nih, springer), the default 30s timeout should be enough; increase if needed
 
 ### Performance Tips
 
@@ -603,7 +606,7 @@ The agent stops gracefully when the limit is approached.
 2. **Tune iterations**: more iterations = more insights but higher cost (the paper shows budget-T correlates monotonically with artifact quality)
 3. **Use checkpoints liberally**: `checkpoint_interval: 10` for long runs
 4. **Domain restriction**: narrow `allowed_domains` to avoid tangents
-5. **Model selection**: Claude Haiku 4.5 or GPT-5.4-mini for cost efficiency; GPT-5.4 or Claude Sonnet 4.5 for quality
+5. **Model selection**: Claude Haiku 4.5 or GPT-5.4-mini for cost efficiency; GPT-5.4 or Claude Sonnet 4.6 for quality
 
 ## Using Caesar in Another Repo (`git subtree`)
 
