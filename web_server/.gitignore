@@ -1,0 +1,56 @@
+# Un-ignore the UI's lib/ folder — the root .gitignore has `lib/` for
+# Python's installable libs directory, which would otherwise gobble up
+# our app code at ui/lib/ (api.ts, useEventSource.ts, utils.ts).
+!ui/lib/
+!ui/lib/**
+
+# Node / Next.js — patterns cover per-instance build dirs (.next-b, etc.)
+ui/node_modules/
+ui/.next/
+ui/.next-*/
+ui/out/
+ui/.turbo/
+ui/.vercel/
+ui/tsconfig.tsbuildinfo
+ui/npm-debug.log*
+ui/yarn-debug.log*
+ui/yarn-error.log*
+ui/pnpm-debug.log*
+
+# Python
+api/.venv/
+api/__pycache__/
+api/**/__pycache__/
+api/**/*.pyc
+api/.pytest_cache/
+api/.mypy_cache/
+api/.ruff_cache/
+api/*.egg-info/
+
+# Run artifacts + SQLite (per-machine data). The live DB is at
+# api/data/caesar_web.sqlite (+ -wal, -shm sidecars when WAL is on);
+# the api/data/ rule covers all of them. The patterns below catch stray
+# copies of any DB file accidentally created at api/ root.
+api/data/
+api/data-*/
+api/caesar*.db
+api/caesar*.sqlite
+api/caesar*.sqlite-journal
+api/caesar*.sqlite-wal
+api/caesar*.sqlite-shm
+
+# Logs
+*.log
+api.log
+ui.log
+.logs/
+.logs-*/
+
+# Editor / OS
+.DS_Store
+.idea/
+.vscode/
+
+# Env
+.env
+.env.local
