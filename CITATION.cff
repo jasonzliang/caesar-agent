@@ -13,8 +13,8 @@ authors:
   - family-names: "Miikkulainen"
     given-names: "Risto"
     affiliation: "The University of Texas at Austin / Cognizant AI Lab"
-repository-code: "https://github.com/cognizant-ai-lab/caesar-agent"
-url: "https://github.com/cognizant-ai-lab/caesar-agent"
+repository-code: "https://github.com/jasonzliang/caesar-agent"
+url: "https://github.com/jasonzliang/caesar-agent"
 license: Apache-2.0
 version: "0.4.11"
 date-released: "2026-08-06"

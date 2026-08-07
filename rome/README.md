@@ -108,7 +108,7 @@ Lightweight workflow for code exploration and analysis:
 #### From Source
 
 ```bash
-git clone https://github.com/cognizant-ai-lab/caesar-agent.git
+git clone https://github.com/jasonzliang/caesar-agent.git
 cd caesar-agent
 pip install -e .
 pip install -e .[dev]  # Include development dependencies

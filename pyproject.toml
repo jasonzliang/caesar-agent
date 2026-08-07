@@ -40,11 +40,11 @@ keywords = [
 dynamic = ["dependencies"]
 
 [project.urls]
-Homepage = "https://github.com/cognizant-ai-lab/caesar-agent"
-Repository = "https://github.com/cognizant-ai-lab/caesar-agent"
-Issues = "https://github.com/cognizant-ai-lab/caesar-agent/issues"
+Homepage = "https://github.com/jasonzliang/caesar-agent"
+Repository = "https://github.com/jasonzliang/caesar-agent"
+Issues = "https://github.com/jasonzliang/caesar-agent/issues"
 Paper = "https://arxiv.org/abs/2604.20855"
-Changelog = "https://github.com/cognizant-ai-lab/caesar-agent/releases"
+Changelog = "https://github.com/jasonzliang/caesar-agent/releases"
 
 [project.optional-dependencies]
 dev = [

@@ -13,7 +13,7 @@
   <a href="https://arxiv.org/abs/2604.20855"><img alt="Paper" src="https://img.shields.io/badge/paper-arXiv%202604.20855-b31b1b"></a>
   <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00CCBB?logo=researchgate&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache_2.0-blue"></a>
-  <a href="https://github.com/cognizant-ai-lab/caesar-agent/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/cognizant-ai-lab/caesar-agent"></a>
+  <a href="https://github.com/jasonzliang/caesar-agent/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/jasonzliang/caesar-agent"></a>
 </p>
 
 **Caesar** is an autonomous AI research agent that navigates the web, reasons over a dynamic knowledge graph, and synthesizes novel, grounded answers. In blinded LLM-as-a-Judge creativity evaluations, Caesar scored **26.96 / 30** on the headline full-answers configuration, beating the runner-up (Gemini 3 Deep Research, 23.78) by **3.18 points** and outscoring GPT-5.2 Deep Research (15.74) by over **11 points**. Statistically significant at **p < 0.001** with large Cliff's δ effect sizes (≥ 0.76), and validated by an independent 23-rater human study.
@@ -35,7 +35,7 @@ caesar regular -q "your research question"
 **From source:**
 
 ```bash
-git clone https://github.com/cognizant-ai-lab/caesar-agent.git
+git clone https://github.com/jasonzliang/caesar-agent.git
 cd caesar-agent && pip install -e .
 export OPENAI_API_KEY=your_key
 python caesar/run_agent.py regular -q "your research question"
@@ -179,8 +179,8 @@ Yes. Configs, judge rubrics, and evaluation scripts are in `caesar/config/` and 
 ## Contributing & Community
 
 - ⭐ **Star the repo** if Caesar is useful for your research
-- 💬 **[Open a Discussion](https://github.com/cognizant-ai-lab/caesar-agent/discussions)** for ideas, questions, or use cases
-- 🐛 **[File an Issue](https://github.com/cognizant-ai-lab/caesar-agent/issues)** for bugs or feature requests
+- 💬 **[Open a Discussion](https://github.com/jasonzliang/caesar-agent/discussions)** for ideas, questions, or use cases
+- 🐛 **[File an Issue](https://github.com/jasonzliang/caesar-agent/issues)** for bugs or feature requests
 - 🔧 **PRs welcome**, especially new exploration policies, synthesis strategies, and benchmark domains
 
 ### Good places to start a fork
@@ -191,7 +191,7 @@ Yes. Configs, judge rubrics, and evaluation scripts are in `caesar/config/` and 
 | Add a new web-search backend (Tavily, Exa, Serper, …) | 2–3 hrs |
 | Experiment with multi-agent synthesis (ring or debate merge) | 4–6 hrs |
 
-If you fork Caesar for your own work, [open a Discussion](https://github.com/cognizant-ai-lab/caesar-agent/discussions) — we'd love to see what you build.
+If you fork Caesar for your own work, [open a Discussion](https://github.com/jasonzliang/caesar-agent/discussions) — we'd love to see what you build.
 
 ## Citation
 

@@ -73,7 +73,7 @@ pip install caesar-agent
 From source (for development):
 
 ```bash
-git clone https://github.com/cognizant-ai-lab/caesar-agent.git
+git clone https://github.com/jasonzliang/caesar-agent.git
 cd caesar-agent && pip install -e .
 ```
 

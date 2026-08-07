@@ -220,14 +220,14 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
-[0.4.11]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.11
-[0.4.10]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.10
-[0.4.9]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.9
-[0.4.8]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.8
-[0.4.7]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.7
-[0.4.6]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.6
-[0.4.5]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.5
-[0.4.4]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.4
-[0.4.0]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.4.0
-[0.3.0]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.3.0
-[0.2.0]: https://github.com/cognizant-ai-lab/caesar-agent/releases/tag/0.2.0
+[0.4.11]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.11
+[0.4.10]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.10
+[0.4.9]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.9
+[0.4.8]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.8
+[0.4.7]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.7
+[0.4.6]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.6
+[0.4.5]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.5
+[0.4.4]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.4
+[0.4.0]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.0
+[0.3.0]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.3.0
+[0.2.0]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.2.0

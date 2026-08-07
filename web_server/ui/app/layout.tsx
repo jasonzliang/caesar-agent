@@ -153,7 +153,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <>
                     {' · '}
                     <a
-                      href="https://github.com/cognizant-ai-lab/caesar-agent"
+                      href="https://github.com/jasonzliang/caesar-agent"
                       target="_blank"
                       rel="noopener"
                       className="hover:underline"
@@ -167,7 +167,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <>
                     {' · '}
                     <a
-                      href={`https://github.com/cognizant-ai-lab/caesar-agent/commit/${commit}`}
+                      href={`https://github.com/jasonzliang/caesar-agent/commit/${commit}`}
                       target="_blank"
                       rel="noopener"
                       className="hover:underline"
