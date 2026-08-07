@@ -227,4 +227,4 @@ If you use Caesar in your research, please cite:
 
 ## License
 
-Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).
+Apache License 2.0. See [LICENSE](LICENSE).
