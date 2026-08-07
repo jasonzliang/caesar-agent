@@ -1,6 +1,8 @@
 <p align="center">
-  <img src="https://img.freepik.com/premium-photo/ancient-rome-sunset-scenery-buildings-ruins-summer-beautiful-sunny-panorama-historical-city-houses-sun-sky-concept-roman-empire-antique-painting-background_788189-12960.jpg" alt="Rome" width="500"/>
+  <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/d/d6/Roman_Ruins_%28Giovanni_Paolo_Panini%29_-_Nationalmuseum_-_94378.tif/lossy-page1-960px-Roman_Ruins_%28Giovanni_Paolo_Panini%29_-_Nationalmuseum_-_94378.tif.jpg" alt="Roman Ruins by Giovanni Paolo Panini" width="500"/>
 </p>
+
+<p align="center"><sub><a href="https://commons.wikimedia.org/wiki/File:Roman_Ruins_(Giovanni_Paolo_Panini)_-_Nationalmuseum_-_94378.tif">Roman Ruins</a>, Giovanni Paolo Panini (1691–1765) — public domain, via Wikimedia Commons / Nationalmuseum</sub></p>
 
 # Rome
 

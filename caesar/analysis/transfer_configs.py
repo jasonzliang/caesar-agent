@@ -5,7 +5,7 @@ import os
 
 import networkx as nx
 
-from prepare_artifact import find_synthesis, DEFAULT_CONFIG, CATEGORIES
+from caesar.analysis.prepare_artifact import find_synthesis, DEFAULT_CONFIG, CATEGORIES
 
 
 # ---------------------------------------------------------------------------
