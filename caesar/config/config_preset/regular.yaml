@@ -41,8 +41,12 @@ ArtifactSynthesizer:
 # LLM CONFIGURATION
 # ============================================================================
 LLMHandler:
-  model: gpt-5.6-terra
-  reasoning_effort: low
+  # Synthesis runs through the agent's handler (exploration has its own override
+  # above), so this is the synthesis model.
+  model: gpt-5.6-sol
+  reasoning_effort: medium
+  # Override the 900s default: sol needs the extra headroom, same as deepest.yaml.
+  timeout: 1200
 
 # ============================================================================
 # KNOWLEDGE BASE CONFIGURATION

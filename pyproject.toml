@@ -1,10 +1,10 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+requires = ["setuptools>=77.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name = "caesar-agent"
-version = "0.4.12"
+version = "0.4.13"
 authors = [
     {name = "Jason Liang"},
     {name = "Elliot Meyerson"},
@@ -15,13 +15,15 @@ maintainers = [
 ]
 description = "Caesar: autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis."
 readme = "README.md"
-license = {text = "Apache-2.0"}
+license = "Apache-2.0"
+# Explicit, not setuptools' default glob: Apache-2.0 4(a) requires the licence
+# to travel with redistributions, and that should not depend on a default.
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10,<3.14"
 classifiers = [
     "Development Status :: 4 - Beta",
     "Intended Audience :: Developers",
     "Intended Audience :: Science/Research",
-    "License :: OSI Approved :: Apache Software License",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
     "Programming Language :: Python :: 3.12",
@@ -47,6 +49,12 @@ Paper = "https://arxiv.org/abs/2604.20855"
 Changelog = "https://github.com/jasonzliang/caesar-agent/releases"
 
 [project.optional-dependencies]
+# Prompt compression. Pulls torch + transformers (~730MB); the code path is a
+# lazy import guarded by ImportError, so the package works fully without it.
+compress = ["llmlingua"]
+# EvalPlus benchmark harness. Only benchmark/ imports it, and benchmark/ is
+# export-ignored, so nothing in the wheel needs it.
+benchmark = ["evalplus"]
 dev = [
     "pytest-cov>=4.1.0",
     "black>=23.0.0",

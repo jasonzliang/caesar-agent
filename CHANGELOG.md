@@ -2,6 +2,37 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.13] — 2026-08-07
+
+### Changed
+
+- Install footprint cut by roughly 730MB. `llmlingua` pulled torch,
+  transformers, sympy, accelerate, tokenizers, safetensors and nltk for a
+  feature reached through one lazy import that already fails gracefully without
+  it; it is now the `compress` extra. `evalplus` moves to the `benchmark` extra
+  -- only `benchmark/` imports it, and that directory is export-ignored, so
+  nothing in the wheel ever needed it. `tabulate` and `colorama` are dropped
+  outright: neither is imported anywhere in `rome/` or `caesar/`.
+- Licence declared as a PEP 639 SPDX expression rather than the deprecated TOML
+  table, with `license-files` stated explicitly instead of relying on
+  setuptools' default glob. Metadata now carries `License-Expression`, and the
+  build emits no deprecation warnings. Build floor raised to `setuptools>=77`.
+- `regular` preset synthesises with `gpt-5.6-sol` at medium reasoning effort,
+  with the timeout raised to 1200s to match `deepest`. Exploration stays on
+  `gpt-5.6-terra` at low effort.
+
+### Fixed
+
+- Preset cost figures in 0.4.12's published description were wrong. `regular` is
+  ~$5-$10 and `mini` ~$2, as before; 0.4.12 shipped inflated estimates that
+  cannot be corrected in place, since a PyPI description is immutable.
+- `release.sh` tags HEAD from the pyproject version instead of requiring a tag to
+  exist. The old behaviour published whatever an existing tag pointed at, so
+  commits made after tagging were dropped from the release without warning. It
+  now refuses a dirty tree, refuses to move a tag whose version is already on
+  PyPI, and fails rather than silently skipping when `--pypi` targets a
+  published version.
+
 ## [0.4.12] — 2026-08-07
 
 ### Fixed
@@ -248,6 +279,7 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
+[0.4.13]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.13
 [0.4.12]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.12
 [0.4.11]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.11
 [0.4.10]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.10
