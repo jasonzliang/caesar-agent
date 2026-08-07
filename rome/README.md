@@ -40,9 +40,10 @@ Lightweight workflow for code exploration and analysis:
 1. **IDLE → CODE_LOADED**: Search and examine code files
 2. **CODE_LOADED → IDLE**: Reset and repeat for iterative analysis
 
-#### Knowledge Base FSM (7-State Cycle)
-`fsm_type: "knowledge_base"` — the simple lifecycle plus multiple action
-variants per phase and a knowledge-base save step before returning to IDLE.
+#### Knowledge Base FSM
+`fsm_type: "knowledge_base"` — the simple lifecycle plus a second pass/fail
+state pair and a knowledge-base save step before returning to IDLE. (The
+builder's own description says "7-states"; it wires eight.)
 
 ## Key Features
 

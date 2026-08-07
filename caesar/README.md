@@ -20,7 +20,7 @@ See the [repo root README](../README.md) for benchmark results and project overv
 - [Example Configs](#example-configs)
 - [Advanced Usage](#advanced-usage)
 - [Troubleshooting](#troubleshooting)
-- [Using Caesar in Your Project Repo](#using-caesar-in-your-project-repo)
+- [Using Caesar in Another Repo](#using-caesar-in-another-repo-git-subtree)
 
 ## Overview
 
