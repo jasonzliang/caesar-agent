@@ -2,6 +2,38 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.15] — 2026-08-07
+
+### Fixed
+
+- Agent shutdown no longer kills unrelated subprocesses. `shutdown_processes`
+  walked `psutil.Process(parent_pid).children(recursive=True)`, so every
+  per-run `agent.shutdown()` swept the host's entire descendant tree and
+  SIGTERMed sibling processes — including the shared Chroma, which
+  cascade-failed every concurrent run's KB calls with `ConnectError`. Recorded
+  in `chroma.log` on 2026-07-30 (×2), 08-01, 08-02, 08-06 and 08-07 (×2), each
+  immediately after a run's shutdown line. `ProcessManager` now reaps only
+  subprocesses an agent explicitly tracked; `BaseAgent` tracks none, so
+  embedded agents shut down without touching anything they do not own.
+  Process-lifetime infrastructure is still cleaned up at interpreter exit via
+  the existing `atexit` hook, so nothing leaks.
+- Chroma startup is serialized behind a lock. Two concurrent observers of
+  `is_running=False` could both spawn a server and race for :8091, which is how
+  two instances ended up in the tree and why the old reaper fired paired
+  SIGTERMs 65–180ms apart.
+- Follow-up runs accept any terminal parent, not only successful ones. Refine
+  and explore need the parent's knowledge base and artifact directory, not a
+  successful synthesis; requiring `completed` forced operators to edit run rows
+  in SQL to recover work. Queued and running parents are still rejected, and
+  `interrupted` joins them since the lifespan boot auto-resumes those and a
+  follow-up would race the resume.
+- Refine runs show the parent's exploration scope instead of `0`. They build no
+  graph of their own, so `graph_node_count` is snapshotted from the parent at
+  submission and preserved at completion, and the live-count overlay is skipped
+  for refine mode rather than stomping the inherited value back to a
+  placeholder.
+- Grammar slip in an LLM-facing exploration-strategy prompt.
+
 ## [0.4.14] — 2026-08-07
 
 ### Fixed
@@ -299,6 +331,7 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
+[0.4.15]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.15
 [0.4.14]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.14
 [0.4.13]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.13
 [0.4.12]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.12

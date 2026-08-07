@@ -547,7 +547,7 @@ Respond with a JSON object in this exact format:
         if not task_inputs: task_inputs = "the paths available"
 
         query_suffix = " for the starting query" if anchor_link_select else ""
-        goal_suffix = f"deepens understanding and is an promising/novel direction to visit{query_suffix}"
+        goal_suffix = f"deepens understanding and is a promising/novel direction to visit{query_suffix}"
 
         prompt = f"""You are selecting the next webpage link to explore{query_section}
 

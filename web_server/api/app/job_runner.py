@@ -684,7 +684,17 @@ class JobPool:
             # diverge whenever the agent discovered but didn't visit links.
             kg_nodes = state.live_graph_node_count
             if mode == "refine":
-                graph_node_count = None
+                # Refines don't build their own graph — inherit the parent's
+                # exploration scope so the listing reflects the actual work
+                # (routers/runs.py snapshots parent.graph_node_count onto the
+                # child row at submission; preserve that value here rather
+                # than overwriting to None, which reads as "0 nodes" in the UI
+                # and hides the parent's exploration entirely).
+                async with SessionLocal() as session:
+                    existing = await session.get(Run, run_id)
+                    graph_node_count = (
+                        existing.graph_node_count if existing else None
+                    )
             else:
                 graph_node_count = kg_nodes if kg_nodes else meta.get("pages_visited")
 

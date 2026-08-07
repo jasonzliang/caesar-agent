@@ -185,7 +185,12 @@ def _summary_from(run: Run) -> RunSummary:
         live_cost, live_graph_node_count = job_pool.live_metrics(run.id)
         if live_cost is not None:
             summary.total_cost_usd = live_cost
-        if live_graph_node_count is not None:
+        # Live overlay of graph_node_count is meaningful only for modes that
+        # actually build a graph (mode=new / mode=explore). Refines synthesize
+        # over the parent's KB — their own agent's graph is just a 1-node
+        # placeholder — so overlaying it stomps on the parent's exploration
+        # scope that was inherited at submission (see routers/runs.py:418).
+        if live_graph_node_count is not None and run.mode != "refine":
             summary.graph_node_count = live_graph_node_count
     return summary
 
@@ -338,8 +343,16 @@ async def create_run(
             )
         synthesis_model = body.synthesis_model
 
-    # Follow-up validation. Require a completed parent: a failed parent may
-    # have no synthesis to seed from and only a partially-populated KB.
+    # Follow-up validation. Parent must be terminal (done exploring) and have
+    # an artifact directory. Both completed and failed parents are acceptable
+    # follow-up targets: refine mode re-synthesizes over the parent's KB —
+    # which is populated by exploration, not by whether synthesis succeeded —
+    # and explore mode extends that KB with fresh navigation. A failed parent
+    # whose synthesis crashed still has a fully-populated KB from its explore
+    # phase (see chroma-core/chroma#4038 cascade victims on 2026-08-07). The
+    # previous check rejected all non-completed parents, forcing operators to
+    # manually flip failed rows to completed in SQL — dishonest and hard to
+    # audit. Only queued/running parents are refused (still exploring).
     parent: Run | None = None
     if body.mode != "new":
         if not body.parent_run_id:
@@ -360,12 +373,21 @@ async def create_run(
             raise HTTPException(
                 status_code=404, detail=f"Parent run {body.parent_run_id!r} not found."
             )
-        if parent.status != RunStatus.completed.value:
+        # Only truly-terminal parents (completed/failed) are safe. queued and
+        # running haven't finished exploring; `interrupted` is transient — the
+        # lifespan boot resubmits interrupted runs (see models.RunStatus doc),
+        # so refining one would race with the auto-resume.
+        _NON_TERMINAL = {
+            RunStatus.queued.value,
+            RunStatus.running.value,
+            RunStatus.interrupted.value,
+        }
+        if parent.status in _NON_TERMINAL:
             raise HTTPException(
                 status_code=409,
                 detail=(
-                    "Follow-ups require a completed parent run "
-                    f"(current status: {parent.status})."
+                    "Follow-ups require the parent to be terminal (still "
+                    f"{parent.status}). Wait for it or cancel first."
                 ),
             )
         if not parent.repository:
@@ -398,6 +420,15 @@ async def create_run(
         collection_name = parent.collection_name or f"web_{parent.id}"
     else:
         collection_name = f"web_{run_id}"
+    # Snapshot the parent's graph_node_count onto the child at submission so
+    # refine follow-ups display a meaningful "exploration scope" number in the
+    # listing (they don't build their own graph — their value derives entirely
+    # from the parent's exploration). Persisting the snapshot here means the
+    # info survives even if the parent is later deleted. `_run`'s completion
+    # path preserves this value for refine mode instead of overwriting to None.
+    inherited_node_count = None
+    if body.mode != "new" and parent is not None:
+        inherited_node_count = parent.graph_node_count
     run = Run(
         id=run_id,
         query=body.query,
@@ -411,6 +442,7 @@ async def create_run(
         parent_run_id=body.parent_run_id if body.mode != "new" else None,
         mode=body.mode,
         collection_name=collection_name,
+        graph_node_count=inherited_node_count,
         owner_id=owner,
         created_at=datetime.now(timezone.utc),
     )
