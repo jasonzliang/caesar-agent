@@ -4,7 +4,6 @@
 # `InvalidRequirement: Expected package name at the start of dependency specifier`.
 
 # Rome Core Packages
-colorama
 litellm
 networkx
 numpy
@@ -43,7 +42,6 @@ pypdf
 # imports yaml directly (rome/config.py, rome/base_agent.py, web_server/api/app/config.py,
 # benchmark/evalplus_multi_agent.py), so it has to be declared here now.
 pyyaml>=6.0
-tabulate
 tenacity
 trafilatura>=2.1.0  # PR #856 fixes Document() mutable-default lxml-element race that segfaulted under ThreadPoolExecutor
 
@@ -57,9 +55,10 @@ requests
 rich
 
 # Rome Optional Packages
-evalplus
+# NB llmlingua (prompt compression) and evalplus (benchmark harness) moved to
+# pyproject [project.optional-dependencies]. llmlingua alone pulls torch and
+# transformers -- ~730MB for a feature reached through one lazy import.
 graphviz
-llmlingua
 # ribs
 tiktoken
 xxhash

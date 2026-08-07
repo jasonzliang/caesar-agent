@@ -57,7 +57,7 @@ same whether you installed from PyPI or from source. Running
 `python caesar/run_agent.py regular -q "..."` directly also works if you would
 rather not install at all.
 
-- **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$3–$5), `regular` (deep, ~$15–$25). Exploration dominates the cost, not synthesis, so the figure tracks `max_iterations` and whether quick-explore is on. Estimates: the only measured runs on this pricing tier are 1000-iteration ones at $50–$68.
+- **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$2), `regular` (deep, ~$5–$10). Costs scale with synthesis output tokens, so treat these as order-of-magnitude.
 - **Output** — `~/.caesar/result/` when installed from PyPI; `caesar/result/` when run from a source checkout. Override either with `CAESAR_RESULT_DIR`.
 - **Optional API keys** — `BRAVE_API_KEY` (higher-quality web search), `ANTHROPIC_API_KEY` (Claude), `GOOGLE_API_KEY` (Gemini)
 - **More** — see [`caesar/README.md`](caesar/README.md) for the full env-var list, custom configs in `~/.caesar/configs/`, and the `pygraphviz` / system graphviz dependency.
@@ -183,7 +183,7 @@ No. Caesar uses hosted LLM APIs (OpenAI, Anthropic). A local ChromaDB instance h
 OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6), Google (Gemini 3.x), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.
 
 **How much does a typical run cost?**
-A 5-iteration exploration with GPT-5.4-mini (`caesar/config/config_test/single_agent_test.yaml`) runs at roughly $0.30 and 10 minutes. A 250-iteration deep run on the `regular` preset is roughly $15–$25.6-terra`) is typically $5–$10.
+A 5-iteration exploration with GPT-5.4-mini (`caesar/config/config_test/single_agent_test.yaml`) runs at roughly $0.30 and 10 minutes. A 250-iteration deep run with the `regular` preset (`gpt-5.6-terra` exploration, `gpt-5.6-sol` synthesis) is typically $5–$10.
 
 **Can I reproduce the benchmarks?**
 Yes. Configs, judge rubrics, and evaluation scripts are in `caesar/config/` and `caesar/analysis/`.
