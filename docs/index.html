@@ -567,8 +567,8 @@
       <!-- <a href="https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.12" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/release-0.4.12-brightgreen" alt="Release"></a> -->
     </div>
     <figure class="hero-figure">
-      <img class="hero-img" src="caesar.webp" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
-      <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1: Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2: Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a Generator–Verifier loop refines it via adversarial query refinement and draft merging.</figcaption>
+      <img class="hero-img" src="caesar.webp" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a adversarial refinement loop with adversarial query refinement and draft merging">
+      <figcaption><strong>Caesar's two-phase architecture.</strong> <strong>(Left) Phase 1: Deep Web Exploration.</strong> A dynamic policy drives a Perceive–Think–Act loop that traverses the web and writes insights into a knowledge graph and vector store. <strong>(Right) Phase 2: Adversarial Artifact Synthesis.</strong> Insights are recalled to draft an answer, then a adversarial refinement loop refines it via adversarial query refinement and draft merging.</figcaption>
     </figure>
     <div class="stat-strip" aria-label="Headline benchmark results">
       <div class="stat">
@@ -592,7 +592,7 @@
     <strong>Read the paper:</strong> <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener"><em>Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis</em></a> &middot; <a href="https://jasonzliang.github.io/" target="_blank" rel="noopener">Liang</a>, Meyerson, Miikkulainen, 2026 &middot; <a href="https://doi.org/10.48550/arXiv.2604.20855" target="_blank" rel="noopener">DOI</a> &middot; <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">PDF</a>
   </div>
 
-  <p><strong>Caesar</strong> is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph, building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.</p>
+  <p><strong>Caesar</strong> is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph, building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial adversarial refinement loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.</p>
 
   <h2 id="why-caesar">Why Caesar?</h2>
   <p>Today's deep-research agents (<strong>ChatGPT Deep Research</strong>, <strong>Perplexity</strong>, <strong>Gemini Deep Research</strong>, <strong>GPT Researcher</strong>) optimize retrieval precision over a flat sequence of documents. On the five creative-reasoning categories in our benchmark we found their answers competent but convergent: they settle early, lose track of what earlier steps established, and land on the consensus reading.</p>
@@ -605,7 +605,7 @@
     </thead>
     <tbody>
       <tr><td>Persistent knowledge graph built during exploration</td><td class="num">✅</td><td class="num">not published</td><td class="num">not published</td><td class="num">❌</td></tr>
-      <tr><td>Adversarial generator–verifier loop over its own drafts</td><td class="num">✅</td><td class="num">not published</td><td class="num">🟡</td><td class="num">🟡</td></tr>
+      <tr><td>Adversarial refinement over its own drafts</td><td class="num">✅</td><td class="num">not published</td><td class="num">🟡</td><td class="num">🟡</td></tr>
       <tr><td>Serialized graph and JSON run log you keep</td><td class="num">✅</td><td class="num">🟡</td><td class="num">🟡</td><td class="num">🟡</td></tr>
       <tr><td>Runs on your own keys and hardware</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">✅</td></tr>
       <tr><td>Works with no setup and no API keys</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">❌</td></tr>
@@ -751,8 +751,8 @@
     <li><strong>Dynamic policy with backtracking.</strong> A navigational stack supports depth-first drill-down until information gain plateaus, then pops back to explore orthogonal branches. The action policy scores candidate URLs using both a global query against <em>KB</em> and the local episodic context, letting Caesar abandon low-value paths the way a human researcher would.</li>
   </ul>
 
-  <h3>2. Adversarial Artifact Synthesis: Generator–Verifier loop</h3>
-  <p>Rather than a single-pass summary, Phase 2 runs as a self-correcting Generator–Verifier loop driven by the knowledge base built in Phase 1.</p>
+  <h3>2. Adversarial Artifact Synthesis</h3>
+  <p>Rather than a single-pass summary, Phase 2 runs as a self-correcting adversarial refinement loop driven by the knowledge base built in Phase 1.</p>
   <ul>
     <li><strong>Recursive insight discovery.</strong> The agent maintains a running context and, at each round, the LLM produces the next critical sub-question (q<sub>t+1</sub>) conditioned on the answer to the previous one (a<sub>t</sub>). Each sub-question is answered by retrieval against <em>KB</em>, so the dependency chain stays grounded in observed sources.</li>
     <li><strong>Adversarial query refinement.</strong> An independent verifier inspects the current draft for logical weaknesses, missing citations, and unsupported claims, then formulates <em>orthogonal</em> queries that target those weaknesses. These queries seed the next draft. This is the mechanism that escapes the consensus basin that traps single-pass LLMs.</li>
