@@ -189,7 +189,7 @@ python run_agent.py nano -q "Novel way to solve ARC-AGI benchmark" --max-iterati
 ### Example: Deep Research Run
 
 ```bash
-# Default preset: 250 iterations, gpt-5.6-terra, ~$5-$10
+# Default preset: 250 iterations, gpt-5.6-terra, ~$15-$25
 python run_agent.py regular -q "Cross-domain creativity research"
 
 # Explicit config + output directory
