@@ -1,6 +1,6 @@
 # Caesar: Autonomous Web Exploration Agent
 
-Caesar is an LLM-powered autonomous agent that explores the web to discover, synthesize, and generate novel insights. It uses a **Perceive-Think-Act** loop to navigate web pages, extract knowledge, build a knowledge graph, and produce synthesis artifacts via an adversarial Generator-Verifier loop.
+Caesar is an LLM-powered autonomous agent that explores the web to discover, synthesize, and generate novel insights. It uses a **Perceive-Think-Act** loop to navigate web pages, extract knowledge, build a knowledge graph, and produce synthesis artifacts via an adversarial adversarial refinement loop.
 
 See the [repo root README](../README.md) for benchmark results and project overview. This document covers configuration, usage modes, and advanced options.
 
@@ -48,7 +48,7 @@ Caesar operates as an "Insight Hunter" rather than a traditional search engine. 
 ## Architecture
 
 <p align="center">
-  <img src="https://jasonzliang.github.io/caesar-agent/caesar.webp" alt="Caesar architecture: Perceive-Think-Act exploration loop feeding a vector knowledge base, and Generator-Verifier adversarial synthesis loop with draft merging and ELI5 post-processing" width="720"/>
+  <img src="https://jasonzliang.github.io/caesar-agent/caesar.webp" alt="Caesar architecture: Perceive-Think-Act exploration loop feeding a vector knowledge base, and adversarial artifact synthesis loop with draft merging and ELI5 post-processing" width="720"/>
 </p>
 
 **Phase 1 (left): Deep Web Exploration.** A dynamic exploration policy controls a three-stage loop (Perceive, Think, Act) to traverse the web and build a knowledge graph + knowledge base from insights.
