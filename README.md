@@ -41,11 +41,6 @@ export OPENAI_API_KEY=your_key
 caesar regular -q "your research question"
 ```
 
-`pip install -e .` installs the `caesar` console script, so the command is the
-same whether you installed from PyPI or from source. Running
-`python caesar/run_agent.py regular -q "..."` directly also works if you would
-rather not install at all.
-
 **In a browser:**
 
 ```bash
@@ -55,7 +50,12 @@ cd web_server && ./launch.sh
 
 The **[Caesar Web Server](web_server/README.md)** is a FastAPI + Next.js GUI that submits runs, streams progress, and renders the live knowledge graph and final artifact.
 
-**Setup notes:**
+## Setup Notes
+
+`pip install -e .` installs the `caesar` console script, so the command is the
+same whether you installed from PyPI or from source. Running
+`python caesar/run_agent.py regular -q "..."` directly also works if you would
+rather not install at all.
 
 - **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$2), `regular` (deep, ~$5–$10). Costs scale with synthesis output tokens, so treat these as order-of-magnitude.
 - **Output** — `~/.caesar/result/` when installed from PyPI; `caesar/result/` when run from a source checkout. Override either with `CAESAR_RESULT_DIR`.
