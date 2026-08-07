@@ -9,11 +9,11 @@
 </p>
 
 <p align="center">
-  <a href="https://caesar.evolution.ml/"><img alt="Live demo" src="https://img.shields.io/badge/live_demo-caesar.evolution.ml-6f42c1"></a>
-  <a href="https://arxiv.org/abs/2604.20855"><img alt="Paper" src="https://img.shields.io/badge/paper-arXiv%202604.20855-b31b1b"></a>
-  <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00CCBB?logo=researchgate&logoColor=white"></a>
-  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache_2.0-blue"></a>
-  <a href="https://github.com/jasonzliang/caesar-agent/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/jasonzliang/caesar-agent"></a>
+  <a href="https://caesar.evolution.ml"><img alt="Live demo" src="https://img.shields.io/badge/Live%20Demo-Try%20Caesar-2ea44f?logo=googlechrome&logoColor=white"></a>
+  <a href="https://arxiv.org/abs/2604.20855"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2604.20855-b31b1b?logo=arxiv&logoColor=white"></a>
+  <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00ccbb?logo=researchgate&logoColor=white"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/License-Apache%202.0-blue?logo=apache&logoColor=white"></a>
+  <a href="https://github.com/jasonzliang/caesar-agent/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/jasonzliang/caesar-agent?logo=github&logoColor=white&label=Last%20Commit&color=181717"></a>
 </p>
 
 **Caesar** is an autonomous AI research agent that navigates the web, reasons over a dynamic knowledge graph, and synthesizes novel, grounded answers. In blinded LLM-as-a-Judge creativity evaluations, Caesar scored **26.96 / 30** on the headline full-answers configuration, beating the runner-up (Gemini 3 Deep Research, 23.78) by **3.18 points** and outscoring GPT-5.2 Deep Research (15.74) by over **11 points**. Cliff's δ effect sizes are uniformly large (**≥ 0.76**, well above the 0.47 large-effect threshold), and the result is corroborated by an independent 23-rater human study.
