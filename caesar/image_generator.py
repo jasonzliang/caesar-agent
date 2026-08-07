@@ -491,7 +491,7 @@ class ImageGenerator:
     def _load_run(self, run_dir: Path) -> Dict:
         """Load final artifact text + cited URL list from a Caesar run directory.
 
-        Searches recursively for synthesis*.txt and experiment_summary.json so it
+        Searches recursively for synthesis*.txt and the exp summary JSON so it
         handles both root-level and __rome__/ subdir layouts.
         """
         run_dir = Path(run_dir).resolve()
@@ -512,9 +512,11 @@ class ImageGenerator:
         if not artifact_text.strip():
             raise ValueError(f"Artifact {artifact_path} is empty; nothing to generate from")
 
-        # experiment_summary may carry structured sources/visited_urls.
+        # The exp summary may carry structured sources/visited_urls. run_agent.py
+        # writes "<exp_id>.exp_summary.json"; the older "experiment_summary"
+        # spelling is matched too so pre-0.4 run dirs still resolve.
         summary: Dict = {}
-        for p in run_dir.rglob("*experiment_summary*.json"):
+        for p in (*run_dir.rglob("*exp_summary*.json"), *run_dir.rglob("*experiment_summary*.json")):
             try:
                 summary = json.loads(p.read_text(encoding="utf-8"))
                 break
