@@ -2,6 +2,32 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.16] — 2026-08-07
+
+### Fixed
+
+- An unparseable rerank no longer discards the entire retrieval. `LLMRerank`
+  reads `Doc: N, Relevance: M` lines, so anything that makes a batch
+  unparseable — an off-format reply, or empty content because a reasoning model
+  spent its completion budget on reasoning tokens — yielded zero nodes. The
+  synthesizer was then handed no context and answered `Empty Response` with no
+  sources, which from the outside is indistinguishable from a genuinely empty
+  knowledge base: a 232-document KB could answer an on-topic question with
+  nothing. When the rerank returns empty but retrieval did not, the top `top_n`
+  in embedding order are used instead and a warning is logged, so a broken
+  reranker stays visible rather than being papered over. Note this is distinct
+  from an unreachable Chroma, which `query()`'s broad exception handler still
+  reports as an empty KB.
+
+### Changed
+
+- The bare `gpt-5.6` alias is removed from the model tables. It routed to
+  `-sol`, so it listed one model twice under two names and hid which tier — and
+  which price — was being selected. Safe to remove rather than merely unlist: no
+  run in either database ever recorded it, pricing consults litellm's live map
+  before this table, and reasoning-model detection resolves any `gpt-5*` by
+  prefix. Name the tier explicitly instead.
+
 ## [0.4.15] — 2026-08-07
 
 ### Fixed
@@ -331,6 +357,7 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
+[0.4.16]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.16
 [0.4.15]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.15
 [0.4.14]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.14
 [0.4.13]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.13

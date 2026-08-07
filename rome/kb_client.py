@@ -571,6 +571,26 @@ class ChromaClientManager:
         # Use LLMRerank to rerank nodes
         reranked_nodes = self.reranker.postprocess_nodes(nodes, query_str=question)
 
+        # Never let the reranker throw away the whole retrieval. LLMRerank
+        # parses the LLM's "Doc: N, Relevance: M" lines, so anything that makes
+        # a batch unparseable -- an off-format reply, or empty content because a
+        # reasoning model spent its completion budget on reasoning tokens --
+        # silently yields zero nodes. The synthesizer is then handed no context
+        # at all and answers "Empty Response" with zero sources, which is
+        # indistinguishable from a genuinely empty knowledge base.
+        #
+        # Falling back to the embedding order is strictly better than answering
+        # from nothing: these nodes are the top similarity matches that were
+        # about to be reranked, not arbitrary ones. A real "nothing is relevant"
+        # verdict on an on-topic query is far less likely than a parse failure,
+        # and this is logged at warning so the distinction stays visible.
+        if not reranked_nodes and nodes:
+            self.logger.warning(
+                "LLMRerank returned 0 of %d nodes; falling back to the top %d "
+                "by embedding similarity so the answer keeps its sources.",
+                len(nodes), top_n)
+            reranked_nodes = nodes[:top_n]
+
         # Build context from reranked nodes
         # context = "\n\n".join([node.node.get_content() for node in reranked_nodes])
 

@@ -139,19 +139,32 @@ async def test_dry_run_lifecycle_completes(client):
     assert r.status_code == 201, r.text
     run_id = r.json()["id"]
 
-    # Poll until terminal.
+    # Poll until terminal AND the terminal event has landed. The status update
+    # and the `done` event are separate commits (_run does _update_status then
+    # _emit), so under load a run reads as completed a beat before its `done`
+    # row is visible -- which failed this test roughly one run in three.
+    #
+    # Waiting for both is the honest assertion: nothing in the app requires
+    # them to be atomic. The UI decides completion from run.status
+    # (LiveProgress isTerminal), and SSE clients receive `done` from the
+    # in-memory queue rather than this table. Asserting a particular
+    # interleaving would be asserting a guarantee the design never made.
     final = None
     for _ in range(40):  # up to ~10s
         await asyncio.sleep(0.25)
-        rg = await client.get(f"/runs/{run_id}")
-        if rg.json()["status"] in ("completed", "failed"):
-            final = rg.json()
+        body = (await client.get(f"/runs/{run_id}")).json()
+        # A failed run emits `error`, not `done`; break so the status assertion
+        # below reports the real failure instead of timing out.
+        if body["status"] == "failed" or (
+            body["status"] == "completed"
+            and any(e["event"] == "done" for e in body["events"])
+        ):
+            final = body
             break
-    assert final is not None, "run did not finish in time"
+    assert final is not None, "run did not finish (or emit `done`) in time"
     assert final["status"] == "completed", final
     assert final["finished_at"] is not None
     assert any(e["event"] == "iteration" for e in final["events"])
-    assert any(e["event"] == "done" for e in final["events"])
 
     rs = await client.get(f"/runs/{run_id}/synthesis", params={"draft": "latest"})
     assert rs.status_code == 200

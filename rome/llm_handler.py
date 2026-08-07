@@ -71,8 +71,9 @@ class LLMHandler:
         # OpenAI GPT-5 series. gpt-5.5 surcharges 2x input / 1.5x output when
         # the prompt exceeds 272K tokens for the whole session; that band is
         # not modelled here (estimates would be off only in long-context runs).
-        # GPT-5.6 family (Jul 2026): the bare `gpt-5.6` alias routes to -sol.
-        "gpt-5.6": {"input": 5.0, "output": 30.0},
+        # GPT-5.6 family (Jul 2026). The bare `gpt-5.6` alias is deliberately
+        # absent: it routes to -sol, so carrying it here offered one model under
+        # two names and hid which tier was being bought. Name the tier.
         "gpt-5.6-sol": {"input": 5.0, "output": 30.0},
         # luna/terra/sol are the 5.6 tiers, 1:10:25 on input. Both of these were
         # entered too high (luna 5x, terra 1.25x) which made every Luna run look
@@ -121,7 +122,6 @@ class LLMHandler:
     MODEL_CONTEXT_SIZE = {
         # OpenAI GPT-5 series
         # GPT-5.6 family: 1.05M context across sol/terra/luna (per OpenAI docs).
-        "gpt-5.6": 1050000,
         "gpt-5.6-sol": 1050000,
         "gpt-5.6-terra": 1050000,
         "gpt-5.6-luna": 1050000,
@@ -166,7 +166,7 @@ class LLMHandler:
     # _is_reasoning_model also falls back to a `gpt-5*` prefix match so any
     # future GPT-5.x release (e.g. 5.6, 5.7) is auto-detected.
     REASONING_MODELS = {
-        "gpt-5.6", "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5-pro", "gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-5.4-mini", "gpt-5-mini", "gpt-5-nano", "gpt-5-pro", "o1", "o1-mini", "o1-pro", "o3", "o3-mini", "o4-mini",
+        "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5-pro", "gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-5.4-mini", "gpt-5-mini", "gpt-5-nano", "gpt-5-pro", "o1", "o1-mini", "o1-pro", "o3", "o3-mini", "o4-mini",
     }
 
     # Unique identifier for chat completion requests
