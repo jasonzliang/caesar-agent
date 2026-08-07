@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="#quickstart"><img alt="Python 3.10-3.13" src="https://img.shields.io/badge/python-3.10--3.13-blue"></a>
+  <a href="https://caesar.evolution.ml/"><img alt="Live demo" src="https://img.shields.io/badge/live_demo-caesar.evolution.ml-6f42c1"></a>
   <a href="https://arxiv.org/abs/2604.20855"><img alt="Paper" src="https://img.shields.io/badge/paper-arXiv%202604.20855-b31b1b"></a>
   <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00CCBB?logo=researchgate&logoColor=white"></a>
   <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache_2.0-blue"></a>
@@ -57,6 +57,7 @@ same whether you installed from PyPI or from source. Running
 `python caesar/run_agent.py regular -q "..."` directly also works if you would
 rather not install at all.
 
+- **Python** — 3.10 through 3.13
 - **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$2), `regular` (deep, ~$5–$10). Costs scale with synthesis output tokens, so treat these as order-of-magnitude.
 - **Output** — `~/.caesar/result/` when installed from PyPI; `caesar/result/` when run from a source checkout. Override either with `CAESAR_RESULT_DIR`.
 - **Optional API keys** — `BRAVE_API_KEY` (higher-quality web search), `ANTHROPIC_API_KEY` (Claude), `GOOGLE_API_KEY` (Gemini)
