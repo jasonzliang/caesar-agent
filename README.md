@@ -87,10 +87,10 @@ Caesar is different:
 | Open source | ✅ | ❌ | ❌ | ✅ |
 | Dynamic knowledge graph | ✅ | ❌ | ❌ | ❌ |
 | Adversarial Generator–Verifier loop | ✅ | ❌ | ❌ | ❌ |
-| Multi-draft synthesis with merge | ✅ | ❌ | ❌ | Partial¹ |
+| Multi-draft synthesis with merge | ✅ | ❌ | ❌ | 🟡¹ |
 | Episodic memory + backtracking | ✅ | ❌ | ❌ | ❌ |
 | Pluggable LLM backend (OpenAI / Anthropic / local) | ✅ | ❌ | ❌ | ✅ |
-| Reproducible experiment JSON | ✅ | ❌ | ❌ | Partial² |
+| Reproducible experiment JSON | ✅ | ❌ | ❌ | 🟡² |
 
 <sub>¹ GPT Researcher supports multi-draft generation but not adversarial self-critique or merge. ² GPT Researcher logs cost per run but not the full reproducibility bundle (wall-time, page-level sources, draft provenance).</sub>
 
