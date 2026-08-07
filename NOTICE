@@ -6,8 +6,7 @@ and Risto Miikkulainen.
 
 The copyright above covers this software. The accompanying paper, "Caesar:
 Deep Agentic Web Exploration for Creative Answer Synthesis" (arXiv:2604.20855),
-is a Cognizant AI Lab technical report and is cited separately; see
-CITATION.cff.
+is a Cognizant AI Lab technical report and is cited separately.
 
 Licensed under the Apache License, Version 2.0 (the "License").
 You may obtain a copy of the License in the LICENSE file in this
