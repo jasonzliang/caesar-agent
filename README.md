@@ -52,18 +52,20 @@ The **[Caesar Web Server](web_server/README.md)** is a FastAPI + Next.js GUI tha
 
 ## Setup Notes
 
-`pip install -e .` installs the `caesar` console script, so the command is the
-same whether you installed from PyPI or from source. Running
-`python caesar/run_agent.py regular -q "..."` directly also works if you would
-rather not install at all.
+Both install paths give you the same `caesar` console script, so every command in
+this README behaves identically whether you came from PyPI or from a checkout.
+From a checkout you can also skip the script entirely and run
+`python caesar/run_agent.py regular -q "..."` — that still needs the dependencies
+(`pip install -r requirements.txt`), just not the package itself.
 
 - **Python** — 3.10 through 3.13
-- **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$2), `regular` (deep, ~$5–$10). Costs scale with synthesis output tokens, so treat these as order-of-magnitude.
-- **Output** — `~/.caesar/result/` when installed from PyPI; `caesar/result/` when run from a source checkout. Override either with `CAESAR_RESULT_DIR`.
-- **Optional API keys** — `BRAVE_API_KEY` (higher-quality web search), `ANTHROPIC_API_KEY` (Claude), `GOOGLE_API_KEY` (Gemini)
-- **More** — see [`caesar/README.md`](caesar/README.md) for the full env-var list, custom configs in `~/.caesar/configs/`, and the `pygraphviz` / system graphviz dependency.
+- **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$2), `regular` (deep, ~$5–$10). Cost scales with synthesis output tokens, so treat these as order-of-magnitude rather than quotes.
+- **API keys** — `OPENAI_API_KEY` alone is enough to run. Add `ANTHROPIC_API_KEY` or `GOOGLE_API_KEY` to reach Claude and Gemini models, and `BRAVE_API_KEY` for better web search — without it, search falls back to DuckDuckGo.
+- **Results** — `caesar/result/` from a source checkout, `~/.caesar/result/` from a PyPI install. `CAESAR_RESULT_DIR` overrides both.
+- **Custom configs** — drop a YAML in `~/.caesar/configs/` and call it by name (`caesar my_preset -q "..."`). Bundled preset names take precedence, so avoid naming yours `nano`, `mini`, or `regular`.
 
-For detailed configuration, exploration modes, synthesis options, and advanced usage, see the **[Caesar module docs](caesar/README.md)**.
+The full env-var list, exploration modes, and synthesis options are in the
+**[Caesar module docs](caesar/README.md)**.
 
 ## What It's Good For
 
