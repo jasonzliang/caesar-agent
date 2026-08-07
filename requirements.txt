@@ -47,6 +47,15 @@ tabulate
 tenacity
 trafilatura>=2.1.0  # PR #856 fixes Document() mutable-default lxml-element race that segfaulted under ThreadPoolExecutor
 
+# Imported at module import time, so they must be declared rather than relied on
+# to arrive transitively. fastapi backs rome/agent_api.py, which rome/agent.py
+# imports whenever Agent.agent_api is true -- and it defaults to true, so
+# rome.Agent could not start from a clean install without it.
+fastapi
+pytz
+requests
+rich
+
 # Rome Optional Packages
 evalplus
 graphviz
