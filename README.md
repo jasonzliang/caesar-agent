@@ -46,6 +46,15 @@ same whether you installed from PyPI or from source. Running
 `python caesar/run_agent.py regular -q "..."` directly also works if you would
 rather not install at all.
 
+**In a browser:**
+
+```bash
+cd web_server && ./launch.sh
+# then open http://localhost:3000
+```
+
+The **[Caesar Web Server](web_server/README.md)** is a FastAPI + Next.js GUI that submits runs, streams progress, and renders the live knowledge graph and final artifact.
+
 **Setup notes:**
 
 - **Presets** — `nano` (fast, ~$0.80), `mini` (balanced, ~$2), `regular` (deep, ~$5–$10). Costs scale with synthesis output tokens, so treat these as order-of-magnitude.
@@ -54,8 +63,6 @@ rather not install at all.
 - **More** — see [`caesar/README.md`](caesar/README.md) for the full env-var list, custom configs in `~/.caesar/configs/`, and the `pygraphviz` / system graphviz dependency.
 
 For detailed configuration, exploration modes, synthesis options, and advanced usage, see the **[Caesar module docs](caesar/README.md)**.
-
-Prefer a browser? The **[Caesar Web Server](web_server/README.md)** ships a FastAPI + Next.js GUI that submits runs, streams progress, and renders the live knowledge graph and final artifact — `cd web_server && ./launch.sh` and open `http://localhost:3000`.
 
 ## What It's Good For
 
