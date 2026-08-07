@@ -1,0 +1,3 @@
+{"config": "config/batch_test.yaml", "query": "what is photosynthesis", "max_iterations": 2}
+{"config": "config/batch_test.yaml", "query": "how do neural networks learn", "max_iterations": 2}
+{"config": "config/batch_test.yaml", "query": "what causes tides", "max_iterations": 2}

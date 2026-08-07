@@ -1,60 +1,214 @@
-# Caesar: Autonomous AI Research Agent
+<p align="center">
+  <img src="https://jasonzliang.github.io/caesar-agent/caesar.webp" alt="Caesar autonomous research agent architecture: Perceive-Think-Act exploration loop and Generator-Verifier adversarial synthesis" width="720"/>
+</p>
 
-Caesar is an autonomous AI research agent. Instead of summarizing a flat list of search results, it treats the web as a graph, building a dynamic knowledge graph as it explores, backtracking when it stagnates, and refining its answer through an adversarial Generator–Verifier loop. The result is deeper, more novel synthesis on the open-ended, cross-disciplinary questions retrieval alone cannot answer.
+<h1 align="center">Caesar: Autonomous AI Research Agent</h1>
 
-**Live site:** <https://jasonzliang.github.io/caesar-agent/>
+<p align="center">
+  <strong>Deep web exploration and creative answer synthesis. The open-source alternative to ChatGPT Deep Research and Perplexity.</strong>
+</p>
 
-This repository hosts the public landing page only. It is built and served via GitHub Pages.
+<p align="center">
+  <a href="#quickstart"><img alt="Python 3.10+" src="https://img.shields.io/badge/python-3.10%2B-blue"></a>
+  <a href="https://arxiv.org/abs/2604.20855"><img alt="Paper" src="https://img.shields.io/badge/paper-arXiv%202604.20855-b31b1b"></a>
+  <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00CCBB?logo=researchgate&logoColor=white"></a>
+  <a href="LICENSE"><img alt="License" src="https://img.shields.io/badge/license-Apache_2.0-blue"></a>
+  <a href="https://github.com/cognizant-ai-lab/caesar-agent/commits/main"><img alt="Last commit" src="https://img.shields.io/github/last-commit/cognizant-ai-lab/caesar-agent"></a>
+</p>
 
-## What Caesar does
+**Caesar** is an autonomous AI research agent that navigates the web, reasons over a dynamic knowledge graph, and synthesizes novel, grounded answers. In blinded LLM-as-a-Judge creativity evaluations, Caesar scored **26.96 / 30** on the headline full-answers configuration, beating the runner-up (Gemini 3 Deep Research, 23.78) by **3.18 points** and outscoring GPT-5.2 Deep Research (15.74) by over **11 points**. Statistically significant at **p < 0.001** with large Cliff's δ effect sizes (≥ 0.76), and validated by an independent 23-rater human study.
 
-Today's deep-research agents (ChatGPT Deep Research, Perplexity, Gemini Deep Research, GPT Researcher) optimize retrieval precision over a flat sequence of documents. They produce competent summaries but fall into local minima, suffer from *navigational amnesia*, and converge on derivative, consensus-driven outputs.
+If you're looking for an **agentic RAG system that goes beyond retrieval** (graph-based exploration, adversarial verification, and multi-draft synthesis), this is it.
 
-Caesar is built differently:
+> 📄 **Read the paper:** [*Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis*](https://arxiv.org/abs/2604.20855) (Liang, Meyerson, Miikkulainen, 2026) · [DOI: 10.48550/arXiv.2604.20855](https://doi.org/10.48550/arXiv.2604.20855) · [PDF](https://arxiv.org/abs/2604.20855)
 
-- **Builds a knowledge graph as it explores.** Each new page is analyzed against insights already attached to predecessor and neighbor nodes.
-- **Adversarial self-critique on its own draft.** An independent verifier formulates orthogonal queries that target weaknesses in the current draft, escaping the consensus basin that traps single-pass LLMs.
-- **Multiple drafts, then merged into one.** Each draft chains off the previous one until a final merge.
-- **Backtracks when an exploration path stalls.** Depth-first drill-down with a stack to pop back and explore orthogonal branches.
-- **Multi-provider.** OpenAI, Anthropic, Google Gemini, or any OpenAI-compatible endpoint.
-- **Reproducible run logs (JSON).** Tokens, cost, wall-time, pages visited, per-draft provenance.
+## Quickstart
 
-## Benchmark results
+**From PyPI:**
 
-Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scored 0–10 across three creativity dimensions: **New**, **Useful**, **Surprising**.
+```bash
+pip install caesar-agent
+export OPENAI_API_KEY=your_key
+caesar regular -q "your research question"
+```
 
-| Agent | New | Useful | Surprising | Total |
-| --- | --- | --- | --- | --- |
-| **Caesar** | **9.11** | **8.87** | **8.98** | **26.96** |
-| Gemini 3 Deep Research | 8.09 | 7.60 | 8.09 | 23.78 |
-| Sonnet 4.5 Deep Research | 6.73 | 7.49 | 6.42 | 20.64 |
-| GPT-5.2 Deep Research | 5.07 | 6.31 | 4.36 | 15.74 |
+**From source:**
 
-Cliff's Delta effect sizes are uniformly large (**δ ≥ 0.76**, well above the 0.47 large-effect threshold) across all baselines and output formats; **δ = 1.00** against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a 21-rater blinded human A/B study, where raters preferred Caesar's Cross-Domain Synthesis answer 90.5% of the time (Holm-corrected p = 0.001). Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the [paper](https://arxiv.org/abs/2604.20855) for full methodology, exploration-budget ablation, and judge bias analysis.
+```bash
+git clone https://github.com/cognizant-ai-lab/caesar-agent.git
+cd caesar-agent && pip install -e .
+export OPENAI_API_KEY=your_key
+python caesar/run_agent.py regular -q "your research question"
+```
 
-## Read more
+**Setup notes:**
 
-- **Landing page (full details, figures, FAQ):** <https://jasonzliang.github.io/caesar-agent/>
-- **Paper (arXiv):** <https://arxiv.org/abs/2604.20855>
-- **DOI:** <https://doi.org/10.48550/arXiv.2604.20855>
-- **ResearchGate:** [Caesar publication](https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis)
+- **Presets** — `nano` (fast, ~$0.30), `mini` (balanced, ~$1), `regular` (deep, ~$3)
+- **Output** — `~/.caesar/result/` when installed from PyPI; `caesar/result/` when run from a source checkout. Override either with `CAESAR_RESULT_DIR`.
+- **Optional API keys** — `BRAVE_API_KEY` (higher-quality web search), `ANTHROPIC_API_KEY` (Claude), `GOOGLE_API_KEY` (Gemini)
+- **More** — see [`caesar/README.md`](caesar/README.md) for the full env-var list, custom configs in `~/.caesar/configs/`, and the `pygraphviz` / system graphviz dependency.
+
+For detailed configuration, exploration modes, synthesis options, and advanced usage, see the **[Caesar module docs](caesar/README.md)**.
+
+Prefer a browser? The **[Caesar Web Server](web_server/README.md)** ships a FastAPI + Next.js GUI that submits runs, streams progress, and renders the live knowledge graph and final artifact — `cd web_server && ./launch.sh` and open `http://localhost:3000`.
+
+## What It's Good For
+
+Caesar shines on **open-ended, creative, cross-disciplinary** research, where retrieval alone won't work:
+
+- **Hypothesis generation**: novel cross-domain connections (e.g., bridging materials science and biology)
+- **Literature synthesis**: graph-grounded review that spots tensions and gaps between papers
+- **Competitive intelligence**: deep mapping of a technical or market landscape
+- **Counterfactual & meta-creative reasoning**: "what if X was different?" style inquiry
+- **Novel solution ideation**: e.g., ARC-AGI–style problem exploration
+
+It's **not** the right tool for quick factual lookups or latency-sensitive apps. Caesar is designed for depth, not speed.
+
+## Why Caesar?
+
+Current deep-research agents (ChatGPT Deep Research, Perplexity, GPT Researcher, Gemini Deep Research) optimize for **retrieval precision over a flat sequence of documents**. They produce competent summaries but suffer from **navigational amnesia**, fall into local minima, and generate derivative, consensus-driven outputs.
+
+Caesar is different:
+
+| Capability | Caesar | ChatGPT Deep Research | Perplexity | GPT Researcher |
+|---|:-:|:-:|:-:|:-:|
+| Open source | ✅ | ❌ | ❌ | ✅ |
+| Dynamic knowledge graph | ✅ | ❌ | ❌ | ❌ |
+| Adversarial Generator–Verifier loop | ✅ | ❌ | ❌ | ❌ |
+| Multi-draft synthesis with merge | ✅ | ❌ | ❌ | Partial¹ |
+| Episodic memory + backtracking | ✅ | ❌ | ❌ | ❌ |
+| Pluggable LLM backend (OpenAI / Anthropic / local) | ✅ | ❌ | ❌ | ✅ |
+| Reproducible experiment JSON | ✅ | ❌ | ❌ | Partial² |
+
+<sub>¹ GPT Researcher supports multi-draft generation but not adversarial self-critique or merge. ² GPT Researcher logs cost per run but not the full reproducibility bundle (wall-time, page-level sources, draft provenance).</sub>
+
+## How It Works
+
+Caesar operates in two cognitive phases:
+
+### 1. Deep Web Exploration: stateful graph traversal
+
+A recursive **Perceive–Think–Act** loop performs topological traversal of information spaces. Rather than isolating summaries, Caesar generates context-aware insights conditioned on the **local structure of the exploration graph**, analyzing how new content builds upon or contradicts neighboring nodes. A dynamic policy, informed by a vector knowledge base and episodic memory, autonomously switches between depth-first expansion, strategic backtracking, and targeted web search.
+
+### 2. Adversarial Artifact Synthesis: Generator–Verifier loop
+
+Rather than a single-pass summary, Caesar runs as a recursive self-correction environment. An independent adversarial module formulates **orthogonal queries** targeting logical weaknesses, missing citations, and contradictions in the current belief state. Multiple drafts are produced iteratively and merged, forcing the agent out of the consensus basin that traps single-pass LLMs.
+
+## Architectural Innovations
+
+- **Domain-Specific Role Adaptation**: the agent rewrites its own system prompt per task, overriding the safety-biased generic responses typical of RLHF models.
+- **Graph-Augmented Insight Generation**: insights are conditioned on the exploration graph neighborhood, enabling online associative reasoning.
+- **Knowledge-Guided Exploration Policy**: detects navigational stagnation via episodic memory and forces backtracking.
+- **Adversarial Query Refinement**: orthogonal queries push the agent out of generic LLM consensus toward novel, grounded facts.
+
+## Benchmark Results
+
+Evaluated with a blinded **3-model LLM-as-a-Judge panel** (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) across three creativity dimensions (**New**, **Useful**, **Surprising**), scored 0–10 each. Headline configuration: full answers, unconstrained length.
+
+| Agent | New | Useful | Surprising | **Total** | Cliff's δ |
+|---|:-:|:-:|:-:|:-:|:-:|
+| **Caesar** | **9.11** | **8.87** | **8.98** | **26.96** | — |
+| Gemini 3 Deep Research | 8.09 | 7.60 | 8.09 | 23.78 | 0.84 |
+| Sonnet 4.5 Deep Research | 6.73 | 7.49 | 6.42 | 20.64 | 1.00 |
+| GPT-5.2 Deep Research | 5.07 | 6.31 | 4.36 | 15.74 | 1.00 |
+
+Mann–Whitney U **p < 0.001** across all settings — a **13–23% improvement over state-of-the-art deep research agents**, with Caesar leading across all three output formats (Full, ELI5, ELI5-450W). Cliff's δ ≥ 0.76 in every comparison (well above the 0.47 large-effect threshold); δ = 1.00 vs. Sonnet 4.5 and GPT-5.2 Deep Research denotes strict dominance.
+
+**Compute-controlled comparison.** At a matched ~$5/challenge budget (T=250 with GPT-5-mini), Caesar still wins: 26.16 vs. Gemini 3 Deep 24.37, Sonnet 4.5 Deep 21.00, GPT-5.2 Deep 16.16. The lead is not an artifact of larger compute.
+
+**Human evaluation.** 23 raters preferred Caesar in 63 of 112 pairwise A/B matchups vs. Gemini 3 Deep Research (56.25%, odds ratio 1.29), independently corroborating the LLM-judge findings.
+
+Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary (large effect sizes, δ ≥ 0.52). See the [paper](https://arxiv.org/abs/2604.20855) for full methodology, per-output-format tables, exploration-budget ablation, and judge bias analysis.
+
+## Example Output
+
+After a run, Caesar writes a full artifact (abstract + body with citations) plus a structured summary:
+
+```json
+{
+  "wall_time": 591.31,
+  "tokens_used": 109873,
+  "token_cost": 0.29,
+  "api_calls": 20,
+  "webpages_visited": 4,
+  "iterations_elapsed": 5,
+  "artifact_dir": "result/.../agent_CaesarExplorer.synthesis.04161850",
+  "num_drafts": 2,
+  "config_summary": { "..." : "..." }
+}
+```
+
+The `artifact_dir` contains one `.txt` per synthesis draft, a final merged artifact, and a metadata file tracking sources cited in each draft. Knowledge graphs are saved as compressed JSON checkpoints for reproducibility or post-hoc analysis.
+
+## Built on Rome
+
+Caesar is built on **Rome**, a Finite State Machine framework for stateful AI agents that provides Generator–Verifier–Reviser topologies, episodic memory, dynamic policy routing, and verifiable code execution. See the [Rome framework docs](rome/README.md) if you want to build your own agent on top.
+
+## Project Layout
+
+```
+caesar-agent/
+├── caesar/          # Caesar agent (see caesar/README.md for full usage)
+│   ├── caesar_agent.py
+│   ├── artifact_synthesis.py
+│   ├── run_agent.py
+│   ├── config/      # YAML configs and creativity benchmarks
+│   └── paper/       # Caesar paper (PDF)
+├── rome/            # Rome framework (see rome/README.md): FSM, memory, LLM handlers, KB client
+├── web_server/      # FastAPI + Next.js web GUI (see web_server/README.md)
+└── web_app/         # Streamlit operator tools: human eval + graph explorer (see web_app/README.md)
+```
+
+## FAQ
+
+**How is this different from LangGraph / CrewAI / AutoGen?**
+Those are orchestration frameworks: they help you wire up agents. Rome is an opinionated runtime for *how* agents should reason (graph-structured exploration, adversarial verification, episodic memory). Caesar is a concrete research agent built on it.
+
+**Do I need GPUs?**
+No. Caesar uses hosted LLM APIs (OpenAI, Anthropic). A local ChromaDB instance handles the vector store. Runs on a laptop.
+
+**Which models are supported?**
+OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6 / 4.7), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.
+
+**How much does a typical run cost?**
+A 5-iteration exploration with Claude Haiku 4.5 runs at roughly $0.30 and 10 minutes. A 250-iteration deep run with the `regular` preset (`gpt-5.6-terra`) is typically $5–$10.
+
+**Can I reproduce the benchmarks?**
+Yes. Configs, judge rubrics, and evaluation scripts are in `caesar/config/` and `caesar/analysis/`.
+
+## Contributing & Community
+
+- ⭐ **Star the repo** if Caesar is useful for your research
+- 💬 **[Open a Discussion](https://github.com/cognizant-ai-lab/caesar-agent/discussions)** for ideas, questions, or use cases
+- 🐛 **[File an Issue](https://github.com/cognizant-ai-lab/caesar-agent/issues)** for bugs or feature requests
+- 🔧 **PRs welcome**, especially new exploration policies, synthesis strategies, and benchmark domains
+
+### Good places to start a fork
+
+| Goal | Effort |
+|---|:---:|
+| Adapt Caesar for your research domain (legal, biology, finance, …) | 1–2 hrs |
+| Add a new web-search backend (Tavily, Exa, Serper, …) | 2–3 hrs |
+| Experiment with multi-agent synthesis (ring or debate merge) | 4–6 hrs |
+
+If you fork Caesar for your own work, [open a Discussion](https://github.com/cognizant-ai-lab/caesar-agent/discussions) — we'd love to see what you build.
 
 ## Citation
 
+If you use Caesar in your research, please cite:
+
 ```bibtex
 @misc{liang26caesar,
-  title={Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis},
+  title={Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis}, 
   author={Jason Liang and Elliot Meyerson and Risto Miikkulainen},
   year={2026},
   eprint={2604.20855},
   archivePrefix={arXiv},
   primaryClass={cs.IR},
-  url={https://arxiv.org/abs/2604.20855}
+  url={https://arxiv.org/abs/2604.20855}, 
 }
 ```
 
-## Authors
+## License
 
-By [Jason Liang](https://jasonzliang.github.io/), Elliot Meyerson, and Risto Miikkulainen, Cognizant AI Lab and The University of Texas at Austin.
-
-Apache License 2.0.
+Apache License 2.0. See [LICENSE](LICENSE) and [NOTICE](NOTICE).

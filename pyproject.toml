@@ -1,0 +1,131 @@
+[build-system]
+requires = ["setuptools>=61.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "caesar-agent"
+version = "0.4.11"
+authors = [
+    {name = "Jason Liang"},
+    {name = "Elliot Meyerson"},
+    {name = "Risto Miikkulainen"},
+]
+maintainers = [
+    {name = "Jason Liang", email = "jasonzliang@utexas.edu"},
+]
+description = "Caesar: autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis."
+readme = "README.md"
+license = {text = "Apache-2.0"}
+requires-python = ">=3.10,<3.14"
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Intended Audience :: Developers",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: Apache Software License",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Scientific/Engineering :: Artificial Intelligence",
+    "Topic :: Scientific/Engineering :: Information Analysis",
+    "Topic :: Internet :: WWW/HTTP :: Indexing/Search",
+]
+keywords = [
+    "ai-agents", "llm", "rag", "agentic-rag", "agentic-ai",
+    "autonomous-agents", "deep-research", "research-agent", "knowledge-graph",
+    "retrieval-augmented-generation", "scientific-discovery", "web-exploration",
+    "generator-verifier", "llm-agents", "openai", "anthropic", "chromadb",
+    "llama-index", "ai-research",
+]
+dynamic = ["dependencies"]
+
+[project.urls]
+Homepage = "https://github.com/cognizant-ai-lab/caesar-agent"
+Repository = "https://github.com/cognizant-ai-lab/caesar-agent"
+Issues = "https://github.com/cognizant-ai-lab/caesar-agent/issues"
+Paper = "https://arxiv.org/abs/2604.20855"
+Changelog = "https://github.com/cognizant-ai-lab/caesar-agent/releases"
+
+[project.optional-dependencies]
+dev = [
+    "pytest-cov>=4.1.0",
+    "black>=23.0.0",
+    "mypy>=1.7.0",
+    "ipython>=8.0.0",
+]
+test = [
+    "pytest>=7.4.0",
+    "pytest-asyncio>=0.21.0",
+    "pytest-xdist>=3.5.0",
+]
+
+[project.scripts]
+caesar = "caesar.run_agent:main"
+
+[tool.setuptools.dynamic]
+# crest moved to its own repo (github.com/jasonzliang/crest), taking crest/requirements.txt with
+# it. pyyaml was the one entry rome itself depends on -- it is now declared in requirements.txt
+# directly, so it stays on the packaging path rather than being merely transitive.
+dependencies = {file = ["requirements.txt"]}
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rome", "rome.*", "caesar", "caesar.*"]
+exclude = [
+    "test*", "benchmark*", "monitor*", "web_app*",
+    "__pycache__*", "*.egg-info", ".git*", ".mypy_cache*",
+    "rome.action.obsolete*",
+]
+
+[tool.setuptools.package-data]
+# Keep this tight on purpose. Broad globs like "**/*.txt" sweep in experiment
+# artifacts (caesar/result/, caesar/query_result/) and balloon the wheel.
+rome = ["py.typed"]
+caesar = [
+    "config/**/*.yaml",
+    "config/**/*.yml",
+    "config/**/*.txt",
+    "config/**/*.json",
+    "config/**/*.jsonl",
+]
+
+[tool.black]
+line-length = 88
+target-version = ['py310', 'py311', 'py312', 'py313']
+extend-exclude = 'benchmark|test|monitor|web_app'
+
+[tool.isort]
+profile = "black"
+line_length = 88
+skip_glob = ["*/benchmark/*", "*/test/*"]
+
+[tool.pytest.ini_options]
+testpaths = ["test"]
+python_files = ["test_*.py", "*_test.py"]
+addopts = ["-ra", "--strict-markers"]
+markers = ["slow: slow tests", "integration: integration tests"]
+
+[tool.coverage.run]
+source = ["rome", "caesar"]
+omit = ["*/test/*", "*/__init__.py"]
+
+[tool.coverage.report]
+exclude_lines = [
+    "pragma: no cover",
+    "if TYPE_CHECKING:",
+    "raise NotImplementedError",
+]
+
+[tool.mypy]
+python_version = "3.10"
+check_untyped_defs = true
+no_implicit_optional = true
+warn_return_any = true
+
+[[tool.mypy.overrides]]
+module = [
+    "graphviz.*", "ribs.*", "xxhash.*", "llmlingua.*", "mem0ai.*",
+    "evalplus.*", "portalocker.*", "tinydb.*", "pygraphviz.*", "pypdf.*",
+    "curl_cffi.*", "chromadb.*", "llama_index.*",
+]
+ignore_missing_imports = true

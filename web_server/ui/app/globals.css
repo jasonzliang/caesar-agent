@@ -1,0 +1,196 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Print stylesheet: when the user clicks "Download PDF" we trigger
+   window.print(); the browser's "Save as PDF" destination produces the
+   actual PDF. We hide everything inside the run-page wrapper except
+   the answer card, so the resulting PDF is just the artifact + sources. */
+@media print {
+  header, footer, nav { display: none !important; }
+  .print\:hidden { display: none !important; }
+  /* Positive scope: hide every direct child of .run-page that isn't the
+     answer card. Adding a new sibling below the card won't silently get
+     hidden the way `~ *` would have. */
+  .run-page > *:not(.answer-card) { display: none !important; }
+  .answer-card { display: block !important; box-shadow: none; border: none; padding: 0 !important; }
+  /* Remove backgrounds so the artifact fills white pages. */
+  body, main, html { background: white !important; }
+  /* Citation chips render as plain inline text in print (no colored bg). */
+  .citation { background: transparent !important; color: black !important; }
+  /* Don't break a heading / list item / paragraph mid-page. */
+  h1, h2, h3, h4 { break-after: avoid; }
+  li, p { break-inside: avoid; }
+  /* Always wrap code blocks in the printed PDF — horizontal scroll has no
+     equivalent on paper, so unwrapped lines get clipped at the page edge. */
+  .answer-prose pre {
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+    overflow-x: visible;
+  }
+  /* Figures: keep an image and its caption on one page. Width inherits
+     from the on-screen rule (w-[70%]); drop the on-hover shadow /
+     cursor affordances which have no meaning on paper. */
+  .answer-prose img {
+    break-inside: avoid;
+    page-break-inside: avoid;
+    box-shadow: none !important;
+    cursor: auto !important;
+  }
+  .answer-prose a:has(> img),
+  .answer-prose figure {
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+  @page { margin: 0.75in; }
+}
+
+:root {
+  --background: 255 255 255;
+  --foreground: 17 24 39;
+  --muted: 107 114 128;
+  --border: 229 231 235;
+  --accent: 30 64 175;
+  --accent-soft: 239 246 255;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background: rgb(var(--background));
+  color: rgb(var(--foreground));
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Skeleton shimmer */
+.skeleton {
+  background: linear-gradient(90deg, #f3f4f6 0%, #e5e7eb 50%, #f3f4f6 100%);
+  background-size: 200% 100%;
+  animation: shimmer 1.4s ease-in-out infinite;
+  border-radius: 0.375rem;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Citation chips inside the artifact body */
+.prose .citation {
+  display: inline-flex;
+  align-items: center;
+  font-variant-numeric: tabular-nums;
+  font-size: 0.72rem;
+  font-weight: 500;
+  line-height: 1;
+  padding: 0.15rem 0.4rem;
+  border-radius: 999px;
+  background: rgb(var(--accent-soft));
+  color: rgb(var(--accent));
+  text-decoration: none;
+  margin: 0 0.1rem;
+  vertical-align: 0.1em;
+  transition: background 0.15s ease, transform 0.15s ease;
+}
+.prose .citation:hover {
+  background: #dbeafe;
+  transform: translateY(-1px);
+}
+
+/* Final-Answer prose polish: heading separators, lead paragraph emphasis,
+   source-row jump highlight. */
+.answer-prose h2 {
+  margin-top: 2.25rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #e5e7eb;
+  font-size: 1.35rem;
+  letter-spacing: -0.01em;
+}
+.answer-prose h3 {
+  margin-top: 1.75rem;
+  font-size: 1.1rem;
+}
+.answer-prose > h2:first-child,
+.answer-prose > h3:first-child {
+  margin-top: 0;
+  padding-top: 0;
+  border-top: none;
+}
+/* Scope to the body lead paragraph only — exclude paragraphs inside the
+   abstract `<aside>` callout, which is rendered with `.not-prose` and its
+   own nested `.prose` block. */
+.answer-prose > p:first-of-type::first-letter {
+  font-weight: 600;
+  color: rgb(var(--accent));
+}
+.answer-prose ul > li::marker {
+  color: #9ca3af;
+}
+/* Tighten line-height in body prose so it matches the query line-height
+   (Tailwind's `leading-snug`, ~1.375). Prose-lg defaults to 1.78, which
+   looks airy next to the tighter query heading directly above. */
+.answer-prose p,
+.answer-prose li {
+  line-height: 1.5;
+}
+
+/* Opt-in wrap for fenced code blocks (toggled by the "Wrap code" button on
+   the run page). Specificity .answer-prose.wrap-code pre (0,2,1) beats
+   Tailwind's .overflow-x-auto (0,1,0). */
+.answer-prose.wrap-code pre {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  overflow-x: visible;
+}
+
+/* Highlight the source row when its citation chip is clicked (#source-N). */
+.source-row:target {
+  background: rgb(var(--accent-soft));
+  border-radius: 0.5rem;
+  padding: 0.35rem 0.5rem;
+  margin: -0.35rem -0.5rem;
+  animation: source-flash 1.6s ease-out 1;
+}
+@keyframes source-flash {
+  0%   { background: #bfdbfe; }
+  100% { background: rgb(var(--accent-soft)); }
+}
+
+/* Status pill colours */
+.pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.18rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.78rem;
+  font-weight: 500;
+  border: 1px solid;
+}
+.pill-queued    { background: #f9fafb; color: #4b5563; border-color: #e5e7eb; }
+.pill-running   { background: #eff6ff; color: #1d4ed8; border-color: #bfdbfe; }
+.pill-completed { background: #ecfdf5; color: #047857; border-color: #a7f3d0; }
+.pill-failed    { background: #fef2f2; color: #b91c1c; border-color: #fecaca; }
+/* Follow-up runs (mode=explore|refine with parent_run_id). One gray stop
+   darker than pill-queued (the Model badge) — same neutral family,
+   slightly more presence to mark it as contextually meaningful. */
+.pill-followup  { background: #f3f4f6; color: #374151; border-color: #d1d5db; }
+
+.pill-running .dot,
+.pill-queued .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+  animation: pulse 1.6s ease-in-out infinite;
+}
+.pill-completed .dot,
+.pill-failed .dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: currentColor;
+}

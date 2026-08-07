@@ -1,0 +1,57 @@
+# Web-server preset: deeper
+# Iterative depth-first exploration — produces richer non-radial graph
+# shapes (trees, branches, sub-clusters) at the cost of longer runtime.
+Agent:
+  name: CaesarExplorer
+  draw_fsm: false
+
+CaesarAgent:
+  additional_starting_queries: 9
+  max_web_searches: 30
+  max_iterations: 240
+  save_graph_interval: 2
+
+  use_quick_explore: False
+  quick_explore_insights: False
+  exploration_llm_config:
+    model: gpt-5.6-luna
+    reasoning_effort: low
+
+  adapt_role: True
+
+ArtifactSynthesizer:
+  synthesis_iterations: 12
+  synthesis_drafts: 3
+  synthesis_merge_artifacts: true
+  synthesis_eli5: false
+  synthesis_eli5_length: [null, 450]
+  synthesis_human_eval: false
+  synthesis_max_length: null
+  synthesis_iteration_filter: null
+  synthesis_generate_images: 3
+
+ImageGenerator:
+  quality: medium
+  # 90 candidates: expected top-5 quality vs default 150 differs by only
+  # ~0.04 points on the 0-10 scale (below VLM rater jitter, per Blom's
+  # order-statistic approximation) while saving ~40% VLM cost.
+  max_candidates_to_score: 90
+
+LLMHandler:
+  model: gpt-5.6-luna
+  reasoning_effort: low
+
+AgentMemory:
+  enabled: true
+  use_graph: false
+
+ChromaClientManager:
+  model: gpt-5.6-luna
+  reasoning_effort: low
+
+BraveSearch:
+  use_ddgs: True
+
+Logger:
+  include_caller_info: "rome"
+  level: "info"

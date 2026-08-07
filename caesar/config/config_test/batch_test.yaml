@@ -1,0 +1,33 @@
+# Minimal config for batch testing (2 iterations, low cost)
+Agent:
+  name: BatchTestAgent
+  draw_fsm: false
+
+CaesarAgent:
+  max_iterations: 2
+  max_web_searches: 1
+  additional_starting_queries: 0
+  save_graph_interval: 1
+  draw_graph: false
+  adapt_role: false
+
+ArtifactSynthesizer:
+  synthesis_iterations: 1
+  synthesis_drafts: 1
+
+LLMHandler:
+  cost_limit: 1.0
+  model: gpt-4o-mini
+  reasoning_effort: low
+  temperature: 0.1
+
+AgentMemory:
+  enabled: false
+  use_graph: false
+
+ChromaClientManager:
+  model: gpt-4o-mini
+  reasoning_effort: low
+
+Logger:
+  include_caller_info: "rome"

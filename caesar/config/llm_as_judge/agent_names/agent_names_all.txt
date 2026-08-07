@@ -1,0 +1,8 @@
+Agent Code Name: Agent Real Name
+answer_cat_cam: Caesar Deep Research
+answer_cow_cld: Sonnet 4.5 Deep Research
+answer_dog_cls: Sonnet 4.5 Shallow Research
+answer_fox_ged: Gemini 3 Deep Research
+answer_lion_ges: Gemini 3 Shallow Research
+answer_owl_gpd: GPT-5.2 Deep Research
+answer_pig_gps: GPT-5.2 Shallow Research

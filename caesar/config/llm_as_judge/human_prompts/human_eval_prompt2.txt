@@ -1,0 +1,17 @@
+YOUR TASK:
+Write exactly two short paragraphs about the artifact text above:
+
+PARAGRAPH 1 - CORE IDEA SUMMARY (2-3 sentences):
+ - Identify and summarize the single most important key idea in the artifact
+ - Be concise, clear, and specific — no filler or vague language
+ - A reader should immediately understand what the artifact is about
+
+PARAGRAPH 2 - CREATIVITY ARGUMENT (3-4 sentences):
+ - Make a clear, convincing argument for why the key idea in the artifact is creative
+ - Explain what makes it novel, surprising, or useful
+ - Ground your argument in specific aspects of the idea, not generic praise
+ - Write to persuade a skeptical reader
+
+IMPORTANT: Do NOT mention or reference "the artifact" — write as if describing the idea itself
+IMPORTANT: Start paragraph 1 with "SUMMARY: " and paragraph 2 with "WHY ITS CREATIVE: "
+IMPORTANT: Use simple and clear English, do not overuse jargon

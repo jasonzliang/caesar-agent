@@ -1,0 +1,47 @@
+cff-version: 1.2.0
+message: "If you use Caesar in your research, please cite the paper and this repository."
+title: "Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis"
+type: software
+authors:
+  - family-names: "Liang"
+    given-names: "Jason"
+    affiliation: "Cognizant AI Lab"
+    email: "jasonzliang@utexas.edu"
+  - family-names: "Meyerson"
+    given-names: "Elliot"
+    affiliation: "Cognizant AI Lab"
+  - family-names: "Miikkulainen"
+    given-names: "Risto"
+    affiliation: "The University of Texas at Austin / Cognizant AI Lab"
+repository-code: "https://github.com/cognizant-ai-lab/caesar-agent"
+url: "https://github.com/cognizant-ai-lab/caesar-agent"
+license: Apache-2.0
+version: "0.4.11"
+date-released: "2026-08-06"
+keywords:
+  - "ai-agents"
+  - "llm"
+  - "rag"
+  - "agentic-rag"
+  - "deep-research"
+  - "knowledge-graph"
+  - "autonomous-agents"
+  - "research-agent"
+  - "scientific-discovery"
+preferred-citation:
+  type: report
+  title: "Caesar: Deep Agentic Web Exploration for Creative Answer Synthesis"
+  authors:
+    - family-names: "Liang"
+      given-names: "Jason"
+    - family-names: "Meyerson"
+      given-names: "Elliot"
+    - family-names: "Miikkulainen"
+      given-names: "Risto"
+  year: 2026
+  month: 3
+  institution:
+    name: "Cognizant AI Lab"
+  number: "2026-02"
+  doi: "10.48550/arXiv.2604.20855"
+  url: "https://arxiv.org/abs/2604.20855"
