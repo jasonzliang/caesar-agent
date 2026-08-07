@@ -163,10 +163,18 @@ class LLMHandler:
     }
 
     # Models that support reasoning_effort or equivalent thinking parameters.
-    # _is_reasoning_model also falls back to a `gpt-5*` prefix match so any
-    # future GPT-5.x release (e.g. 5.6, 5.7) is auto-detected.
+    # is_reasoning_model() also falls back to a `gpt-5*` prefix match so any
+    # future GPT-5.x release (e.g. 5.7) is auto-detected. That prefix rule does
+    # NOT cover the o-series, so every o-model must be listed explicitly.
+    #
+    # This is the single source of truth. rome/kb_client.py kept a hand-maintained
+    # second copy until it drifted: its copy was missing the whole GPT-5.6 family,
+    # so the `mini` preset's KB model (gpt-5.6-luna) failed the membership test
+    # and had its configured reasoning_effort silently dropped at construction.
     REASONING_MODELS = {
         "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5-pro", "gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-5.4-mini", "gpt-5-mini", "gpt-5-nano", "gpt-5-pro", "o1", "o1-mini", "o1-pro", "o3", "o3-mini", "o4-mini",
+        # Merged in from kb_client's former copy.
+        "gpt-5.1-codex-max", "gpt-5.2-pro", "gpt-5.4-nano", "gpt-5.4-pro", "o3-pro",
     }
 
     # Unique identifier for chat completion requests
@@ -242,8 +250,19 @@ class LLMHandler:
         'temperature'" because the temperature-strip path at
         _build_kwargs (~line 490) gates on this check.
         """
-        model = self._get_base_model(model)
-        return model in self.REASONING_MODELS or model.startswith("gpt-5")
+        return self.is_reasoning_model(self._get_base_model(model))
+
+    @classmethod
+    def is_reasoning_model(cls, model: str) -> bool:
+        """Same rule as `_is_reasoning_model`, callable without an instance.
+
+        Exists so other modules (rome/kb_client.py) can ask the question without
+        constructing an LLMHandler — building one logs and installs a cost limit,
+        and copying the rule instead is what let kb_client's model list drift out
+        of sync with this one.
+        """
+        base = model.split("/", 1)[-1] if "/" in model else model
+        return base in cls.REASONING_MODELS or base.startswith("gpt-5")
 
     def _get_max_input_tokens(self) -> int:
         """Get max input tokens."""

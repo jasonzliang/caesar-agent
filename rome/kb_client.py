@@ -13,7 +13,7 @@ from urllib.parse import urlparse
 import warnings
 warnings.filterwarnings('ignore', message='.*validate_default.*', category=UserWarning)
 
-from .llm_handler import FatalLLMError
+from .llm_handler import FatalLLMError, LLMHandler
 
 try:
     from chromadb.utils.embedding_functions import (
@@ -129,22 +129,7 @@ def _token_batched_indices(token_counts, budget=_EMBED_BATCH_TOKEN_BUDGET):
     if start < len(token_counts):
         yield start, len(token_counts)
 
-# Models that accept the `reasoning_effort` parameter. Bare identifiers only —
-# dated suffix variants (e.g. "gpt-5.4-2025-12-01") need to be added explicitly
-# or the parameter will be silently dropped at LLM construction time.
-# Verified against OpenAI's API docs (developers.openai.com/api/docs/models).
-REASONING_MODELS = {
-    # GPT-5 series
-    "gpt-5", "gpt-5-mini", "gpt-5-nano", "gpt-5-pro",
-    "gpt-5.1", "gpt-5.1-codex-max",
-    "gpt-5.2", "gpt-5.2-pro",
-    "gpt-5.4", "gpt-5.4-mini", "gpt-5.4-nano", "gpt-5.4-pro",
-    "gpt-5.5",
-    # o-series
-    "o1", "o1-mini", "o1-pro",
-    "o3", "o3-mini", "o3-pro",
-    "o4-mini",
-}
+
 
 
 class ChromaClientManager:
@@ -294,7 +279,8 @@ class ChromaClientManager:
             temperature=self.temperature,
             max_tokens=DEFAULT_CONFIG['LLMHandler']['max_completion_tokens'],
             additional_kwargs={"reasoning_effort": self.reasoning_effort}
-                if (self.reasoning_effort and self.model in REASONING_MODELS) else None,
+                if (self.reasoning_effort
+                    and LLMHandler.is_reasoning_model(self.model)) else None,
         )
         self.embed_model = OpenAIEmbedding(model=self.embedding_model)
         self.logger.debug(
