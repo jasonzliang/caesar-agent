@@ -25,10 +25,27 @@ class ProcessManager:
         self.shutdown_called = False
         self._lock = threading.Lock()
         self.parent_pid = os.getpid()
+        # Explicit list of subprocesses this agent owns. shutdown_processes
+        # terminates only these — NOT psutil.Process(parent_pid).children(),
+        # which would sweep the entire host's descendant tree and reap siblings.
+        # Empty by default: embedded agents (in a web server, notebook, batch
+        # subprocess) leave it empty and their shutdown is a safe no-op w.r.t.
+        # subprocess reaping. Standalone runners that spawn subprocesses can
+        # register them via track_subprocess() to get cleanup on shutdown.
+        self._tracked: List = []
 
     def add_callback(self, callback: Callable) -> None:
         if callback and callable(callback):
             self.callbacks.append(callback)
+
+    def track_subprocess(self, proc) -> None:
+        """Register a subprocess (subprocess.Popen or psutil.Process) that
+        this agent owns. shutdown_processes() will terminate every tracked
+        proc. Only track things you actually own — never register shared or
+        externally-managed processes; that's what caused the multi-hour Chroma
+        cascade-kill bug (chroma.log SIGTERM history from 2026-07 through 08)."""
+        if proc is not None:
+            self._tracked.append(proc)
 
     def setup_signals(self, logger=None) -> None:
         """Setup signal handlers - only works in main thread"""
@@ -191,8 +208,13 @@ class ProcessManager:
         if cleanup_zombies:
             self.cleanup_zombies(logger=logger)
 
-        for child in self.get_children():
-            self._terminate_process(child)
+        # Only reap subprocesses we explicitly track. Do NOT walk
+        # psutil.Process(parent_pid).children(recursive=True) — parent_pid is
+        # os.getpid() at agent __init__, which in a web server is uvicorn's
+        # PID. Reaping uvicorn's descendants killed the shared Chroma every
+        # time any single agent shut down. Track only what you own.
+        for proc in self._tracked:
+            self._terminate_process(proc)
 
     def shutdown(self, cleanup_zombies: bool = True):
         with self._lock:

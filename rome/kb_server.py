@@ -75,6 +75,11 @@ class ChromaServerManager:
         self._clients = set()
         self._clients_lock = threading.Lock()
 
+        # Serialize start() so two concurrent is_running=False observers don't
+        # both spawn Chroma and race for port 8091 — the "two chromas" state
+        # that made every reap hit multiple targets in the earlier cascade bug.
+        self._start_lock = threading.Lock()
+
         self._shutdown_registered = False
 
         # Register cleanup on exit
@@ -152,40 +157,43 @@ class ChromaServerManager:
         Returns:
             True if server started successfully, False otherwise
         """
-        if force_restart and self.is_running():
-            self.logger.info("Force restart requested, stopping existing server")
-            self.stop()
-            time.sleep(self.shutdown_timeout)  # Give server time to fully stop
+        # Serialized so concurrent callers (multiple Caesar runs starting at
+        # the same instant in a web server) don't double-spawn.
+        with self._start_lock:
+            if force_restart and self.is_running():
+                self.logger.info("Force restart requested, stopping existing server")
+                self.stop()
+                time.sleep(self.shutdown_timeout)  # Give server time to fully stop
 
-        if self.is_running():
-            self.logger.info(f"ChromaDB server already running at {self.server_url}")
-            return True
-
-        self.logger.info(f"Starting ChromaDB server at {self.server_url}...")
-
-        # Ensure persist directory exists
-        os.makedirs(self.persist_path, exist_ok=True)
-
-        # Force WAL on chroma's SQLite store before the subprocess opens it.
-        # Default journal_mode=DELETE serializes writers and blocks readers,
-        # causing futex_wait_queue_me deadlocks under concurrent quick_explore.
-        # WAL is persistent in the file header so subsequent starts inherit it.
-        # See chroma-core/chroma#4038.
-        self._preset_sqlite_wal()
-
-        # Try different command variations for ChromaDB
-        commands = [
-            ["chroma", "run", "--host", self.host, "--port", str(self.port),
-                "--path", self.persist_path],
-        ]
-
-        for cmd in commands:
-            if self._try_start_command(cmd):
+            if self.is_running():
+                self.logger.info(f"ChromaDB server already running at {self.server_url}")
                 return True
 
-        self.logger.error("All ChromaDB server start attempts failed")
-        self.logger.info(f"Try manually: chroma run --host {self.host} --port {self.port} --path {self.persist_path}")
-        return False
+            self.logger.info(f"Starting ChromaDB server at {self.server_url}...")
+
+            # Ensure persist directory exists
+            os.makedirs(self.persist_path, exist_ok=True)
+
+            # Force WAL on chroma's SQLite store before the subprocess opens it.
+            # Default journal_mode=DELETE serializes writers and blocks readers,
+            # causing futex_wait_queue_me deadlocks under concurrent quick_explore.
+            # WAL is persistent in the file header so subsequent starts inherit it.
+            # See chroma-core/chroma#4038.
+            self._preset_sqlite_wal()
+
+            # Try different command variations for ChromaDB
+            commands = [
+                ["chroma", "run", "--host", self.host, "--port", str(self.port),
+                    "--path", self.persist_path],
+            ]
+
+            for cmd in commands:
+                if self._try_start_command(cmd):
+                    return True
+
+            self.logger.error("All ChromaDB server start attempts failed")
+            self.logger.info(f"Try manually: chroma run --host {self.host} --port {self.port} --path {self.persist_path}")
+            return False
 
     def _try_start_command(self, cmd: list) -> bool:
         """Try to start server with a specific command"""
@@ -216,6 +224,13 @@ class ChromaServerManager:
                     self.logger.info(
                         f"ChromaDB server started successfully (took {i+1}s); logs → {log_path}"
                     )
+                    # Marks this process as the one that spawned Chroma —
+                    # activates the atexit hook at _register_cleanup so Chroma
+                    # dies with its Python interpreter (standalone/batch/web
+                    # server, all covered). Never clean up mid-life; only on
+                    # process exit.
+                    self._started_by_me = True
+                    self._register_cleanup()
                     return True
 
                 # Check if process died
