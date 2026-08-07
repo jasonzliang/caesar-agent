@@ -2,6 +2,27 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.17] — 2026-08-07
+
+### Fixed
+
+- `reasoning_effort` is no longer silently dropped for KB models. `kb_client`
+  carried its own hand-maintained copy of `REASONING_MODELS`, and it had
+  drifted: the copy was missing the entire GPT-5.6 family, so the `mini`
+  preset's KB model — `gpt-5.6-luna`, configured with `reasoning_effort: low` —
+  failed the membership test and had its effort discarded when the LlamaIndex
+  LLM was built. It then ran at the model's default effort against a 10k
+  `max_tokens` cap that covers reasoning *and* output. Exhausting that budget on
+  reasoning returns an empty completion — which is exactly the input that made
+  `LLMRerank` parse nothing and return zero nodes in 0.4.16. That release fixed
+  the symptom; this removes the cause.
+
+  The duplicate list is deleted rather than refreshed. `LLMHandler` gains
+  `is_reasoning_model()` as a classmethod so callers can ask without
+  constructing a handler, and `_is_reasoning_model` delegates to it, so the two
+  forms cannot disagree. The lists are merged, keeping `kb_client`'s extras —
+  notably `o3-pro`, which the `gpt-5*` prefix rule does not cover.
+
 ## [0.4.16] — 2026-08-07
 
 ### Fixed
@@ -357,6 +378,7 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
+[0.4.17]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.17
 [0.4.16]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.16
 [0.4.15]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.15
 [0.4.14]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.14
