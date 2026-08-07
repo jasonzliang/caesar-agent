@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="https://jasonzliang.github.io/caesar-agent/caesar.webp" alt="Caesar autonomous research agent architecture: Perceive-Think-Act exploration loop and Generator-Verifier adversarial synthesis" width="720"/>
+  <img src="https://jasonzliang.github.io/caesar-agent/caesar.webp" alt="Caesar autonomous research agent architecture: Perceive-Think-Act exploration loop and adversarial artifact synthesis" width="720"/>
 </p>
 
 <h1 align="center">Caesar: Autonomous AI Research Agent</h1>
@@ -82,17 +82,18 @@ Current deep-research agents (ChatGPT Deep Research, Perplexity, GPT Researcher,
 
 Caesar is different:
 
-| Capability | Caesar | ChatGPT Deep Research | Perplexity | GPT Researcher |
+| Design choice | Caesar | ChatGPT / Gemini Deep Research | Perplexity Research | GPT Researcher |
 |---|:-:|:-:|:-:|:-:|
-| Open source | ✅ | ❌ | ❌ | ✅ |
-| Dynamic knowledge graph | ✅ | ❌ | ❌ | ❌ |
-| Adversarial Generator–Verifier loop | ✅ | ❌ | ❌ | ❌ |
-| Multi-draft synthesis with merge | ✅ | ❌ | ❌ | 🟡¹ |
-| Episodic memory + backtracking | ✅ | ❌ | ❌ | ❌ |
-| Pluggable LLM backend (OpenAI / Anthropic / local) | ✅ | ❌ | ❌ | ✅ |
-| Reproducible experiment JSON | ✅ | ❌ | ❌ | 🟡² |
+| Persistent knowledge graph built during exploration | ✅ | not published | not published | ❌ |
+| Adversarial refinement over its own drafts | ✅ | not published | 🟡 | 🟡 |
+| Serialized graph and JSON run log you keep | ✅ | 🟡 | 🟡 | 🟡 |
+| Runs on your own keys and hardware | ✅ | ❌ | ❌ | ✅ |
+| Works with no setup and no API keys | ❌ | ✅ | ✅ | ❌ |
+| Typical time to an answer | 10 min – 1.5 hrs | 5–30 min | under 3 min | 2–5 min |
+| Browser and mobile access | ❌ | ✅ | ✅ | 🟡 |
+| Maturity | research prototype | GA product | GA product | established open source |
 
-<sub>¹ GPT Researcher supports multi-draft generation but not adversarial self-critique or merge. ² GPT Researcher logs cost per run but not the full reproducibility bundle (wall-time, page-level sources, draft provenance).</sub>
+<sub>Compared as of July 2026 against each product's then-current tier. **"Not published"** means the vendor has not documented the mechanism, which is not the same as its absence: these are closed systems and we can report only what they disclose. ChatGPT and Deep Research are trademarks of OpenAI; Perplexity of Perplexity AI; Gemini of Google.</sub>
 
 ## How It Works
 
@@ -102,9 +103,9 @@ Caesar operates in two cognitive phases:
 
 A recursive **Perceive–Think–Act** loop performs topological traversal of information spaces. Rather than isolating summaries, Caesar generates context-aware insights conditioned on the **local structure of the exploration graph**, analyzing how new content builds upon or contradicts neighboring nodes. A dynamic policy, informed by a vector knowledge base and episodic memory, autonomously switches between depth-first expansion, strategic backtracking, and targeted web search.
 
-### 2. Adversarial Artifact Synthesis: Generator–Verifier loop
+### 2. Adversarial Artifact Synthesis
 
-Rather than a single-pass summary, Caesar runs as a recursive self-correction environment. An independent adversarial module formulates **orthogonal queries** targeting logical weaknesses, missing citations, and contradictions in the current belief state. Multiple drafts are produced iteratively and merged, forcing the agent out of the consensus basin that traps single-pass LLMs.
+Rather than a single-pass summary, Caesar runs as a recursive self-correction environment. Between drafts the agent re-reads its own artifact and formulates a refined, **orthogonal challenge** targeting narrative weaknesses, gaps and contradictions in the current belief state. Drafts are produced recurrently, each conditioned on the last, then merged — forcing the agent out of the consensus basin that traps single-pass LLMs.
 
 ## Architectural Innovations
 

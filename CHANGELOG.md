@@ -2,6 +2,26 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.14] — 2026-08-07
+
+### Fixed
+
+- The comparison table asserted six absences in ChatGPT Deep Research and
+  Perplexity. The paper declines to make those claims -- section 5.1 notes those
+  systems' "internal behavior, token budgets, and retrieval strategies are not
+  publicly documented" -- and one was wrong as a product claim, since Perplexity
+  offers model selection. Replaced with the landing page's wording, which marks
+  undocumented mechanisms as "not published", says why that differs from
+  absence, and includes the rows where Caesar loses.
+- Phase 2 is named Adversarial Artifact Synthesis and its loop adversarial
+  refinement, matching the paper. "Generator-Verifier loop" appeared in neither
+  the paper nor the source. The prose also described "an independent adversarial
+  module"; Appendix K.2 and Figure 1 have the same model critiquing its own
+  draft, with drafts recurrent rather than independent. The `generator-verifier`
+  package keyword is renamed to `adversarial-refinement`.
+
+Documentation only -- no code changes.
+
 ## [0.4.13] — 2026-08-07
 
 ### Changed
@@ -279,6 +299,7 @@ Major release coinciding with the Caesar paper publication ([arXiv: 2604.20855](
 
 Initial Caesar release.
 
+[0.4.14]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.14
 [0.4.13]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.13
 [0.4.12]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.12
 [0.4.11]: https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.11

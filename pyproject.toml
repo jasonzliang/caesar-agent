@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "caesar-agent"
-version = "0.4.13"
+version = "0.4.14"
 authors = [
     {name = "Jason Liang"},
     {name = "Elliot Meyerson"},
@@ -36,7 +36,7 @@ keywords = [
     "ai-agents", "llm", "rag", "agentic-rag", "agentic-ai",
     "autonomous-agents", "deep-research", "research-agent", "knowledge-graph",
     "retrieval-augmented-generation", "scientific-discovery", "web-exploration",
-    "generator-verifier", "llm-agents", "openai", "anthropic", "chromadb",
+    "adversarial-refinement", "llm-agents", "openai", "anthropic", "chromadb",
     "llama-index", "ai-research",
 ]
 dynamic = ["dependencies"]
