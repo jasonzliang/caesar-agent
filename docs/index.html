@@ -23,8 +23,8 @@
   <meta name="citation_author" content="Liang, Jason">
   <meta name="citation_author" content="Meyerson, Elliot">
   <meta name="citation_author" content="Miikkulainen, Risto">
-  <meta name="citation_publication_date" content="2026/03">
-  <meta name="citation_online_date" content="2026/03">
+  <meta name="citation_publication_date" content="2026/05">
+  <meta name="citation_online_date" content="2026/05">
   <meta name="citation_arxiv_id" content="2604.20855">
   <meta name="citation_doi" content="10.48550/arXiv.2604.20855">
   <meta name="citation_pdf_url" content="https://arxiv.org/pdf/2604.20855">
@@ -43,7 +43,7 @@
   <meta property="og:image:height" content="624">
   <meta property="og:image:type" content="image/webp">
   <meta property="article:published_time" content="2026-05-01">
-  <meta property="article:modified_time" content="2026-07-26">
+  <meta property="article:modified_time" content="2026-08-07">
   <meta property="article:author" content="https://jasonzliang.github.io/">
   <meta property="article:section" content="AI Research">
   <meta property="article:tag" content="AI agent">
@@ -69,11 +69,11 @@
     "description": "Autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis. Outperforms Gemini 3, Sonnet 4.5 and GPT-5.2 Deep Research on creative reasoning benchmarks.",
     "url": "https://jasonzliang.github.io/caesar-agent/",
     "downloadUrl": "https://jasonzliang.github.io/caesar-agent/",
-    "softwareVersion": "0.3.2",
+    "softwareVersion": "0.4.12",
     "license": "https://www.apache.org/licenses/LICENSE-2.0",
     "programmingLanguage": "Python",
     "datePublished": "2026-05-01",
-    "dateModified": "2026-07-26",
+    "dateModified": "2026-08-07",
     "offers": {
       "@type": "Offer",
       "price": "0",
@@ -124,7 +124,7 @@
       {"@type": "Person", "name": "Elliot Meyerson"},
       {"@type": "Person", "name": "Risto Miikkulainen"}
     ],
-    "datePublished": "2026-03",
+    "datePublished": "2026-05",
     "identifier": {"@type": "PropertyValue", "propertyID": "DOI", "value": "10.48550/arXiv.2604.20855"},
     "url": "https://arxiv.org/abs/2604.20855",
     "sameAs": [
@@ -186,7 +186,7 @@
       {
         "@type": "Question",
         "name": "Which models are supported?",
-        "acceptedAnswer": {"@type": "Answer", "text": "OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6 / 4.7), Google (Gemini 3 Pro), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config."}
+        "acceptedAnswer": {"@type": "Answer", "text": "OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6), Google (Gemini 3.x), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config."}
       },
       {
         "@type": "Question",
@@ -551,7 +551,7 @@
   </nav>
 
   <header>
-    <p class="commercial-note">Our human agents are building Caesar into a service, stay tuned for the source code release! <a href="cog.html" rel="noopener">&#128521;</a></p>
+    <p class="commercial-note">The source is on <a href="https://github.com/jasonzliang/caesar-agent" target="_blank" rel="noopener">GitHub</a>; our human agents are building Caesar into a service. <a href="cog.html" rel="noopener">&#128521;</a></p>
     <h1>Caesar: Autonomous AI Research Agent</h1>
     <p class="tagline">Caesar explores the web as a knowledge graph and refines its answer through adversarial self-critique, for creative, novel synthesis.</p>
     <p class="byline">By <a href="https://jasonzliang.github.io/" target="_blank" rel="noopener" class="lead-author">Jason Liang</a>, Elliot Meyerson, and Risto Miikkulainen</p>
@@ -564,7 +564,7 @@
       <!-- <a href="https://github.com/jasonzliang/caesar-agent" target="_blank" rel="noopener"><img src="https://img.shields.io/github/stars/jasonzliang/caesar-agent?style=social" alt="GitHub stars" width="84" height="22"></a> -->
       <!-- <a href="https://www.python.org/downloads/" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python&amp;logoColor=white" alt="Python 3.10+"></a> -->
       <!-- <a href="https://github.com/jasonzliang/caesar-agent/blob/main/LICENSE" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/license-Apache_2.0-blue" alt="License"></a> -->
-      <!-- <a href="https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.11" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/release-0.3.1-brightgreen" alt="Release"></a> -->
+      <!-- <a href="https://github.com/jasonzliang/caesar-agent/releases/tag/0.4.12" target="_blank" rel="noopener"><img src="https://img.shields.io/badge/release-0.4.12-brightgreen" alt="Release"></a> -->
     </div>
     <figure class="hero-figure">
       <img class="hero-img" src="caesar.webp" width="2008" height="624" fetchpriority="high" decoding="async" alt="Caesar autonomous research agent architecture: Phase 1 Deep Web Exploration drives a Perceive-Think-Act loop that reads and writes a knowledge graph and vector store; Phase 2 Adversarial Artifact Synthesis runs a Generator-Verifier loop with adversarial query refinement and draft merging">
@@ -610,7 +610,7 @@
       <tr><td>Runs on your own keys and hardware</td><td class="num">✅</td><td class="num">❌</td><td class="num">❌</td><td class="num">✅</td></tr>
       <tr><td>Works with no setup and no API keys</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">❌</td></tr>
       <tr><td>Typical time to an answer</td><td class="num">10 min to 1.5 hours</td><td class="num">5–30 min</td><td class="num">under 3 min</td><td class="num">2–5 min</td></tr>
-      <tr><td>Cost per query</td><td class="num">$0.30–$30 by configuration</td><td class="num">subscription</td><td class="num">subscription</td><td class="num">API spend</td></tr>
+      <tr><td>Cost per query</td><td class="num">$0.30–$70 by configuration</td><td class="num">subscription</td><td class="num">subscription</td><td class="num">API spend</td></tr>
       <tr><td>Browser and mobile access</td><td class="num">❌</td><td class="num">✅</td><td class="num">✅</td><td class="num">🟡</td></tr>
       <tr><td>Maturity</td><td class="num">research prototype</td><td class="num">GA product</td><td class="num">GA product</td><td class="num">established open source</td></tr>
     </tbody>
@@ -619,7 +619,7 @@
   <p class="table-note">Compared as of July 2026 against each product's then-current tier. "Not published" means the vendor has not documented the mechanism, which is not the same as its absence: these are closed systems and we can report only what they disclose. ChatGPT and Deep Research are trademarks of OpenAI, Perplexity of Perplexity AI, Gemini of Google; Caesar is not affiliated with or endorsed by any of them.</p>
 
   <h2 id="benchmarks">Benchmark Results</h2>
-  <p>Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scored 0–10 across three creativity dimensions: <strong>New</strong>, <strong>Useful</strong>, <strong>Surprising</strong>.</p>
+  <p>Blinded 3-model LLM-as-a-Judge panel (Claude Sonnet 4.5, GPT-5.2, Gemini 3 Pro) scored 1–10 across three creativity dimensions: <strong>New</strong>, <strong>Useful</strong>, <strong>Surprising</strong>.</p>
 
   <div class="table-scroll">
   <table>
@@ -635,7 +635,7 @@
   </table>
   </div>
 
-  <p>Cliff's Delta effect sizes are uniformly large (<strong>δ ≥ 0.76</strong>, well above the 0.47 large-effect threshold) across all baselines and output formats; <strong>δ = 1.00</strong> against five of six baselines indicates strict dominance. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a blinded human A/B study in which 23 raters preferred Caesar in 63 of 112 pairwise comparisons (56.25%), a directional result rather than a decisive one. Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
+  <p>Cliff's Delta effect sizes are uniformly large (<strong>δ ≥ 0.76</strong>, well above the 0.47 large-effect threshold) across all baselines and output formats. <strong>δ = 1.00</strong> — strict dominance — holds against GPT-5.2 Deep Research in every format, and against Sonnet 4.5 Deep Research on full answers. The advantage holds in a compute-controlled run (Caesar at $5/challenge with GPT-5-mini still tops Gemini 3 Deep Research) and in a blinded human A/B study in which 23 raters preferred Caesar in 63 of 112 pairwise comparisons (56.25%), a directional result rather than a decisive one. Ablations confirm both graph exploration and the adversarial verifier loop are independently necessary. See the <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">paper</a> for full methodology, exploration-budget ablation, and judge bias analysis.</p>
 
   <h2 id="example">Example Outputs</h2>
   <p>Head-to-head excerpts from four of the five <a href="#exploration">benchmark categories</a>, each against the strongest Deep Research baseline on that query. Each baseline answers the question well. Caesar answers one level up.</p>
@@ -653,7 +653,7 @@
     <blockquote class="baseline" aria-labelledby="ex-cd-base">
       A derivative asks: "If I change this slightly, what happens?" For delicate cake, two extra minutes transforms perfection into dryness: the time derivative is steep. … Integrals measure what accumulated over the entire cooking time. … Different cooking paths can integrate to the same result. … This is why <strong>sous vide</strong> works: low temperature × long time = high temperature × short time. … When you marinate then grill chicken, the final result depends on two things multiplied together: how the marinade changes the meat, and how sensitive grilling is to that marinated state. This is the <strong>chain rule</strong>, composition of transformations. …
     </blockquote>
-    <p class="scoreline">Blinded panel, this query: <strong>Caesar 25.78</strong> · Sonnet 4.5 Deep Research 17.67. Three judge models, three passes each.</p>
+    <p class="scoreline">Blinded panel, this query: <strong>Caesar 25.77</strong> · Sonnet 4.5 Deep Research 19.22. Three judge models, three passes each.</p>
 
     <p><strong>Quick analysis.</strong></p>
     <ul>
@@ -676,7 +676,7 @@
     <blockquote class="baseline" aria-labelledby="ex-cs-base">
       This report posits the existence of a hypothetical emotion, <strong>Sidera-Somatic Resonance</strong> (SSR), a state of being that humans are biologically capable of hosting but evolutionarily precluded from experiencing. SSR is defined as the visceral, affective perception of one's vector, velocity, and alignment within the Earth's geomagnetic field. … emotions such as fernweh (farsickness), monachopsis (the feeling of being out of place) … are not independent phenomena, but rather <strong>"phantom limb"</strong> sensations of a severed magnetic sense. … We have the sensor, but no wire to the dashboard. … It is the feeling of knowing exactly where you are and where you belong, not because you read a sign or recognized a landmark, but because the iron in your blood sings in harmony with the iron in the Earth's core. …
     </blockquote>
-    <p class="scoreline">Blinded panel, this query: <strong>Caesar 26.87</strong> · Gemini 3 Deep Research 24.60. Three judge models, five passes each.</p>
+    <p class="scoreline">Blinded panel, this query: <strong>Caesar 27.11</strong> · Gemini 3 Deep Research 23.78. Three judge models, three passes each.</p>
 
     <p><strong>Quick analysis.</strong></p>
     <ul>
@@ -701,7 +701,7 @@
       <blockquote class="baseline" aria-labelledby="ex-cf-base">
         If you made a marble statue of a person today, it would look perfect to our eyes, but to an echolocator, it would sound like a solid, dead rock. In this new world, high art would require <strong>internal density</strong>. A statue would need a skeletal structure made of ceramic and organs made of gel so that when a viewer clicked at it, the returning echo would "feel" like a living body. … To ensure privacy, you wouldn't just close a curtain; you would retreat into heavy, soundproof <strong>"Shadow Zones"</strong> where no active sonar pulse could reach you. …
       </blockquote>
-      <p class="scoreline">Blinded panel, this query: <strong>Caesar 25.89</strong> · Gemini 3 Deep Research 23.78. Three judge models, three passes each.</p>
+      <p class="scoreline">Blinded panel, this query: <strong>Caesar 24.99</strong> · Gemini 3 Deep Research 24.00. Three judge models, three passes each.</p>
 
       <p><strong>Quick analysis.</strong></p>
       <ul>
@@ -727,7 +727,7 @@
       <blockquote class="baseline" aria-labelledby="ex-mc-base">
         <strong>Computational Depth</strong>: How much processing was needed to create this? Random strings can be generated instantly (zero depth). The digits of pi require substantial computation (high depth). … Structural Sophistication: Does it have rich but non-trivial patterns? Random noise lacks patterns. Perfect repetition ("AAAA...") has trivial patterns. Creative works occupy a "Goldilocks zone" of substantial, interesting structure. … <strong>Generative Potential</strong>: The most innovative component. Does encountering this output help you compress (understand) OTHER things better? … These five components are multiplied together. This creates crucial selectivity: if ANY component is near zero, the total score crashes. … The ideal mathematical measures are uncomputable, so we use approximations. …
       </blockquote>
-      <p class="scoreline">Blinded panel, this query: <strong>Caesar 26.22</strong> · Sonnet 4.5 Deep Research 20.11. Three judge models, three passes each.</p>
+      <p class="scoreline">Blinded panel, this query: <strong>Caesar 26.23</strong> · Sonnet 4.5 Deep Research 20.12. Three judge models, three passes each.</p>
 
       <p><strong>Quick analysis.</strong></p>
       <ul>
@@ -756,7 +756,7 @@
   <ul>
     <li><strong>Recursive insight discovery.</strong> The agent maintains a running context and, at each round, the LLM produces the next critical sub-question (q<sub>t+1</sub>) conditioned on the answer to the previous one (a<sub>t</sub>). Each sub-question is answered by retrieval against <em>KB</em>, so the dependency chain stays grounded in observed sources.</li>
     <li><strong>Adversarial query refinement.</strong> An independent verifier inspects the current draft for logical weaknesses, missing citations, and unsupported claims, then formulates <em>orthogonal</em> queries that target those weaknesses. These queries seed the next draft. This is the mechanism that escapes the consensus basin that traps single-pass LLMs.</li>
-    <li><strong>Generative draft merging.</strong> Multiple independent drafts are produced and then merged by the LLM into a single artifact, which is post-processed (e.g., into an ELI5 summary) for the final output. Caesar's output is a cited research artifact plus a serialized exploration graph and a JSON run summary, auditable and reproducible.</li>
+    <li><strong>Generative draft merging.</strong> Drafts are produced recurrently, each conditioned on the previous one, then merged by the LLM into a single artifact, which is post-processed (e.g., into an ELI5 summary) for the final output. Caesar's output is a cited research artifact plus a serialized exploration graph and a JSON run summary, auditable and reproducible.</li>
   </ul>
   <p>The exact algorithms (URL scoring, persona generation, insight prompting, verifier prompts) are in Sections 3–4 of <a href="https://arxiv.org/abs/2604.20855" target="_blank" rel="noopener">the paper</a>.</p>
 
@@ -815,10 +815,10 @@ python run_agent.py config/config_preset/regular.yaml -q "your research question
   <p>No. Caesar uses hosted LLM APIs (OpenAI, Anthropic, Gemini). A local ChromaDB instance handles the vector store. Runs comfortably on a laptop.</p>
 
   <h3>Which models are supported?</h3>
-  <p>OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6 / 4.7), Google (Gemini 3 Pro), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.</p>
+  <p>OpenAI (GPT-5 family, o-series reasoning models), Anthropic (Claude 4.5 / 4.6), Google (Gemini 3.x), and any OpenAI-compatible endpoint. Model selection is per-subsystem (exploration, synthesis, judging) via YAML config.</p>
 
   <h3>How much does a typical run cost?</h3>
-  <p>A 5-iteration exploration with Claude Haiku 4.5 runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run with GPT-5.4-mini is typically <strong>$5–$10</strong>. A full 1000-iteration run, the configuration behind the benchmark results on this page, costs around <strong>$30</strong> and takes 60 to 90 minutes.</p>
+  <p>A 5-iteration exploration with GPT-5.4-mini runs at roughly <strong>$0.30</strong> and 10 minutes. A 250-iteration deep run on the <code>regular</code> preset is typically <strong>$5–$10</strong>. A full 1000-iteration run, the configuration behind the benchmark results on this page, costs roughly <strong>$45–$70</strong> and takes 60 to 90 minutes.</p>
 
   <h3>Is Caesar a good ChatGPT Deep Research alternative?</h3>
   <p>Yes, for open-ended creative or cross-disciplinary research. In blinded judge evaluation on full-answer tasks, Caesar scored 26.96 vs GPT-5.2 Deep Research's 15.74 on creative reasoning. Caesar is designed for depth and novelty, not latency, so it is not a drop-in replacement for real-time chat scenarios.</p>
