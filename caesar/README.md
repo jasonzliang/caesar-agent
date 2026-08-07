@@ -628,4 +628,4 @@ git subtree push --prefix caesar rome main
 
 ## License
 
-Apache License 2.0. See the [repo root LICENSE](../LICENSE) and [NOTICE](../NOTICE).
+Apache License 2.0. See the [repo root LICENSE](../LICENSE).
