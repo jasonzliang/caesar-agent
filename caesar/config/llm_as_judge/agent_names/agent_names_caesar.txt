@@ -1,0 +1,7 @@
+Agent Code Name: Agent Real Name
+answer_cat_syn1: Caesar (Draft 1)
+answer_cat_syn3: Caesar (Draft 3)
+answer_cat_merge: Caesar (Final)
+answer_cat_250: Caesar (250 Iter)
+answer_cat_500: Caesar (500 Iter)
+answer_cat_1000: Caesar (1000 Iter)

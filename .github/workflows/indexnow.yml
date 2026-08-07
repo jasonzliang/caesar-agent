@@ -2,18 +2,23 @@ name: IndexNow ping
 
 # Pings IndexNow (Bing / Yandex / DuckDuckGo / others) so newly-pushed content
 # gets indexed within minutes instead of waiting for the next crawl.
-# Verification key file lives at the repo root (8ec2557553f62b0ca93ef023481b8787.txt).
+# Verification key file lives at docs/8ec2557553f62b0ca93ef023481b8787.txt, which
+# GitHub Pages serves from the site root -- keyLocation below is a URL, so the
+# 2026-08 move of the site into docs/ did not change it.
 
 on:
   push:
     branches: [main]
+    # Scoped to docs/ -- the site. Without this, the Caesar source that now shares
+    # this repo would fire a ping on any .html or .svg it happens to touch.
     paths:
-      - '**.html'
-      - '**.png'
-      - '**.jpg'
-      - '**.svg'
-      - 'sitemap.xml'
-      - 'robots.txt'
+      - 'docs/**.html'
+      - 'docs/**.png'
+      - 'docs/**.jpg'
+      - 'docs/**.webp'
+      - 'docs/**.svg'
+      - 'docs/sitemap.xml'
+      - 'docs/robots.txt'
   # Allow manual re-pings without pushing
   workflow_dispatch:
 

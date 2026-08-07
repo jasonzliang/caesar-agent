@@ -1,0 +1,69 @@
+# Caesar Agent Configuration File
+# Only includes settings that differ from DEFAULT_CONFIG
+
+# ============================================================================
+# AGENT CONFIGURATION
+# ============================================================================
+Agent:
+  name: CaesarExplorer
+  draw_fsm: false
+
+# ============================================================================
+# CAESAR-SPECIFIC CONFIGURATION
+# ============================================================================
+CaesarAgent:
+  additional_starting_queries: 9
+  max_iterations: 200
+  save_graph_interval: 50
+
+  use_quick_explore: True
+  quick_explore_insights: False
+  exploration_llm_config:
+    model: gpt-5.6-luna
+    reasoning_effort: low
+
+  # overwrite_role_file: config/role/self_transcend_role.txt
+  # adapt_role_file: config/role/self_transcend_insights_v1.txt
+  adapt_role: True
+
+ArtifactSynthesizer:
+  synthesis_iterations: 10
+  synthesis_drafts: 3
+  synthesis_merge_artifacts: true
+  synthesis_eli5: false
+  synthesis_eli5_length: [null, 450]
+  synthesis_human_eval: false
+  synthesis_max_length: null
+  synthesis_iteration_filter: null
+
+# ============================================================================
+# LLM CONFIGURATION
+# ============================================================================
+LLMHandler:
+  model: gpt-5.6-luna
+  reasoning_effort: low
+
+# ============================================================================
+# KNOWLEDGE BASE CONFIGURATION
+# ============================================================================
+AgentMemory:
+  enabled: false
+  use_graph: false
+
+ChromaClientManager:
+  model: gpt-5.6-luna
+  reasoning_effort: low
+
+# ============================================================================
+# WEB SEARCH CONFIGURATION
+# ============================================================================
+BraveSearch:
+  # Force the DDGS metasearch backend regardless of BRAVE_API_KEY availability.
+  use_ddgs: True
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+Logger:
+  include_caller_info: "rome"
+  level: "info"

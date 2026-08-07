@@ -1,0 +1,29 @@
+### YOUR TASK ###
+
+Attached is a CSV file with results from multiple judges (judge_*) where each judge scored the creativity of answers from different agents (answer_*) on various queries (using 3 metrics: new, surprising, useful). Create an easy to understand yet detailed and informative summary of the scores from each agent.
+
+Output the following:
+
+1. Modified CSV file showing actual agent names
+  - Use attached agent names file to replace the agent code names in the CSV file with their actual names.
+  - For example, replace "answer_cat_cam" or "cat" with "Caesar Deep Research"
+
+2. Using the modified CSV file, create clean, well formatted tables:
+  - Show all of the raw metrics (in a compact table) for all agents on each query
+  - Give average score for each of the query answers from each agent.
+  - Give average score for each metric (new, surprising, useful) for each agent.
+  - Give average score for each agent from each judge.
+  - Give judge bias scores:
+    a) For each judge (lets call this Judge X), find scores that Judge X gave to agent answers with similar name as itself.
+    b) Find scores that the other judges (Judge Y, Judge Z, ...) gave to the same agent answers with similar names as Judge X.
+    c) Compare the overall average scores from a) and b) for bias of Judge X towards answers from similar agents. Remember to carefully double check your calculations!
+  - IMPORTANT: For each table, also give overall average for each agent, and ensure the tables are sorted by the overall average in descending order.
+
+3. Finally, analyze what is unique about Caesar agent's answers when compared to the rest. By carefully checking and comparing against other agents, explain how Caesar agent's answer:
+  - Structurally different than other answers
+  - More creative than other answers
+  - Resolves the query in a unique way
+  - Any other useful insights
+
+IMPORTANT: You must use the modified CSV file (with actual agent names) for all of your calculations, tables, and responses.
+IMPORTANT: Make sure to double check that your score calculations and analysis are correct. Make sure all calculations are backed up by the raw data and that there are no missing or skipped scores.

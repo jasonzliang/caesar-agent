@@ -1,0 +1,70 @@
+# Caesar Agent Configuration File
+# Only includes settings that differ from DEFAULT_CONFIG
+
+# ============================================================================
+# AGENT CONFIGURATION
+# ============================================================================
+Agent:
+  name: CaesarExplorer
+  draw_fsm: false
+
+# ============================================================================
+# CAESAR-SPECIFIC CONFIGURATION
+# ============================================================================
+CaesarAgent:
+  # starting_url: "https://arxiv.org/pdf/1911.01547"
+  starting_query: "Novel way to solve ARC-AGI benchmark"
+  additional_starting_queries: 1
+  max_web_searches: 3
+  save_graph_interval: 1
+  draw_graph: true
+  max_iterations: 5
+
+  exploration_llm_config:
+    model: gpt-5.4-mini
+    reasoning_effort: low
+    temperature: 0.9
+    max_completion_tokens: 8192
+    timeout: 120
+
+  overwrite_role_file: config/role/self_transcend_role_v1.txt
+  adapt_role: false
+  adapt_role_file: config/role/self_transcend_insights_v1.txt
+
+ArtifactSynthesizer:
+  synthesis_iterations: 5
+  synthesis_drafts: 2
+  synthesis_merge_artifacts: true
+  synthesis_eli5: false
+  synthesis_eli5_length: [null, 450]
+  synthesis_human_eval: false
+  synthesis_max_length: null
+  synthesis_iteration_filter: null
+
+# ============================================================================
+# LLM CONFIGURATION
+# ============================================================================
+LLMHandler:
+  provider: openai
+  cost_limit: 300.0
+  model: gpt-5.4-mini
+  reasoning_effort: low
+  temperature: 0.1
+  max_completion_tokens: 8192
+
+# ============================================================================
+# KNOWLEDGE BASE CONFIGURATION
+# ============================================================================
+AgentMemory:
+  enabled: true
+  use_graph: false
+
+ChromaClientManager:
+  model: gpt-5.4-mini
+  reasoning_effort: low
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+Logger:
+  include_caller_info: "rome"

@@ -1,0 +1,59 @@
+# Caesar Agent Configuration File
+# Only includes settings that differ from DEFAULT_CONFIG
+
+# ============================================================================
+# AGENT CONFIGURATION
+# ============================================================================
+Agent:
+  name: CaesarExplorer
+  draw_fsm: false
+
+# ============================================================================
+# CAESAR-SPECIFIC CONFIGURATION
+# ============================================================================
+CaesarAgent:
+  starting_url: "https://en.wikipedia.org/wiki/Evolution"
+  # starting_query: "How can multi-agent AI systems use LLMs to solve complex enterprise decision-making problems?"
+  max_iterations: 1000
+  save_graph_interval: 50
+
+  exploration_llm_config:
+    model: gpt-5.4
+
+  adapt_role: True
+  adapt_role_file: config/role/self_transcend_insights_v1.txt
+
+ArtifactSynthesizer:
+  synthesis_iterations: 25
+  synthesis_drafts: 3
+  synthesis_merge_artifacts: true
+  synthesis_eli5: false
+  synthesis_eli5_length: [null, 450]
+  synthesis_human_eval: false
+  synthesis_max_length: null
+  synthesis_iteration_filter: null
+
+# ============================================================================
+# LLM CONFIGURATION
+# ============================================================================
+LLMHandler:
+  model: gpt-5.4
+  reasoning_effort: low
+
+# ============================================================================
+# KNOWLEDGE BASE CONFIGURATION
+# ============================================================================
+AgentMemory:
+  enabled: true
+  use_graph: true
+
+ChromaClientManager:
+  model: gpt-5-mini
+  reasoning_effort: low
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+Logger:
+  include_caller_info: "rome"
+  level: "info"

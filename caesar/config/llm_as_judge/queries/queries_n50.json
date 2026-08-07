@@ -1,0 +1,64 @@
+{
+  "queries": {
+    "constrained_synthesis": [
+      "Design a functional, zero-electricity cooling system for a desert home using only materials available in 14th-century Mali.",
+      "Write a short story where the sentiment of each sentence must strictly alternate between positive and negative, but the overall narrative must end in a tragedy.",
+      "Develop a tabletop roleplaying game combat system that uses exactly three standard six-sided dice, involves no arithmetic (no addition or subtraction), and resolves actions purely through the spatial positioning of the dice.",
+      "Compose the rules for a team sport played in zero gravity where players cannot physically touch each other, and the 'ball' is a highly magnetic sphere.",
+      "Design a 7-day vegetarian meal plan using exactly 10 distinct ingredients for the entire week, optimizing for complete protein and avoiding flavor fatigue.",
+      "Create a secure cryptographic cipher that can be easily memorized and executed by a 10-year-old using only a standard deck of 52 playing cards.",
+      "Propose a purely mechanical (no electronics) sorting machine capable of separating three different types of plastic waste based solely on density and elasticity.",
+      "Draft a legal contract for the sale of a soul that contains no loopholes, uses strictly plain English (no legalese), and fits on a single 3x5 inch index card.",
+      "Invent a musical instrument that can only produce three distinct pitches but allows for complex rhythmic expression through air pressure manipulation.",
+      "Design a city block layout for 1,000 residents that maximizes sunlight exposure for every unit while dedicating exactly 40% of the surface area to unbroken, continuous green space."
+    ],
+    "counterfactual_reasoning": [
+      "What if the Roman Empire successfully industrialized using steam power in 100 AD? Trace the geopolitical and environmental consequences up to the year 1000 AD.",
+      "Imagine a world where human memory resets completely every 10 years. How would financial systems, property ownership, and criminal justice evolve to handle this biological reality?",
+      "Suppose water expanded when heated, but contracted when frozen (becoming denser than liquid water). Describe the evolution of marine life and ocean currents on this alternate Earth.",
+      "If the Library of Alexandria had never burned and its knowledge was seamlessly integrated into the Byzantine Empire, how would the timeline of the scientific revolution shift?",
+      "What if the human species possessed a hive-mind communication ability strictly limited to a 50-mile radius? Trace the downstream effects on urban planning and warfare.",
+      "Imagine if the primary global energy source from the 1800s onward was a highly efficient, fast-growing biofuel crop instead of fossil fuels. How would global power dynamics differ today?",
+      "What if the dinosaurs were never wiped out by an asteroid, but instead underwent a slow cognitive evolution? Outline the societal structure of a reptilian civilization coexisting with early mammals.",
+      "Suppose the concept of 'zero' was never conceptualized in mathematics. How would modern physics and engineering attempt to function without it?",
+      "If sleep was entirely optional and provided no physiological benefit, how would the 24-hour global economy and labor laws restructure society?",
+      "What if the Earth had two moons of equal size, creating extreme and unpredictable tidal patterns? Detail the architectural and agricultural adaptations required for human survival."
+    ],
+    "cross_domain_synthesis": [
+      "Apply the principles of quantum mechanics (superposition, entanglement, observer effect) to the psychology of human interpersonal relationships.",
+      "Map the structural framework of a blockchain (distributed ledger, consensus mechanisms, cryptography) onto the human immune system's response to novel pathogens.",
+      "Use the formal logic of music theory (harmony, dissonance, counterpoint, resolution) to design a major city's public transportation schedule.",
+      "Apply the principles of fluid dynamics (laminar flow, turbulence, viscosity) to model the spread of viral misinformation on social media platforms.",
+      "Structure a novel's plot progression using the lifecycle of a star (nebula, main sequence, red giant, supernova/white dwarf).",
+      "Map the principles of macroeconomic theory (inflation, interest rates, supply and demand) to the management of an individual's daily cognitive energy and focus.",
+      "Use the architectural principles of Gothic cathedrals (flying buttresses, ribbed vaults, light-as-divine) to structure the user interface and experience of a computer operating system.",
+      "Apply the rules of plate tectonics (subduction, divergence, transform faults) to explain the long-term evolution and collision of language families and dialects.",
+      "Translate the logic of genetic algorithms (mutation, crossover, fitness functions) into a methodology for writing and optimizing stand-up comedy routines.",
+      "Apply the formal structure of a chess game (opening theory, positional advantage, endgame technique) to the process of negotiating a hostile corporate takeover."
+    ],
+    "meta_creativity": [
+      "Design an artificial intelligence prompt that systematically evaluates and improves its own ability to write poetry, including a quantifiable metric for defining 'soulfulness.'",
+      "Develop a framework for teaching a generative AI how to experience and utilize an artificial state of 'boredom' as a catalyst for unprecedented creative output.",
+      "Propose a physical game where the primary objective is to continually invent new rules for the game itself, maintaining competitive balance while escalating complexity.",
+      "Outline a methodology for a human artist to collaborate with a non-human biological system (like a slime mold or mycelium network) to co-author a piece of architecture.",
+      "Create the grammatical rules for a constructed language specifically designed to articulate the feeling of having a complex idea that you cannot quite put into words.",
+      "Design an algorithm that evaluates human art not by aesthetic value, but by the degree to which it successfully subverts the algorithm's own predictive models.",
+      "Formulate a philosophy of creativity where 'destruction' and 'forgetting' are the primary mechanisms of innovation, rather than 'building' and 'remembering.'",
+      "Invent a systemic process for mathematically translating a classical painting into a philosophical argument, detailing the mapping between color/composition and premise/conclusion.",
+      "Outline a curriculum for teaching the concept of 'irony' to a superintelligent AI that lacks any understanding of human emotion, context, or mortality.",
+      "Design a museum exhibit that is continuously curated and physically rearranged in real-time by the physiological responses (heart rate, pupil dilation) of its visitors."
+    ],
+    "open_ended_synthesis": [
+      "Invent a completely original form of global currency that is not based on fiat, gold, or computing power, but rather on the verifiable generation of ecological biodiversity.",
+      "Propose a new primary emotion that humans do not currently possess, detailing its evolutionary purpose, physical sensation, and how society would adapt to it.",
+      "Design a radically new system of government that operates entirely without geographic borders, utilizing dynamic, issue-specific opt-in jurisdictions.",
+      "Invent an entirely new category of performing arts that relies fundamentally on manipulating the audience's perception of time.",
+      "Conceptualize a viable, ethical business model for a company that legally harvests, synthesizes, and sells human dreams.",
+      "Propose a novel scientific instrument capable of measuring a fundamental property of the universe that modern physics does not yet know exists.",
+      "Invent a new genre of philosophy that entirely rejects the concept of the 'self' or 'individual consciousness' as a starting point, replacing it with an alternative axiom.",
+      "Design an educational system where the concept of 'subjects' (math, history, science) is replaced by an entirely different, holistic organizing principle for human knowledge.",
+      "Conceptualize a global physical infrastructure project, on the scale of the internet or the highway system, that solves a critical problem humanity doesn't even realize it has yet.",
+      "Invent a new type of interpersonal relationship that is neither familial, romantic, nor platonic, complete with its own distinct social norms, legal rights, and obligations."
+    ]
+  }
+}

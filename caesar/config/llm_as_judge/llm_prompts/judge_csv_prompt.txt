@@ -1,0 +1,15 @@
+### YOUR TASK ###
+
+Attached are results from multiple judges (judge_[...].txt) where each judge scored the creativity of answers from different agents (answer_[...].txt) on various queries (using 3 metrics: new, surprising, useful). Create an easy to understand yet detailed and informative summary of the scores from each agent.
+
+Generate a CSV showing all the scoring results (use example below as an template, but do NOT copy the scores from it):
+
+Query Category,Agent Name,Judge Name,New Score,Useful Score,Surprising Score,Total Score
+constrained_creativity,answer_agent1,judge_claude,1,1,1,3
+counterfactual_reasoning,answer_agent1,judge_gemini,2,2,2,6
+crossdomain_synthesis,answer_agent2,judge_claude,3,3,3,9
+meta_creativity,answer_agent2,judge_gemini,4,4,4,12
+openended_creativity,answer_agent3,judge_gpt,5,5,5,15
+
+IMPORTANT: In the CSV, the judge scores of each agent answer must be assigned to one of the following 5 query categories: constrained_creativity, counterfactual_reasoning, crossdomain_synthesis, meta_creativity, openended_creativity.
+IMPORTANT: You must double check that the generated CSV is accurate and that no scores or results are omitted.

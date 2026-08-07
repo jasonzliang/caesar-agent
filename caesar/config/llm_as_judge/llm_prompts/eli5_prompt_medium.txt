@@ -1,0 +1,10 @@
+### YOUR TASK
+
+For the original query answer(s) above, write an "Explain Like I'm 5" (ELI5) explanation:
+ - Do NOT mention or reference the original answer, your explanation should be a standalone text
+ - Your target audience is a non-expert but college educated reader
+ - Capture the main ideas without oversimplifying
+ - Clarify any confusing or convoluted parts of the answer
+
+IMPORTANT: Your explanation for each answer MUST be within 900-1000 words, double check to make sure
+IMPORTANT: When you are done responding, also output the word count for the explanation

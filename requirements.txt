@@ -1,0 +1,56 @@
+# pyproject reads this file via setuptools' dynamic dependencies. Do NOT use pip's `-r` to pull in
+# another file here: setuptools does not expand -r and passes the literal line through as a PEP 508
+# specifier, which made `pip install .` die with
+# `InvalidRequirement: Expected package name at the start of dependency specifier`.
+
+# Rome Core Packages
+colorama
+litellm
+networkx
+numpy
+openai
+portalocker
+psutil
+pytest
+scipy
+tinydb
+
+# KB/Memory Packages
+chromadb
+llama-index
+llama-index-vector-stores-chroma
+llama-index-embeddings-openai
+llama-index-llms-openai
+pillow  # llama-index-core imports PIL at import time; not always pulled transitively
+# mem0ai[graph]
+mem0ai
+
+# Casear Agent Packages
+anthropic
+beautifulsoup4
+curl_cffi
+ddgs
+google-genai>=2.16.0   # floor, not a pin: 2.2.0 was 14 minor versions behind on a PREVIEW
+                       # surface (Interactions / Deep Research) whose vendor's standing advice
+                       # for intermittent 400 INVALID_ARGUMENT on that endpoint is 'update the
+                       # SDK'. Upgraded 2026-08-01 and re-verified every surface the adapters
+                       # touch: agent id and both agent_config keys are still declared, and a
+                       # live shape test reached the server (rejected on credentials, not
+                       # structure). NB the SDK version is NOT in adapter_fp -- see below.
+pygraphviz
+pypdf
+# Reached the packaging path via crest/requirements.txt until crest moved to its own repo. rome
+# imports yaml directly (rome/config.py, rome/base_agent.py, web_server/api/app/config.py,
+# benchmark/evalplus_multi_agent.py), so it has to be declared here now.
+pyyaml>=6.0
+tabulate
+tenacity
+trafilatura>=2.1.0  # PR #856 fixes Document() mutable-default lxml-element race that segfaulted under ThreadPoolExecutor
+
+# Rome Optional Packages
+evalplus
+graphviz
+llmlingua
+# ribs
+tiktoken
+xxhash

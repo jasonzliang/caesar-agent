@@ -1,0 +1,67 @@
+# Caesar Agent Configuration File
+# Only includes settings that differ from DEFAULT_CONFIG
+
+# ============================================================================
+# AGENT CONFIGURATION
+# ============================================================================
+Agent:
+  name: CaesarExplorer
+  draw_fsm: false
+
+# ============================================================================
+# CAESAR-SPECIFIC CONFIGURATION
+# ============================================================================
+CaesarAgent:
+  # starting_url: "https://arcprize.org/arc-agi"
+  # allowed_domains: ["*"]
+  starting_query: "Apply the mathematical structure of calculus (not the concepts, but the formal relationships) to cooking. What would a 'derivative' of a recipe mean? An 'integral'? Show the parallel structure."
+  additional_starting_queries: 11
+  max_web_searches: 30
+  max_iterations: 1000
+  save_graph_interval: 50
+
+  use_quick_explore: False
+  quick_explore_insights: False
+  exploration_llm_config:
+    model: gpt-5.4
+    reasoning_effort: low
+
+  # overwrite_role_file: config/custom_role/self_transcend_role_v3.txt
+  # adapt_role_file:     config/custom_role/self_transcend_insights_v4.txt
+  adapt_role: True
+  role_max_length: 400
+
+ArtifactSynthesizer:
+  synthesis_iterations: 30
+  synthesis_drafts: 3
+  synthesis_merge_artifacts: true
+  synthesis_eli5: true
+  synthesis_eli5_length: [null, 450]
+  synthesis_human_eval: false
+  synthesis_max_length: null
+  synthesis_iteration_filter: null
+
+# ============================================================================
+# LLM CONFIGURATION
+# ============================================================================
+LLMHandler:
+  model: gpt-5.4
+  reasoning_effort: medium
+
+# ============================================================================
+# KNOWLEDGE BASE CONFIGURATION
+# ============================================================================
+AgentMemory:
+  enabled: true
+  use_graph: false
+
+ChromaClientManager:
+  model: gpt-5.4
+  reasoning_effort: low
+
+# ============================================================================
+# LOGGING CONFIGURATION
+# ============================================================================
+Logger:
+  include_caller_info: "rome"
+  level: "info"
