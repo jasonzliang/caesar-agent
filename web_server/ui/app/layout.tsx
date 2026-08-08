@@ -167,11 +167,11 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                   <>
                     {' · '}
                     <a
-                      href={`https://github.com/jasonzliang/caesar-agent/commit/${commit}`}
+                      href="https://github.com/jasonzliang/caesar-agent/commits/main/"
                       target="_blank"
                       rel="noopener"
                       className="hover:underline"
-                      title="Commit on GitHub"
+                      title="Commit history on GitHub"
                     >
                       {commit}
                     </a>
