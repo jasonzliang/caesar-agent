@@ -359,6 +359,7 @@ class _RunState:
         preset_id: str,
         api_key: str | None = None,
         synthesis_model: str | None = None,
+        output_length: int | None = None,
     ) -> None:
         self.run_id = run_id
         self.preset_id = preset_id
@@ -368,6 +369,9 @@ class _RunState:
         # Public-mode synthesis-model override (LLMHandler.model). None keeps
         # the preset's model. In-memory only, like api_key.
         self.synthesis_model = synthesis_model
+        # Public-mode artifact word target (ArtifactSynthesizer.synthesis_max_length).
+        # None keeps the preset's value. In-memory only, like the two above.
+        self.output_length = output_length
         self.task: asyncio.Task | None = None
         # Bounded so a stuck SSE client can't grow memory; oldest event drops.
         self.queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=512)
@@ -459,6 +463,7 @@ class JobPool:
         collection_name: str | None = None,
         api_key: str | None = None,
         synthesis_model: str | None = None,
+        output_length: int | None = None,
     ) -> None:
         async with self._lock:
             if run_id in self._states:
@@ -466,7 +471,7 @@ class JobPool:
                 return
             state = _RunState(
                 run_id, preset_id=preset_id, api_key=api_key,
-                synthesis_model=synthesis_model,
+                synthesis_model=synthesis_model, output_length=output_length,
             )
             self._states[run_id] = state
             state.task = asyncio.create_task(
@@ -849,6 +854,16 @@ class JobPool:
         # keep the preset's model, so only the synthesis/default path changes.
         if state.synthesis_model:
             config.setdefault("LLMHandler", {})["model"] = state.synthesis_model
+
+        # Public-mode artifact-length override. synthesis_max_length is already
+        # threaded through both the per-draft prompt and the merge prompt, so
+        # setting it here is the whole feature -- caesar needs no change. The
+        # presets all ship null (unconstrained), which is why an unset run can
+        # run to ~8k words.
+        if state.output_length:
+            config.setdefault("ArtifactSynthesizer", {})["synthesis_max_length"] = (
+                state.output_length
+            )
 
         # For follow-up modes, fold parent + follow-up via a small LLM call
         # so Caesar's synthesizer + search-keyword paths see a properly-scoped

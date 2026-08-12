@@ -4,7 +4,12 @@ import { useEffect, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { api, type Preset } from '@/lib/api';
-import { usePublicMode, getStoredKey, getStoredModel } from '@/lib/public-mode';
+import {
+  usePublicMode,
+  getStoredKey,
+  getStoredModel,
+  getStoredOutputLength,
+} from '@/lib/public-mode';
 import { PresetToggle } from './PresetToggle';
 import { ExamplePrompts } from './ExamplePrompts';
 import { ArrowRight, Loader2 } from 'lucide-react';
@@ -72,7 +77,9 @@ export function QueryInput({ presets }: Props) {
         ...(publicMode ? { apiKey } : {}),
         // Synthesis-model override set on the /config page (empty → preset
         // default; createRun omits it when falsy).
-        ...(publicMode ? { synthesisModel: getStoredModel() } : {}),
+        ...(publicMode
+          ? { synthesisModel: getStoredModel(), outputLength: getStoredOutputLength() }
+          : {}),
       });
       router.push(`/run/${run.id}`);
     } catch (e) {

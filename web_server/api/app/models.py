@@ -44,6 +44,10 @@ class Run(Base):
     # preset's default model. Not a secret, so unlike the api_key it is
     # persisted — the run page reads it for the model badge.
     synthesis_model: Mapped[str | None] = mapped_column(String(64), nullable=True)
+    # Public-mode per-run artifact word target; NULL = the preset's own value.
+    # Persisted for the same reason as synthesis_model: a restart must reproduce
+    # the run it is restarting, not silently fall back to the preset.
+    output_length: Mapped[int | None] = mapped_column(Integer, nullable=True)
     # Public-mode per-run OpenAI key, stored so a restart can auto-resume the
     # run from its checkpoint. Cleared the instant the run reaches a terminal
     # state (see job_runner._update_status), plus a startup purge + TTL — so it

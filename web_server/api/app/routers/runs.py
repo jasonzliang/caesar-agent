@@ -343,6 +343,11 @@ async def create_run(
             )
         synthesis_model = body.synthesis_model
 
+    # Same gate for the artifact word target. Pydantic has already bounded it to
+    # 500..20000, so there is nothing further to validate here -- unlike the
+    # model, there is no enumerated list to check membership against.
+    output_length: int | None = body.output_length if settings.public_mode else None
+
     # Follow-up validation. Parent must be terminal (done exploring) and have
     # an artifact directory. Both completed and failed parents are acceptable
     # follow-up targets: refine mode re-synthesizes over the parent's KB —
@@ -434,6 +439,7 @@ async def create_run(
         query=body.query,
         preset=body.preset,
         synthesis_model=synthesis_model,
+        output_length=output_length,
         # Public mode: stash the key so a restart can auto-resume from
         # checkpoint; cleared on terminal + startup purge + TTL. Non-public runs
         # use the operator env key, so nothing is stored.
@@ -462,11 +468,13 @@ async def create_run(
         collection_name=collection_name,
         api_key=body.api_key,
         synthesis_model=synthesis_model,
+        output_length=output_length,
     )
     logger.info(
-        "Submitted run %s preset=%s mode=%s parent=%s collection=%s synth_model=%s",
+        "Submitted run %s preset=%s mode=%s parent=%s collection=%s synth_model=%s len=%s",
         run_id, body.preset, body.mode, body.parent_run_id, collection_name,
         synthesis_model or "(preset default)",
+        output_length or "(preset default)",
     )
 
     return await _summary_for(run, session)
@@ -627,6 +635,7 @@ async def retry_run(
             collection_name=run.collection_name,
             api_key=body.api_key,
             synthesis_model=run.synthesis_model,
+            output_length=run.output_length,
         )
     except Exception:
         # create_run gets rollback-on-error for free because its commit happens
