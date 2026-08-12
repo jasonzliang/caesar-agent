@@ -461,7 +461,7 @@ The `exp_summary.json` contains wall-time, token/cost totals, iterations elapsed
 
 ### Presets (`config/config_preset/`)
 
-- `regular.yaml`: 250 iterations, `gpt-5.6-terra` (exploration) / `gpt-5.6-sol` at medium effort (synthesis) / `gpt-5.6-luna` (KB), adapt_role enabled, merge enabled (production default)
+- `regular.yaml`: 250 iterations, `gpt-5.6-terra` (exploration) / `gpt-5.6-sol` at medium effort (synthesis) / `gpt-5.4-mini` (KB), adapt_role enabled, merge enabled (production default)
 - `mini.yaml`: smaller/faster run
 - `nano.yaml`: smallest, for quick smoke tests
 

@@ -2,6 +2,21 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.19] — 2026-08-12
+
+### Changed
+
+- Presets are back on `gpt-5.4-mini` for the KB, exploration and synthesis
+  models, reverting the move to `gpt-5.6-luna`. Runs had gone from ~17 minutes
+  to 30–56. The measured cause is reasoning tokens, not speed: on a capped
+  100-word answer luna spent 948 output tokens (808 reasoning, 140 visible) in
+  8.5s against mini's 332 (201 reasoning, 132 visible) in 2.8s. Throughput is
+  effectively identical at 111 against 118 tok/s, so luna is not slower per
+  token — it emits three to four times as many, nearly all invisible. That also
+  reconciles two measurements that had looked contradictory: tokens/sec put luna
+  at 0.93x, while wall-clock per call was 1.7–3x worse. Both were right. Preset
+  descriptions and the cost and duration estimates in `web_server` follow.
+
 ## [0.4.18] — 2026-08-12
 
 ### Added

@@ -19,7 +19,7 @@ CaesarAgent:
   use_quick_explore: True
   quick_explore_insights: True
   exploration_llm_config:
-    model: gpt-5.6-luna
+    model: gpt-5.4-mini
     reasoning_effort: low
 
   # overwrite_role_file: config/role/self_transcend_role.txt
@@ -51,7 +51,7 @@ AgentMemory:
   use_graph: false
 
 ChromaClientManager:
-  model: gpt-5.6-luna
+  model: gpt-5.4-mini
   reasoning_effort: low
 
 # ============================================================================
