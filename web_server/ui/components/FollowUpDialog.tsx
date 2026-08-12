@@ -5,7 +5,12 @@ import { createPortal } from 'react-dom';
 import { useRouter } from 'next/navigation';
 import { ArrowRight, Loader2, X } from 'lucide-react';
 import { api, type RunMode } from '@/lib/api';
-import { usePublicMode, getStoredKey, getStoredModel } from '@/lib/public-mode';
+import {
+  usePublicMode,
+  getStoredKey,
+  getStoredModel,
+  getStoredOutputLength,
+} from '@/lib/public-mode';
 import { cn } from '@/lib/utils';
 
 type Props = {
@@ -125,7 +130,9 @@ export function FollowUpDialog({ open, onClose, parentRunId, parentPreset }: Pro
         mode,
         ...(publicMode ? { apiKey } : {}),
         // Reuse the synthesis-model override saved on the /config page.
-        ...(publicMode ? { synthesisModel: getStoredModel() } : {}),
+        ...(publicMode
+          ? { synthesisModel: getStoredModel(), outputLength: getStoredOutputLength() }
+          : {}),
       });
       router.push(`/run/${run.id}`);
     } catch (e) {

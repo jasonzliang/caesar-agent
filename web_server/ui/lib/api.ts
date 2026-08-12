@@ -118,7 +118,13 @@ export const api = {
   createRun: (
     query: string,
     preset: string,
-    opts?: { parent_run_id?: string; mode?: RunMode; apiKey?: string; synthesisModel?: string },
+    opts?: {
+      parent_run_id?: string;
+      mode?: RunMode;
+      apiKey?: string;
+      synthesisModel?: string;
+      outputLength?: string;
+    },
   ) =>
     fetch('/api/runs', {
       method: 'POST',
@@ -133,6 +139,8 @@ export const api = {
         ...(opts?.apiKey ? { api_key: opts.apiKey } : {}),
         // Public mode only: synthesis-model override. Omitted → preset default.
         ...(opts?.synthesisModel ? { synthesis_model: opts.synthesisModel } : {}),
+        // Public mode only: artifact word target. Omitted → preset default.
+        ...(opts?.outputLength ? { output_length: Number(opts.outputLength) } : {}),
       }),
     }).then((r) => jsonOrThrow<RunSummary>(r)),
 

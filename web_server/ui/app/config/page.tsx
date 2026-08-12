@@ -10,6 +10,9 @@ import {
   clearStoredKey,
   getStoredModel,
   setStoredModel,
+  getStoredOutputLength,
+  setStoredOutputLength,
+  OUTPUT_LENGTH_CHOICES,
 } from '@/lib/public-mode';
 
 // Config page: enter the OpenAI API key (saved to a browser cookie so it
@@ -26,6 +29,10 @@ export default function ConfigPage() {
   const [model, setModel] = useState('');
   const [hasModel, setHasModel] = useState(false);
   const [modelSaved, setModelSaved] = useState(false);
+  // Artifact word target. '' = use the preset's own length.
+  const [outputLength, setOutputLength] = useState('');
+  const [hasLength, setHasLength] = useState(false);
+  const [lengthSaved, setLengthSaved] = useState(false);
 
   // Recovery code = this browser's caesar_id (fetched from the server, which
   // owns the HttpOnly cookie). Restoring sets that cookie to a pasted code.
@@ -42,6 +49,9 @@ export default function ConfigPage() {
     const storedModel = getStoredModel();
     setModel(storedModel);
     setHasModel(storedModel.length > 0);
+    const storedLength = getStoredOutputLength();
+    setOutputLength(storedLength);
+    setHasLength(storedLength.length > 0);
     api.getModels().then(setModels).catch(() => setModels([]));
     fetch('/api/whoami', { cache: 'no-store' })
       .then((r) => r.json())
@@ -71,6 +81,13 @@ export default function ConfigPage() {
     setModelSaved(true);
     // Brief "Saved" confirmation; stay on the page (unlike the key save).
     window.setTimeout(() => setModelSaved(false), 1500);
+  };
+
+  const onLengthSave = () => {
+    setStoredOutputLength(outputLength);
+    setHasLength(outputLength.length > 0);
+    setLengthSaved(true);
+    window.setTimeout(() => setLengthSaved(false), 1500);
   };
 
   const onCopy = async () => {
@@ -229,6 +246,58 @@ export default function ConfigPage() {
               </>
             ) : (
               'Save model'
+            )}
+          </button>
+        </div>
+      </div>
+
+      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm p-6">
+        <div className="flex items-center gap-2 mb-1">
+          <h2 className="text-lg font-semibold text-gray-900">Answer length</h2>
+          <span
+            className={`ml-1 inline-flex items-center gap-1 text-xs px-2 py-0.5 rounded-full ${
+              hasLength ? 'bg-green-50 text-green-700' : 'bg-gray-100 text-gray-500'
+            }`}
+          >
+            {hasLength ? 'Custom length saved' : 'Preset default'}
+          </span>
+        </div>
+        <p className="text-sm text-gray-500 mb-5">
+          Roughly how long the final answer should be. It is a target the writer aims
+          for, not a hard cut-off. Left at the preset default the answer is
+          unconstrained and can run long.
+        </p>
+        <label htmlFor="output-length" className="block text-sm font-medium text-gray-700 mb-1">
+          Length
+        </label>
+        <select
+          id="output-length"
+          value={outputLength}
+          onChange={(e) => {
+            setOutputLength(e.target.value);
+            setLengthSaved(false);
+          }}
+          className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500"
+        >
+          {OUTPUT_LENGTH_CHOICES.map((c) => (
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
+          ))}
+        </select>
+
+        <div className="mt-4">
+          <button
+            type="button"
+            onClick={onLengthSave}
+            className="inline-flex items-center gap-1.5 rounded-xl bg-brand-800 hover:bg-brand-900 text-white text-sm font-medium px-4 py-2 transition-colors"
+          >
+            {lengthSaved ? (
+              <>
+                <Check size={16} /> Saved
+              </>
+            ) : (
+              'Save length'
             )}
           </button>
         </div>

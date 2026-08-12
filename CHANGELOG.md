@@ -2,6 +2,34 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.18] — 2026-08-12
+
+### Added
+
+- Public mode can set a target length for the synthesized artifact. `/config`
+  offers preset default (unconstrained), brief, standard and detailed; the
+  choice rides a `caesar_output_length` cookie and lands on
+  `ArtifactSynthesizer.synthesis_max_length`. The server bounds it at
+  500..20000 rather than enumerating the four options, so the API has no choice
+  list to drift out of sync with the dropdown, while the client accepts only a
+  value it actually offers — a hand-edited or stale cookie falls back to the
+  preset default instead of 422-ing every submit with a pydantic message the
+  user cannot act on, from a cookie they cannot see. Ignored outside public
+  mode. Covered by `test_output_length.py`.
+
+### Fixed
+
+- The web UI footer's commit link pointed at a single SHA, which 404s once that
+  commit is no longer reachable in the published mirror; it now points at the
+  history.
+
+### Changed
+
+- README: setup notes rewritten, badges matched to the landing page, the Python
+  badge swapped for a live-demo badge, and the docs pointer folded into the
+  bullets. The NOTICE link is dropped from the License lines in both READMEs.
+- `web_server/ui/next-env.d.ts` is no longer tracked; Next.js generates it.
+
 ## [0.4.17] — 2026-08-07
 
 ### Fixed

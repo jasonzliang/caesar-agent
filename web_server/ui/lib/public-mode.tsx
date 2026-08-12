@@ -78,3 +78,47 @@ export function setStoredModel(value: string): void {
     `${SYNTH_MODEL_COOKIE}=${encodeURIComponent(value)}; Path=/; ` +
     `Max-Age=${OPENAI_KEY_MAX_AGE}; SameSite=Lax${secure}`;
 }
+
+// Artifact word target, same cookie treatment as the model override: not a
+// secret, set on /config, read at submit time, ignored by the server outside
+// public mode. Empty string = use the preset's own length (all presets ship
+// unconstrained). Stored as the raw number so the caller can send it as-is.
+export const OUTPUT_LENGTH_COOKIE = 'caesar_output_length';
+
+// The choices offered on /config. Values must sit inside the server's
+// 500..20000 bound (RunCreate.output_length); '' means "preset default".
+export const OUTPUT_LENGTH_CHOICES: { value: string; label: string }[] = [
+  { value: '', label: 'Preset default (unconstrained)' },
+  { value: '1500', label: 'Brief (~1,500 words)' },
+  { value: '3000', label: 'Standard (~3,000 words)' },
+  { value: '6000', label: 'Detailed (~6,000 words)' },
+];
+
+export function getStoredOutputLength(): string {
+  if (typeof document === 'undefined') return '';
+  const m = document.cookie.match(/(?:^|;\s*)caesar_output_length=([^;]*)/);
+  if (!m) return '';
+  // Accept only a value we actually offer. A digits-only check would let a
+  // hand-edited or stale cookie (say 100, or a value from a future revision of
+  // this list) through to the server, where it fails RunCreate's 500..20000
+  // bound and 422s every submit with a pydantic message the user cannot act on
+  // -- from a cookie they cannot see. Anything unrecognised falls back to the
+  // preset default. Checking membership rather than re-stating the numeric
+  // bound also keeps the server's range from being duplicated here.
+  const v = decodeURIComponent(m[1]);
+  return OUTPUT_LENGTH_CHOICES.some((c) => c.value === v) ? v : '';
+}
+
+export function setStoredOutputLength(value: string): void {
+  if (typeof document === 'undefined') return;
+  const secure = location.protocol === 'https:' ? '; Secure' : '';
+  if (!value) {
+    document.cookie = `${OUTPUT_LENGTH_COOKIE}=; Path=/; Max-Age=0; SameSite=Lax${secure}`;
+    return;
+  }
+  document.cookie =
+    `${OUTPUT_LENGTH_COOKIE}=${encodeURIComponent(value)}; Path=/; ` +
+    `Max-Age=${OPENAI_KEY_MAX_AGE}; SameSite=Lax${secure}`;
+}
+
+

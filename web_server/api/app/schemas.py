@@ -70,6 +70,13 @@ class RunCreate(_ApiKeyBody):
     # validates membership against the supported-OpenAI list and ignores it
     # outside public mode; here it is just trimmed to None-or-nonempty.
     synthesis_model: str | None = Field(default=None)
+    # Public-mode only: target word count for the synthesized artifact, applied
+    # to ArtifactSynthesizer.synthesis_max_length. None = the preset's own value
+    # (all four ship null, i.e. unconstrained). Bounded rather than enumerated so
+    # there is no choice list to drift out of sync with the UI's dropdown; the
+    # floor keeps a target from starving the abstract, the ceiling keeps a typo
+    # from ordering a novel. Ignored outside public mode.
+    output_length: int | None = Field(default=None, ge=500, le=20000)
 
     @field_validator("query")
     @classmethod

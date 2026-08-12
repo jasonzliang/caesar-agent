@@ -92,6 +92,7 @@ _ADDITIVE_COLUMNS: list[tuple[str, str, str]] = [
     ("runs", "synthesis_model", "VARCHAR(64)"),
     ("runs", "run_api_key", "TEXT"),
     ("runs", "elapsed_prior_s", "FLOAT NOT NULL DEFAULT 0"),
+    ("runs", "output_length", "INTEGER"),
 ]
 
 

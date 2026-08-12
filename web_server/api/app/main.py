@@ -465,6 +465,7 @@ async def _recover_public_runs(runs_dir: Path) -> None:
                     collection_name=run.collection_name,
                     api_key=key,
                     synthesis_model=run.synthesis_model,
+                    output_length=run.output_length,
                 )
                 resumed.append(run.id)
                 continue
