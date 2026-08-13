@@ -9,6 +9,12 @@
 </p>
 
 <p align="center">
+  <a href="https://caesar.evolution.ml"><strong>Try the live demo</strong></a>
+  &nbsp;·&nbsp;
+  <a href="https://jasonzliang.github.io/caesar-agent"><strong>Project site &amp; docs</strong></a>
+</p>
+
+<p align="center">
   <a href="https://caesar.evolution.ml"><img alt="Live demo" src="https://img.shields.io/badge/Live%20Demo-Try%20Caesar-2ea44f?logo=googlechrome&logoColor=white"></a>
   <a href="https://arxiv.org/abs/2604.20855"><img alt="arXiv" src="https://img.shields.io/badge/arXiv-2604.20855-b31b1b?logo=arxiv&logoColor=white"></a>
   <a href="https://www.researchgate.net/publication/402554537_Caesar_Deep_Agentic_Web_Exploration_for_Creative_Answer_Synthesis"><img alt="ResearchGate" src="https://img.shields.io/badge/ResearchGate-Caesar-00ccbb?logo=researchgate&logoColor=white"></a>
