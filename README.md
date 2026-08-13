@@ -5,11 +5,11 @@
 <h1 align="center">Caesar: Autonomous AI Research Agent</h1>
 
 <p align="center">
-  <strong>Deep web exploration and creative answer synthesis: the open-source alternative to ChatGPT Deep Research and Perplexity.</strong>
+  <strong>The open-source alternative to ChatGPT Deep Research and Perplexity.</strong>
 </p>
 
 <p align="center">
-  <a href="https://jasonzliang.github.io/caesar-agent"><strong>Project site &amp; docs</strong></a>
+  <a href="https://jasonzliang.github.io/caesar-agent"><strong>Project home page</strong></a>
 </p>
 
 <p align="center">
