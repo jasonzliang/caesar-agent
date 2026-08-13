@@ -12,7 +12,7 @@ CaesarAgent:
   use_quick_explore: True
   quick_explore_insights: False
   exploration_llm_config:
-    model: gpt-5.4-mini
+    model: gpt-5.6-luna
     reasoning_effort: low
 
   adapt_role: True
@@ -35,7 +35,7 @@ ImageGenerator:
   max_candidates_to_score: 30
 
 LLMHandler:
-  model: gpt-5.4-mini
+  model: gpt-5.6-luna
   reasoning_effort: low
 
 AgentMemory:

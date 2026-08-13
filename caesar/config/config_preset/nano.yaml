@@ -19,7 +19,7 @@ CaesarAgent:
   use_quick_explore: True
   quick_explore_insights: False
   exploration_llm_config:
-    model: gpt-5.4-mini
+    model: gpt-5.6-luna
     reasoning_effort: low
 
   # overwrite_role_file: config/role/self_transcend_role.txt
@@ -40,7 +40,7 @@ ArtifactSynthesizer:
 # LLM CONFIGURATION
 # ============================================================================
 LLMHandler:
-  model: gpt-5.4-mini
+  model: gpt-5.6-luna
   reasoning_effort: low
 
 # ============================================================================

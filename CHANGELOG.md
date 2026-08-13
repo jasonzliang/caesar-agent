@@ -2,6 +2,27 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.20] — 2026-08-13
+
+### Changed
+
+- The Luna revert in 0.4.19 is narrowed to the knowledge base. That release
+  swapped every `gpt-5.6-luna` reference across the presets, which was wider
+  than the evidence: only the KB swap was measured, at 32.1s against 18.9s per
+  query in a controlled same-collection A/B, about 6.5 minutes per 30-query run,
+  with retrieval quality unchanged — 240 blind-judged passages over 6 queries
+  scored luna 1.85, mini 1.87 and no-rerank 1.90, all inside a ±0.3 noise floor.
+  Synthesis and exploration go back to Luna. Synthesis writes the artifact, and
+  swapping the model that produces the product on latency grounds with no
+  measurement of artifact quality is not a defensible trade for the ~2 minutes
+  it bought in a ~33-minute run; exploration is 1–2 minutes either way and
+  equally unmeasured. The net effect is one line per preset. `deepest` keeps
+  sol, `mini` and `regular` keep terra, and the UI descriptions name Luna again
+  because synthesis is Luna again.
+- For the record, the underlying cause is that `reasoning_effort` barely moves
+  Luna: reasoning tokens per call measured 618 unset, 558 minimal, 318 low, 560
+  medium, 632 high — a floor it will not come off, with no monotonic trend.
+
 ## [0.4.19] — 2026-08-12
 
 ### Changed

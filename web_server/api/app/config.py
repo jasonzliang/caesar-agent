@@ -118,7 +118,7 @@ PRESETS: list[dict] = [
         "id": "fast",
         "label": "Fast",
         "caesar_preset": "fast",
-        "description": "Quick parallel exploration with GPT-5.4 mini. Roughly $0.50 and ~10 min.",
+        "description": "Quick parallel exploration with GPT-5.6 Luna. Roughly $0.50 and ~10 min.",
         "estimated_cost_usd": 0.50,
         "estimated_time_min": 10,
     },
@@ -126,7 +126,7 @@ PRESETS: list[dict] = [
         "id": "normal",
         "label": "Normal",
         "caesar_preset": "normal",
-        "description": "Mid-depth exploration with GPT-5.4 mini. Roughly $1 and ~10–20 min.",
+        "description": "Mid-depth exploration with GPT-5.6 Luna. Roughly $1 and ~10–20 min.",
         "estimated_cost_usd": 1.00,
         "estimated_time_min": 20,
     },
@@ -136,7 +136,7 @@ PRESETS: list[dict] = [
         "caesar_preset": "deeper",
         "description": (
             "Iterative depth-first walk; richer graph shapes (trees, branches). "
-            "GPT-5.4 mini synthesis. ~$5 and ~45–90 min."
+            "GPT-5.6 Luna synthesis. ~$5 and ~45–90 min."
         ),
         "estimated_cost_usd": 5.00,
         "estimated_time_min": 90,
