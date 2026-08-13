@@ -5,7 +5,7 @@
 <h1 align="center">Caesar: Autonomous AI Research Agent</h1>
 
 <p align="center">
-  <strong>Deep web exploration and creative answer synthesis. The open-source alternative to ChatGPT Deep Research and Perplexity.</strong>
+  <strong>Deep web exploration and creative answer synthesis: the open-source alternative to ChatGPT Deep Research and Perplexity.</strong>
 </p>
 
 <p align="center">
