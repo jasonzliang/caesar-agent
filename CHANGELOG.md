@@ -2,6 +2,52 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.21] — 2026-08-17
+
+### Fixed
+
+- False `Worker stalled` watchdog failures. A root-cause analysis traced
+  `no activity for 1201s (threshold 1200.0s)` to several causes that all reduce
+  to more than 1200s of no watchdog-observable progress, and fixes them at four
+  points:
+  - `WATCHDOG_STALL_S` goes from 1200 to 1800. It had been *equal* to the
+    largest per-call `LLMHandler.timeout` (`deepest` and `regular` both set
+    1200s), so a single legitimate full-length synthesis call went
+    watchdog-invisible for ~1200s and tripped the stall a second later. 1800 is
+    that 1200s ceiling plus 600s of margin.
+  - mem0's Chroma `HttpClient` inherits chromadb's hardcoded
+    `httpx.Timeout(timeout=None)`, an infinite read, so a wedged or half-open
+    Chroma subprocess could hang `remember()` or `recall()` indefinitely — which
+    surfaced under the web server as a silent stall. It now gets the finite
+    budget `kb_client` already applies to its own client (connect 5s, read and
+    write 300s, pool 10s). The override reaches through a private attribute
+    path, so it is guarded and warns rather than failing if that path changes.
+  - `num_retries=0` on the exploration, startup, image-generation and
+    Brave-search query-shortening LLM calls, mirroring the synthesizer, so
+    litellm cannot stack up to three times the request timeout on a hung call.
+    All four paths already fail soft or self-correct.
+  - The synthesizer now logs a per-attempt heartbeat, `[LABEL] attempt k/N
+    (reasoning_effort=…)`, before each otherwise watchdog-invisible blocking
+    call; a new `LLM_ATTEMPT_RE` in the job pool matches it and resets the stall
+    clock between attempts, so a stacked retry ladder stays visible. Guarded by
+    `test_watchdog_margin.py`, which asserts the threshold stays above the
+    highest preset timeout with at least 300s of margin, and that the heartbeat
+    matches the regex while an ordinary synthesis log line does not.
+
+### Changed
+
+- The SSE reconnect debounce widens from 10s to 30s. Tailscale Funnel's reverse
+  proxy drops streaming connections every 10–40s regardless of byte flow; the
+  browser reconnects in 3–8s but funnel-side handshakes can spike to ~10s, so a
+  10s debounce sat exactly at that ceiling and normal reconnects still flashed
+  the `disconnected` badge. A genuinely dead stream still surfaces the badge,
+  after the longer window.
+- The takeover notice is clearer about what it is waiting for: "Stopping the
+  previous attempt. The restart begins once it has fully stopped, which can take
+  up to a minute."
+- README: a live-demo and project-home-page link row above the badges, and the
+  tagline cut to one rendered line.
+
 ## [0.4.20] — 2026-08-13
 
 ### Changed

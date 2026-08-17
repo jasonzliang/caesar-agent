@@ -102,17 +102,24 @@ export function useEventSource(url: string | null) {
         return;
       }
       if (errorTimer != null) return;
-      // Wide debounce: Tailscale Funnel's reverse proxy drops streaming
-      // connections every 10-40s regardless of byte flow (sse-starlette's
-      // 5s heartbeat helps but doesn't eliminate it). 4s was too tight —
-      // the browser usually reconnects in 3-8s but funnel-side handshakes
-      // can spike to 10s. 10s here lets normal reconnects pass silently
-      // while real disconnects (server down, full network loss) still
-      // surface the badge.
+      // This debounce = how long a reconnect gap must last before we tell the
+      // user the live stream is down. Trade-off in both directions:
+      //  - too short: Tailscale Funnel drops streaming connections every
+      //    10-40s regardless of byte flow, reconnecting in ~3-10s (handshakes
+      //    spike higher), so a tight window flashes a false badge on every
+      //    normal, self-healing reconnect (missed events replay via
+      //    Last-Event-ID, so nothing is actually lost);
+      //  - too long: a GENUINELY dead stream (server down, run crashed, no
+      //    reconnect at all) keeps showing green "Live" for the whole window,
+      //    so the badge lies about liveness.
+      // 30s is ~3x the funnel's ~10s handshake ceiling — clears essentially
+      // all false badges while still surfacing a real outage within ~30s.
+      // Going much beyond this makes the badge untrustworthy, so treat it as
+      // the ceiling, not a knob to keep raising.
       errorTimer = setTimeout(() => {
         errorTimer = null;
         if (es.readyState !== EventSource.CLOSED) setStatus('error');
-      }, 10000);
+      }, 30000);
     };
 
     return () => {

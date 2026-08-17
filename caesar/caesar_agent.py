@@ -171,7 +171,11 @@ Respond with valid JSON only:
 
                 response = self.chat_completion(
                     prompt,
-                    response_format={"type": "json_object"}
+                    response_format={"type": "json_object"},
+                    # Own retry strategy: on failure this falls back to the
+                    # single starting query. num_retries=0 stops litellm from
+                    # stacking up to 3x the request timeout on a hung call.
+                    num_retries=0,
                 )
                 result = self.parse_json_response(response)
                 additional = result["queries"][:self.additional_starting_queries]
@@ -250,7 +254,7 @@ Provide an adapted role description (~{self.role_max_length} words) that is crea
 
 IMPORATNT: Your response must start with "Your role:" followed by the adapted role description."""
 
-            if not (adapted_role := self.chat_completion(prompt).strip()) or len(adapted_role) < 50:
+            if not (adapted_role := self.chat_completion(prompt, num_retries=0).strip()) or len(adapted_role) < 50:
                 self.logger.error("[ADAPT ROLE] Invalid LLM response, keeping default role")
                 return
 
@@ -440,7 +444,11 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
         try:
             insights = self.chat_completion(
                 prompt,
-                override_config=self.exploration_llm_config
+                override_config=self.exploration_llm_config,
+                # The explore loop is the retry strategy (a failed think is
+                # caught and the iteration backtracks/continues). num_retries=0
+                # stops litellm stacking up to 3x the timeout on a hung call.
+                num_retries=0,
             )
         except FatalLLMError:
             raise  # propagate to explore() → job_runner so the run is marked failed
@@ -521,7 +529,11 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
         try:
             insights = self.chat_completion(
                 prompt,
-                override_config=self.exploration_llm_config
+                override_config=self.exploration_llm_config,
+                # The explore loop is the retry strategy (a failed think is
+                # caught and the iteration backtracks/continues). num_retries=0
+                # stops litellm stacking up to 3x the timeout on a hung call.
+                num_retries=0,
             )
         except FatalLLMError:
             raise  # propagate to explore() → job_runner so the run is marked failed
@@ -762,7 +774,8 @@ IMPORTANT: Use your role as a guide on how to respond!
 Depending on the complexity of the content, provide anywhere from 1 to 6 concise but substantive insights, but do not exceed ~600 words in total length:"""
 
             insights = self.chat_completion(
-                prompt, override_config=self.exploration_llm_config)
+                prompt, override_config=self.exploration_llm_config,
+                num_retries=0)
             return {"url": url, "insights": insights, "iteration": iteration}
 
         except FatalLLMError:

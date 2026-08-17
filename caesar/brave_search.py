@@ -150,7 +150,10 @@ class BraveSearch:
             f"under {MAX_QUERY_WORDS} words. Return ONLY the shortened query, "
             f"nothing else.\n\nOriginal query:\n{query}"
         )
-        shortened = self.agent.chat_completion(prompt).strip().strip('"\'')
+        # num_retries=0: fails soft to _truncate_query below, so don't let
+        # litellm stack up to 3x the request timeout on a hung call (would
+        # otherwise reproduce the "Worker stalled" watchdog failure).
+        shortened = self.agent.chat_completion(prompt, num_retries=0).strip().strip('"\'')
         if not shortened:
             self.logger.error("LLM returned empty summary, falling back to truncation")
             shortened = self._truncate_query(query)

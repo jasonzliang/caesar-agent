@@ -56,10 +56,15 @@ TAKEOVER_WAIT_S = 300.0
 
 # Watchdog stall threshold. If no non-ping event fires for this long, the
 # worker is considered stuck (thread wedged in untimed I/O, or died silently
-# without state.finished.set() firing) and the run is marked failed. Chosen
-# to be well above any legitimate long single-call — deep-explore quick_explore
-# workers can take minutes; LLMHandler's own timeout is 900s.
-WATCHDOG_STALL_S = 1200.0  # 20 minutes
+# without state.finished.set() firing) and the run is marked failed. MUST stay
+# strictly ABOVE the largest per-call LLMHandler.timeout (deepest/regular set
+# 1200s) plus margin: it was previously 1200 == that timeout, so a single
+# legitimate full-length synthesis call went watchdog-invisible for ~1200s and
+# tripped the stall at ~1201s ("no activity for 1201s (threshold 1200.0s)").
+# 1800 = 1200s max single call + 600s margin. A multi-attempt retry ladder is
+# kept visible separately by the per-attempt heartbeat the synthesizer logs
+# (matched by LLM_ATTEMPT_RE below).
+WATCHDOG_STALL_S = 1800.0  # 30 minutes
 
 # Public-mode bring-your-own-key handling. Chat/synthesis LLM calls get the
 # per-run key threaded through config["LLMHandler"]["api_key"], but chromadb's
@@ -1134,6 +1139,14 @@ class JobPool:
     IMAGE_GEN_START_RE = re.compile(
         r"\[IMAGE\]\s+Generating\s+(?P<n>\d+)\s+image"
     )
+    # Synthesizer retry-ladder heartbeat: "[LABEL] attempt k/N
+    # (reasoning_effort=...)" logged right before each blocking, otherwise
+    # watchdog-invisible synthesis/merge/clarify LLM call. Seeing a new one is
+    # proof of liveness (the worker advanced to a fresh attempt), so it resets
+    # the stall clock between attempts of a stacked ladder.
+    LLM_ATTEMPT_RE = re.compile(
+        r"\]\s+attempt\s+(?P<k>\d+)/(?P<n>\d+)\s+\(reasoning_effort="
+    )
 
     async def _watchdog(self, run_id: str, repo_dir: Path, state: _RunState) -> None:
         # Seed de-dup sets from existing files so a resumed watchdog doesn't
@@ -1421,6 +1434,14 @@ class JobPool:
                 iter_n=1,
                 iter_total=1,
             )
+
+        # Synthesis LLM retry-ladder heartbeat. A new "[LABEL] attempt k/N"
+        # line means the worker is alive and advancing to a fresh attempt, so
+        # refresh the stall clock directly (no client event / DB row — this is
+        # a liveness signal, not user-facing progress). Keeps a legitimately
+        # long, multi-attempt synthesis call from looking hung.
+        if self.LLM_ATTEMPT_RE.search(chunk):
+            state.last_activity_mono = time.monotonic()
 
         return last_qx_n, last_iter_n, kb_total, new_kb_n, new_synth_key, new_offset
 
