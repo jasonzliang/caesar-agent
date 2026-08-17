@@ -98,6 +98,15 @@ class ArtifactSynthesizer:
                     f"stepping reasoning_effort → {effective_reasoning} "
                     f"(orig {original_reasoning})"
                 )
+            # Watchdog heartbeat: this LLM call is long and otherwise invisible
+            # to the web stall-watchdog (no artifact/log/cost until it returns).
+            # Log a liveness line at each attempt start so a stacked retry
+            # ladder resets the watchdog's stall clock between attempts.
+            # Format is matched by LLM_ATTEMPT_RE in web_server job_runner.py.
+            self.logger.info(
+                f"[{label}] attempt {attempt}/{retries} "
+                f"(reasoning_effort={effective_reasoning})"
+            )
             override = {"reasoning_effort": effective_reasoning} if effective_reasoning else {}
             try:
                 # num_retries=0: this wrapper owns the retry strategy (with the

@@ -347,7 +347,8 @@ Respond with a JSON object in this exact format:
         try:
             response = self.agent.chat_completion(prompt,
                 override_config=self.agent.exploration_llm_config,
-                response_format={"type": "json_object"})
+                response_format={"type": "json_object"},
+                num_retries=0)  # explore loop owns retry; don't stack timeouts
             data = self.agent.parse_json_response(response)
             if not data or "action" not in data or "reasoning" not in data or \
                 "search_query" not in data:
@@ -577,7 +578,8 @@ Your response must be valid JSON only, nothing else."""
             response = self.agent.chat_completion(
                 prompt,
                 override_config=self.agent.exploration_llm_config,
-                response_format={"type": "json_object"}
+                response_format={"type": "json_object"},
+                num_retries=0,  # explore loop owns retry; don't stack timeouts
             )
             decision = self.agent.parse_json_response(response)
             if decision and 'choice' in decision:

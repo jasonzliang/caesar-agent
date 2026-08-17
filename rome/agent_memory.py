@@ -180,6 +180,22 @@ class AgentMemory:
             # Initialize memory with the complete configuration
             self.memory = Memory.from_config(config_dict=mem0_config)
 
+            # mem0's Chroma HttpClient inherits chromadb's hardcoded
+            # httpx Timeout(timeout=None) (infinite read), so a wedged or
+            # half-open Chroma subprocess would hang a remember()/recall()
+            # call FOREVER — which under the web server surfaces as a silent
+            # "Worker stalled" watchdog failure. Give mem0's client the same
+            # finite read budget kb_client applies to its own client. Private
+            # API, so guard it and warn (never fatal) if the path changes.
+            try:
+                import httpx as _httpx
+                self.memory.vector_store.client._server._session.timeout = _httpx.Timeout(
+                    connect=5.0, read=300.0, write=300.0, pool=10.0)
+            except (AttributeError, ImportError) as e:
+                self.logger.warning(
+                    f"Could not override mem0 chromadb httpx timeout (private "
+                    f"API may have changed): {e}")
+
         except Exception as e:
             self.logger.error(f"Memory initialization failed: {e}")
             self.logger.error(traceback.format_exc())

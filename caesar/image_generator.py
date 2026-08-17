@@ -622,6 +622,7 @@ class ImageGenerator:
         serve as visual references for illustrative outputs."""
         try:
             resp = self.llm_handler.completion(
+                num_retries=0,  # VLM scoring/captioning fails soft; don't stack timeouts
                 messages=[{
                     "role": "user",
                     "content": [
@@ -740,6 +741,7 @@ class ImageGenerator:
         Returns "" on any failure so the orchestrator can move on."""
         try:
             resp = self.llm_handler.completion(
+                num_retries=0,  # VLM scoring/captioning fails soft; don't stack timeouts
                 messages=[{
                     "role": "user",
                     "content": [
@@ -886,6 +888,9 @@ class ImageGenerator:
                 temperature=0.9,
                 max_completion_tokens=max_tokens,
                 reasoning_effort=reasoning,
+                # Image gen fails soft (returns None), so it owns its retry:
+                # num_retries=0 keeps a hung call from stacking 3x the timeout.
+                num_retries=0,
             )
 
         def _is_incomplete(resp_text: str) -> bool:
