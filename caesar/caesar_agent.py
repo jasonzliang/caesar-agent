@@ -17,6 +17,7 @@ from rome.kb_client import ChromaClientManager
 from rome.llm_handler import FatalLLMError
 
 from .artifact_synthesis import ArtifactSynthesizer
+from .arxiv_explorer import ArxivExplorer
 from .brave_search import BraveSearch
 from .checkpoint import CheckpointManager
 from .web_explorer import WebExplorer
@@ -41,9 +42,14 @@ class CaesarAgent(BaseAgent):
 
         self._setup_allowed_domains()
         self._setup_knowledge_base()
+        # Explorer is created before search setup: in arxiv mode the seed URL is
+        # produced by the explorer and _setup_brave_search dispatches to it. The
+        # ArxivExplorer subclasses WebExplorer, so the rest of the agent is
+        # backend-agnostic (it only ever handles opaque node-URL strings).
+        self.web_explorer = (ArxivExplorer(agent=self) if self.mode == "arxiv"
+                             else WebExplorer(agent=self))
         self._setup_brave_search()
         self._setup_synthesizer()
-        self.web_explorer = WebExplorer(agent=self)
         self.checkpoint_manager = CheckpointManager(agent=self)
 
         self._setup_exploration_state()
@@ -121,6 +127,41 @@ You navigate through information space systematically yet creatively, always wit
         if self.allow_all_domains:
             self.logger.info("Wildcard '*' detected - allowing ALL domains")
 
+    def _build_starting_queries(self) -> List[str]:
+        """The starting query plus up to additional_starting_queries LLM-
+        generated variants (different aspects/angles of the same question).
+
+        Shared by the web seed search (_setup_brave_search) and the arxiv seed
+        search (ArxivExplorer._fetch_seed). Fails soft: any error falls back to
+        just the starting query. num_retries=0 keeps a hung generation call from
+        stacking litellm timeouts (the caller owns retry)."""
+        queries = [self.starting_query]
+        if self.additional_starting_queries > 0:
+            try:
+                prompt = f"""Given this query: "{self.starting_query}"
+
+Generate anywhere from 0 to {self.additional_starting_queries} additional search queries that would help comprehensively answer the original query. These queries should:
+- Explore different aspects or angles of the original query
+- Cover related concepts that provide essential context
+- Include specific technical or domain-specific variations
+- Be concise (1-6 words each for optimal search results)
+
+IMPORTANT: Use your role as a guide on how to respond!
+
+Respond with valid JSON only:
+{{
+"queries": ["query1", "query2", ...]
+}}"""
+                response = self.chat_completion(
+                    prompt, response_format={"type": "json_object"}, num_retries=0)
+                result = self.parse_json_response(response)
+                additional = result["queries"][:self.additional_starting_queries]
+                queries.extend(additional)
+                self.logger.info(f"Generated {len(additional)} additional queries: {additional}")
+            except Exception as e:
+                self.logger.error(f"Failed to generate additional queries: {e}")
+        return queries
+
     def _setup_brave_search(self, use_cache: bool = True) -> None:
         """Generate (or regenerate) the starting_url via a fresh Brave search
         over LLM-generated queries. Safe to call multiple times. Pass
@@ -128,6 +169,12 @@ You navigate through information space systematically yet creatively, always wit
         the reseed path to force fresh results)."""
         if not hasattr(self, 'web_searches_used'):
             self.web_searches_used = 0
+        if self.mode == "arxiv":
+            # Arxiv mode: the starting_url is a synthetic Semantic Scholar search
+            # node whose real API search runs lazily when it is first perceived.
+            self.starting_url = self.web_explorer.setup_seed()
+            self.logger.info(f"[ARXIV] Seed node: {self.starting_url}")
+            return
         if not self.starting_query or self.max_iterations == 0:
             return
 
@@ -149,41 +196,8 @@ You navigate through information space systematically yet creatively, always wit
                 self.logger.info(f"Overwriting existing starting_url ({old_starting_url}) with cached search results: {self.starting_url}")
                 return
 
-        # Generate additional queries if requested
-        queries = [self.starting_query]
-        if self.additional_starting_queries > 0:
-            try:
-                prompt = f"""Given this query: "{self.starting_query}"
-
-Generate anywhere from 0 to {self.additional_starting_queries} additional search queries that would help comprehensively answer the original query. These queries should:
-- Explore different aspects or angles of the original query
-- Cover related concepts that provide essential context
-- Include specific technical or domain-specific variations
-- Be concise (1-6 words each for optimal search results)
-
-IMPORTANT: Use your role as a guide on how to respond!
-
-Respond with valid JSON only:
-{{
-"queries": ["query1", "query2", ...]
-}}"""
-# IMPORTANT: If no additional queries are generated, return an empty list
-
-                response = self.chat_completion(
-                    prompt,
-                    response_format={"type": "json_object"},
-                    # Own retry strategy: on failure this falls back to the
-                    # single starting query. num_retries=0 stops litellm from
-                    # stacking up to 3x the request timeout on a hung call.
-                    num_retries=0,
-                )
-                result = self.parse_json_response(response)
-                additional = result["queries"][:self.additional_starting_queries]
-                queries.extend(additional)
-                self.logger.info(f"Generated {len(additional)} additional queries: {additional}")
-
-            except Exception as e:
-                self.logger.error(f"Failed to generate additional queries: {e}")
+        # [starting_query] + up to additional_starting_queries LLM variants.
+        queries = self._build_starting_queries()
 
         # Execute search with all queries
         self.starting_url = search_engine.search_and_save(queries, use_cache=use_cache)
@@ -705,6 +719,10 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
         (independent of max_web_searches). Returns the new starting_url, or
         None if the reseed budget is spent or the search fails."""
         if not self.starting_query:
+            return None
+        if self.mode == "arxiv":
+            # The arxiv seed is deterministic from the query, so re-running the
+            # search can't surface new links; there is nothing to regenerate.
             return None
         if self.reseeds_used >= MAX_RESEEDS:
             self.logger.error(

@@ -201,8 +201,9 @@ class ArtifactSynthesizer:
                       label: str, base_dir: str = None, suffix: str = "post",
                       timestamp: str = None) -> Optional[Dict]:
         """Shared post-process: LLM call → wrap as artifact → save."""
-        llm_result = self._llm_call(prompt, [response_key],
-            reasoning="high", label=label)
+        # eli5 / human_eval are light post-processes (like clarify): they run at
+        # the model's default effort, not the synthesis reasoning tier.
+        llm_result = self._llm_call(prompt, [response_key], label=label)
         if not llm_result:
             return None
         processed = {
@@ -404,7 +405,7 @@ Respond with valid JSON only:
     "artifact": "<artifact text>"
 }}"""
         result = self._llm_call(prompt, ["abstract", "artifact"],
-            reasoning="high", label="SYNTHESIS")
+            reasoning=self.synthesis_reasoning_effort, label="SYNTHESIS")
         if not result: return None
 
         result["sources"] = dict(sorted(source_map.items(), key=lambda x: x[1]))
@@ -607,7 +608,7 @@ EXAMPLE OUTPUT:
 """
 
         result = self._llm_call(prompt, ["abstract", "artifact"],
-            reasoning="high", label="MERGE")
+            reasoning=self.synthesis_reasoning_effort, label="MERGE")
         if not result: return None
 
         result["metadata"] = all_drafts[-1].get("metadata", {})
@@ -782,9 +783,15 @@ Respond with JSON:
         source_map = {}; answers = []
 
         for i, (q, a, sources) in enumerate(qa_pairs):
-            # Add new sources to index (exclude file:// URLs)
+            # Add new sources to index. Skip the search-results seed page: the
+            # file:// seed in web mode and the Semantic Scholar search URL in
+            # arxiv mode are navigation scaffolding, not citable sources.
             for src in sources:
-                if (url := src['url']) and not url.startswith('file://') and url not in source_map:
+                url = src['url']
+                if (not url or url.startswith('file://')
+                        or 'semanticscholar.org/search' in url):
+                    continue
+                if url not in source_map:
                     source_map[url] = len(source_map) + 1
 
             # Format with citations (only for URLs in source_map)
@@ -907,9 +914,11 @@ Respond with valid JSON only:
     "clarified_artifact": "<the rewritten artifact text in markdown>"
 }}"""
 
+        # Clarity is a light plain-language/formatting pass, not deep reasoning,
+        # so it runs at the model's default effort (no high override).
         llm_result = self._llm_call(prompt,
             ["clarified_abstract", "clarified_artifact"],
-            reasoning="high", label="CLARIFY")
+            label="CLARIFY")
         if not llm_result: return None
 
         new_artifact = llm_result.get("clarified_artifact") or ""

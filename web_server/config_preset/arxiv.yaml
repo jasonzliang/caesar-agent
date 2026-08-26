@@ -1,0 +1,68 @@
+# Web-server preset: arXiv (citation graph)
+# Based on the `deeper` preset, but explores the Semantic Scholar citation graph
+# of arXiv papers instead of the open web: an S2 search seeds the graph, then
+# each hop follows a reference/citation edge (papers = nodes, citations = edges).
+# Iterative depth-first walk with GPT-5.6 Luna. Set an optional
+# SEMANTIC_SCHOLAR_API_KEY on the server for reliable throughput (the anonymous
+# S2 pool is heavily rate-limited).
+Agent:
+  name: CaesarExplorer
+  draw_fsm: false
+
+CaesarAgent:
+  mode: arxiv
+  # CaesarAgent settings mirror the `deepest` preset; only max_iterations is
+  # pinned (240 instead of deepest's 1000) and mode is arxiv. No max_depth cap
+  # (like deepest): depth is bounded by max_iterations + the exploration
+  # strategy, not a fixed ceiling.
+  additional_starting_queries: 9
+  max_web_searches: 30
+  max_iterations: 250
+  save_graph_interval: 2
+
+  use_quick_explore: False
+  quick_explore_insights: False
+  exploration_llm_config:
+    model: gpt-5.6-luna
+    reasoning_effort: low
+
+  adapt_role: True
+
+# Synthesis matches the `deepest` preset (deep, thorough artifact).
+ArtifactSynthesizer:
+  synthesis_iterations: 20
+  synthesis_drafts: 3
+  synthesis_merge_artifacts: true
+  synthesis_eli5: false
+  synthesis_eli5_length: [null, 450]
+  synthesis_human_eval: false
+  synthesis_max_length: null
+  synthesis_iteration_filter: null
+  synthesis_generate_images: 6
+
+ImageGenerator:
+  quality: medium
+  max_candidates_to_score: 90
+
+LLMHandler:
+  # Synthesis model matches `deepest` (Sol); exploration stays on Luna above.
+  # The public /config synthesis-model dropdown still overrides this per-run.
+  model: gpt-5.6-sol
+  reasoning_effort: medium
+  timeout: 1200
+
+AgentMemory:
+  enabled: true
+  use_graph: false
+
+ChromaClientManager:
+  model: gpt-5.4-mini
+  reasoning_effort: low
+
+# Semantic Scholar knobs use their defaults from caesar/caesar_config.py; add a
+# SemanticScholar: block to override (num_results / refs_limit / citations_limit
+# / arxiv_only / min_request_interval).
+
+Logger:
+  include_caller_info: "rome"
+  level: "info"

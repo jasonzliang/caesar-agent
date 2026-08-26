@@ -114,11 +114,13 @@ def get_settings() -> Settings:
 # `normal` has no post-migration run yet; $1 is the pre-migration figure, a better
 # prior now that Luna is known to be cheaper rather than dearer.
 PRESETS: list[dict] = [
+    # Descriptions follow one template -- "<depth> <source> exploration with
+    # <model>. ~$<cost>, ~<time>." -- so the pill hover tooltips read uniformly.
     {
         "id": "fast",
         "label": "Fast",
         "caesar_preset": "fast",
-        "description": "Quick parallel exploration with GPT-5.6 Luna. Roughly $0.50 and ~10 min.",
+        "description": "Quick parallel web exploration with GPT-5.6 Luna. ~$0.50, ~10 min.",
         "estimated_cost_usd": 0.50,
         "estimated_time_min": 10,
     },
@@ -126,7 +128,7 @@ PRESETS: list[dict] = [
         "id": "normal",
         "label": "Normal",
         "caesar_preset": "normal",
-        "description": "Mid-depth exploration with GPT-5.6 Luna. Roughly $1 and ~10–20 min.",
+        "description": "Mid-depth web exploration with GPT-5.6 Luna. ~$1, ~20 min.",
         "estimated_cost_usd": 1.00,
         "estimated_time_min": 20,
     },
@@ -134,10 +136,7 @@ PRESETS: list[dict] = [
         "id": "deeper",
         "label": "Deeper",
         "caesar_preset": "deeper",
-        "description": (
-            "Iterative depth-first walk; richer graph shapes (trees, branches). "
-            "GPT-5.6 Luna synthesis. ~$5 and ~45–90 min."
-        ),
+        "description": "Deep iterative web exploration with GPT-5.6 Luna. ~$5, ~1.5 h.",
         "estimated_cost_usd": 5.00,
         "estimated_time_min": 90,
     },
@@ -145,12 +144,17 @@ PRESETS: list[dict] = [
         "id": "deepest",
         "label": "Deepest",
         "caesar_preset": "deepest",
-        "description": (
-            "Extended iterative walk with the full GPT-5.6 Sol model. "
-            "Roughly $30 and ~6 hours."
-        ),
+        "description": "Deepest iterative web exploration with GPT-5.6 Sol. ~$30, ~6 h.",
         "estimated_cost_usd": 30.00,
         "estimated_time_min": 360,
+    },
+    {
+        "id": "arxiv",
+        "label": "arXiv",
+        "caesar_preset": "arxiv",
+        "description": "arXiv citation-graph exploration via Semantic Scholar with GPT-5.6 Sol. ~$10, ~2 h.",
+        "estimated_cost_usd": 10.00,
+        "estimated_time_min": 120,
     },
 ]
 

@@ -6,13 +6,21 @@
 
 # Rome
 
-Rome is a Python library for building intelligent AI agents with Finite State Machine (FSM) architecture. This library provides a structured framework for creating AI-powered agents that can analyze, edit, test, and execute code with LLM assistance, specifically designed for automated software development workflows.
+Rome is a Python library for building intelligent AI agents with Finite State
+Machine (FSM) architecture. This library provides a structured framework for
+creating AI-powered agents that can analyze, edit, test, and execute code with
+LLM assistance, specifically designed for automated software development
+workflows.
 
-> For the project overview and the Caesar research agent built on Rome, see the [repo root README](../README.md).
+> For the project overview and the Caesar research agent built on Rome, see the
+> [repo root README](../README.md).
 
 ## Overview
 
-Rome is built around a configurable Finite State Machine architecture that enables AI agents to navigate through different operational states while performing complex software development tasks. The library includes comprehensive components for:
+Rome is built around a configurable Finite State Machine architecture that
+enables AI agents to navigate through different operational states while
+performing complex software development tasks. The library includes
+comprehensive components for:
 
 - **FSM-based agent orchestration** with configurable workflows
 - **Code repository analysis and management**
@@ -27,22 +35,29 @@ Rome is built around a configurable Finite State Machine architecture that enabl
 Rome supports multiple FSM types for different use cases:
 
 #### Simple FSM (6-State Development Lifecycle)
+
 The comprehensive workflow for full development cycles:
 
-1. **IDLE → CODE_LOADED**: Search and load code files using tournament/priority search
-2. **CODE_LOADED → CODE_EDITED or TEST_EDITED**: Edit code or write tests based on analysis
+1. **IDLE → CODE_LOADED**: Search and load code files using tournament/priority
+   search
+2. **CODE_LOADED → CODE_EDITED or TEST_EDITED**: Edit code or write tests based
+   on analysis
 3. **CODE_EDITED → TEST_EDITED**: After code changes, create comprehensive tests
-4. **TEST_EDITED → CODE_EXECUTED_PASS/FAIL**: Execute code with tests and validate results
+4. **TEST_EDITED → CODE_EXECUTED_PASS/FAIL**: Execute code with tests and
+   validate results
 5. **CODE_EXECUTED_PASS → IDLE**: Successful completion, reset for next task
-6. **CODE_EXECUTED_FAIL → CODE_LOADED/IDLE**: Intelligent recovery with version revert or restart
+6. **CODE_EXECUTED_FAIL → CODE_LOADED/IDLE**: Intelligent recovery with version
+   revert or restart
 
 #### Minimal FSM (2-State Analysis Cycle)
+
 Lightweight workflow for code exploration and analysis:
 
 1. **IDLE → CODE_LOADED**: Search and examine code files
 2. **CODE_LOADED → IDLE**: Reset and repeat for iterative analysis
 
 #### Knowledge Base FSM
+
 `fsm_type: "knowledge_base"` — the simple lifecycle plus a second pass/fail
 state pair and a knowledge-base save step before returning to IDLE. (The
 builder's own description says "7-states"; it wires eight.)
@@ -51,23 +66,28 @@ builder's own description says "7-states"; it wires eight.)
 
 ### Advanced Agent Capabilities
 
-- **Smart Action Selection**: Tournament-based and priority-driven action selection strategies
-- **Context Management**: Maintains execution context and history across iterations
-- **Intelligent Recovery**: Automatic fallback states and version management for failure scenarios
+- **Smart Action Selection**: Tournament-based and priority-driven action
+  selection strategies
+- **Context Management**: Maintains execution context and history across
+  iterations
+- **Intelligent Recovery**: Automatic fallback states and version management for
+  failure scenarios
 - **Cost Management**: Built-in LLM API cost tracking and limits
 - **Patience System**: Prevents infinite loops with configurable retry limits
 
 ### Repository Management
 
 - **File Type Filtering**: Configurable file type support (`.py`, etc.)
-- **Version Control**: Automatic versioning of code changes with metadata tracking
+- **Version Control**: Automatic versioning of code changes with metadata
+  tracking
 - **Completion Tracking**: Progress monitoring across repository files
 - **Database Integration**: Persistent storage for agent state and history
 
 ### Benchmarking & Evaluation
 
 - **HumanEval+ Integration**: Built-in support for coding benchmark evaluation
-- **EvalPlus Compatibility**: Seamless integration with EvalPlus evaluation framework
+- **EvalPlus Compatibility**: Seamless integration with EvalPlus evaluation
+  framework
 - **Periodic Evaluation**: Background evaluation during agent execution
 - **Multi-Dataset Support**: Support for HumanEval and MBPP datasets
 
@@ -75,17 +95,21 @@ builder's own description says "7-states"; it wires eight.)
 
 ### Core Components
 
-- **Agent**: Main orchestrator with FSM management, context handling, and execution control
-- **FSMSelector**: Factory for creating different FSM types (`minimal`, `simple`, `knowledge_base`)
+- **Agent**: Main orchestrator with FSM management, context handling, and
+  execution control
+- **FSMSelector**: Factory for creating different FSM types (`minimal`,
+  `simple`, `knowledge_base`)
 - **ActionSelector**: Configurable strategies for intelligent action selection
 - **RepositoryManager**: File system operations and repository analysis
 - **VersionManager**: Code versioning and change tracking with database backend
-- **LLMHandler**: litellm-backed LLM interface (`openai`, `anthropic`, `gemini` providers) with cost management and response parsing
+- **LLMHandler**: litellm-backed LLM interface (`openai`, `anthropic`, `gemini`
+  providers) with cost management and response parsing
 - **AgentHistory**: Execution tracking and performance analytics
 
 ### States & Actions
 
 **Available States:**
+
 - `IdleState`: Waiting for tasks, ready to search
 - `CodeLoadedState`: File selected and loaded for processing
 - `CodeEditedState`: Code has been modified
@@ -94,6 +118,7 @@ builder's own description says "7-states"; it wires eight.)
 - `CodeExecutedFailState`: Failed execution requiring recovery
 
 **Key Actions:**
+
 - `TournamentSearchAction`: Advanced search with ranking algorithms
 - `PrioritySearchAction`: Priority-based file selection
 - `EditCodeAction`: AI-assisted code modification
@@ -108,8 +133,8 @@ builder's own description says "7-states"; it wires eight.)
 
 - Linux or macOS with Python 3.10–3.13 (`requires-python = ">=3.10,<3.14"`)
 - OpenAI API key or compatible LLM endpoint
-- Optional: the system `graphviz` library for FSM visualization (the `graphviz` /
-  `pygraphviz` Python bindings are already in `requirements.txt`)
+- Optional: the system `graphviz` library for FSM visualization (the `graphviz`
+  / `pygraphviz` Python bindings are already in `requirements.txt`)
 
 ### Installation
 
@@ -126,8 +151,8 @@ pip install -e ".[dev]"  # Include development dependencies (black, mypy, pytest
 
 `pip install -e .` installs everything listed in `requirements.txt` — the core
 runtime (litellm, openai, networkx, numpy, scipy, tinydb, portalocker, psutil,
-colorama), the KB/memory stack (chromadb, llama-index, mem0ai), and the
-optional extras `evalplus`, `graphviz` and `tiktoken`.
+colorama), the KB/memory stack (chromadb, llama-index, mem0ai), and the optional
+extras `evalplus`, `graphviz` and `tiktoken`.
 
 Not included, install separately if needed:
 
@@ -228,7 +253,7 @@ Rome uses YAML-based configuration with extensive customization options:
 # Agent Configuration
 Agent:
   name: "CodeExpert"
-  fsm_type: "simple"  # or "minimal"
+  fsm_type: "simple" # or "minimal"
   patience: 3
   action_select_strat: "smart"
   agent_api: true
@@ -252,7 +277,7 @@ AgentMemory:
 
 # Action Configuration
 TournamentSearchAction:
-  batch_size: 5   # >= 1 means a file count; < 1 means a fraction of all files
+  batch_size: 5 # >= 1 means a file count; < 1 means a fraction of all files
 
 RevertCodeAction:
   num_versions: 10
@@ -416,27 +441,34 @@ GET /agent/fsm   # FSM structure and current state
 ## Examples & Use Cases
 
 ### Code Quality Improvement
+
 - Analyze existing codebases for improvement opportunities
 - Automatically generate comprehensive test suites
 - Refactor code following best practices
 
 ### Automated Development
+
 - Complete partial function implementations
 - Generate documentation and comments
 - Fix bugs and logical errors
 
 ### Benchmark Evaluation
+
 - Evaluate agent performance on coding challenges
 - Compare different FSM configurations
 - Measure improvement over time
 
 ## Limitations & Considerations
 
-- **LLM Dependencies**: Requires access to an OpenAI, Anthropic or Gemini endpoint (`LLMHandler.provider`)
+- **LLM Dependencies**: Requires access to an OpenAI, Anthropic or Gemini
+  endpoint (`LLMHandler.provider`)
 - **Cost Management**: Monitor API usage with built-in cost limits and tracking
-- **File System Access**: Agents modify files directly (use with version control)
-- **Execution Safety**: Code execution happens in local environment (use containers for isolation)
-- **Port Requirements**: Agent API uses ports 40000-41000 range for web interface
+- **File System Access**: Agents modify files directly (use with version
+  control)
+- **Execution Safety**: Code execution happens in local environment (use
+  containers for isolation)
+- **Port Requirements**: Agent API uses ports 40000-41000 range for web
+  interface
 - **Real-time Monitoring**: Streamlit dashboard requires agent API to be enabled
 
 ## Contributing
