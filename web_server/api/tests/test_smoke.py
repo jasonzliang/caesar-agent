@@ -27,7 +27,7 @@ async def test_presets(client):
     assert r.status_code == 200
     body = r.json()
     ids = [p["id"] for p in body]
-    assert ids == ["fast", "normal", "deeper", "deepest"]
+    assert ids == ["fast", "normal", "deeper", "deepest", "deeper_arxiv", "deepest_arxiv"]
     required = {"id", "label", "description", "estimated_cost_usd", "estimated_time_min"}
     for p in body:
         assert required <= p.keys()
