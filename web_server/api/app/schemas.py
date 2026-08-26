@@ -102,6 +102,9 @@ class RunSummary(BaseModel):
     id: str
     query: str
     preset: str
+    # Human-facing preset name (e.g. "ArXiv") resolved from the preset registry;
+    # null if the stored id has no current entry. Clients fall back to `preset`.
+    preset_label: str | None = None
     status: str
 
     parent_run_id: str | None = None

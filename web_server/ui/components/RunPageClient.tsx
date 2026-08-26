@@ -258,7 +258,7 @@ export function RunPageClient({ initial }: Props) {
                 </Link>
               </>
             ) : null}
-            {' '}· <span>{run.preset}</span>
+            {' '}· <span>{run.preset_label ?? run.preset}</span>
             {followupModeText ? <> · {followupModeText}</> : null}
             {' '}· started{' '}
             {run.started_at ? new Date(run.started_at).toLocaleString() : '—'}

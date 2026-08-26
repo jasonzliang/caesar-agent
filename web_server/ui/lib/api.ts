@@ -24,6 +24,7 @@ export type RunSummary = {
   id: string;
   query: string;
   preset: string;
+  preset_label: string | null;
   status: RunStatus;
   parent_run_id: string | null;
   mode: RunMode;

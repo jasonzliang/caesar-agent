@@ -70,6 +70,7 @@ export function RunsListClient({ initial }: { initial: RunSummary[] }) {
       if (
         !dq.includes(needle) &&
         !(r.preset || '').toLowerCase().includes(needle) &&
+        !(r.preset_label || '').toLowerCase().includes(needle) &&
         !(r.status || '').toLowerCase().includes(needle)
       ) {
         return false;
@@ -192,7 +193,7 @@ export function RunsListClient({ initial }: { initial: RunSummary[] }) {
                 </div>
                 <p className="text-sm text-gray-900 line-clamp-2">{displayQuery}</p>
                 <div className="text-xs text-gray-500 mt-1.5 flex flex-wrap gap-4">
-                  <span className="capitalize">{r.preset}</span>
+                  <span className="capitalize">{r.preset_label ?? r.preset}</span>
                   {/* Hide null pills rather than rendering "—": cost is null
                       until the watchdog populates it (~1.5s past agent warmup),
                       and graph size stays null until Caesar has more than its
