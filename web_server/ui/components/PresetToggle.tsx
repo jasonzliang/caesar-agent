@@ -28,8 +28,9 @@ function fmtMin(min: number): string {
 // Presets that are a different SEARCH SOURCE rather than a web-depth tier get a
 // divider before them, so the row reads as "web depths | other sources" instead
 // of implying arXiv is just an even-deeper speed setting. Extend as new sources
-// (e.g. a future pubmed mode) are added.
-const SOURCE_BREAK = new Set(['arxiv']);
+// (e.g. a future pubmed mode) are added. Only the FIRST arxiv pill gets the
+// divider, so the two arXiv tiers sit together as one group.
+const SOURCE_BREAK = new Set(['deeper_arxiv']);
 
 export function PresetToggle({ presets, value, onChange }: Props) {
   // The per-pill "~$cost · time" was the row's space hog and pushed the 5th

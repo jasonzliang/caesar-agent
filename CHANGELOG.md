@@ -2,6 +2,19 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.23] - 2026-08-26
+
+### Changed
+
+- **Split the web GUI arXiv preset into two tiers**, "ArXiv" and "ArXiv Deep",
+  replacing the single "arXiv" preset. "ArXiv" (`deeper_arxiv`) runs 250
+  exploration iterations and synthesizes with GPT-5.6 Terra; "ArXiv Deep"
+  (`deepest_arxiv`) runs 1000 iterations and synthesizes with GPT-5.6 Sol,
+  matching the "Deepest" web preset. Both explore the Semantic Scholar citation
+  graph identically (mode `arxiv`, GPT-5.6 Luna); only depth and synthesis model
+  differ. The two pills share one divider in the preset selector so they read as
+  a single arXiv group.
+
 ## [0.4.22] - 2026-08-26
 
 ### Added
