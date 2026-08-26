@@ -18,6 +18,8 @@ CaesarAgent:
 
 ArtifactSynthesizer:
   synthesis_iterations: 10
+  # Lighter synthesis reasoning for the quick preset (default is high).
+  synthesis_reasoning_effort: medium
   synthesis_drafts: 3
   synthesis_merge_artifacts: true
   synthesis_eli5: false

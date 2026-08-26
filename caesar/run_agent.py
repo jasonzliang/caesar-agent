@@ -35,7 +35,7 @@ from rome.logger import get_logger
 # Path and config resolution
 # =============================================================================
 
-CONFIG_PRESETS = {'regular', 'mini', 'nano'}
+CONFIG_PRESETS = {'regular', 'mini', 'nano', 'arxiv'}
 
 USER_DATA_DIR = Path.home() / ".caesar"
 USER_CONFIG_DIR = USER_DATA_DIR / "configs"

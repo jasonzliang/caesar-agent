@@ -443,9 +443,12 @@ export function KnowledgeGraph({ runId, refreshKey, phase, progress, onStats, mo
             nodeLabel={(n: any) => {
               const d = graph.depthById.get(n.id) ?? Number(n.depth ?? 0);
               const iter = n.iteration ?? '—';
-              // The root is a file:// local search-results seed page; show a
-              // friendly label instead of the unbrowsable server path.
-              const label = String(n.id ?? '').startsWith('file://') ? 'Starting Search Page' : n.id;
+              // The root is a search-results seed: a file:// local page (web
+              // mode) or a Semantic Scholar search URL (arxiv mode). Show a
+              // friendly label instead of the raw path either way.
+              const rid = String(n.id ?? '');
+              const label = rid.startsWith('file://') || rid.includes('semanticscholar.org/search')
+                ? 'Starting Search Page' : rid;
               return `${label} (Iteration: ${iter}, Depth: ${d})`;
             }}
             nodeRelSize={NODE_R}

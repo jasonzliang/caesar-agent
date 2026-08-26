@@ -8,7 +8,7 @@ Agent:
 CaesarAgent:
   additional_starting_queries: 9
   max_web_searches: 30
-  max_iterations: 240
+  max_iterations: 250
   save_graph_interval: 2
 
   use_quick_explore: False

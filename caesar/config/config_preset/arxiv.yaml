@@ -1,5 +1,9 @@
-# Caesar Agent Configuration File
-# Only includes settings that differ from DEFAULT_CONFIG
+# Caesar Agent Configuration File - arxiv citation-graph mode
+# Traverses the Semantic Scholar citation graph of arxiv papers instead of the
+# open web: Semantic Scholar search seeds the graph, then each hop follows a
+# reference/citation edge. Requires a starting_query (-q). An optional
+# SEMANTIC_SCHOLAR_API_KEY greatly improves throughput.
+# Only includes settings that differ from DEFAULT_CONFIG / CAESAR_CONFIG.
 
 # ============================================================================
 # AGENT CONFIGURATION
@@ -12,6 +16,10 @@ Agent:
 # CAESAR-SPECIFIC CONFIGURATION
 # ============================================================================
 CaesarAgent:
+  mode: arxiv
+  # CaesarAgent settings mirror the `regular` preset; only max_iterations is
+  # pinned (240) and mode is arxiv. No max_depth cap (like regular): depth is
+  # bounded by max_iterations + the exploration strategy, not a fixed ceiling.
   additional_starting_queries: 9
   max_web_searches: 20
   max_iterations: 250
@@ -20,19 +28,28 @@ CaesarAgent:
   use_quick_explore: False
   quick_explore_insights: False
   exploration_llm_config:
-    model: gpt-5.6-terra
+    model: gpt-5.6-luna
     reasoning_effort: low
 
-  # overwrite_role_file: config/role/self_transcend_role.txt
-  # adapt_role_file: config/role/self_transcend_insights_v1.txt
   adapt_role: True
 
+# ============================================================================
+# SEMANTIC SCHOLAR (arxiv citation graph)
+# ----------------------------------------------------------------------------
+# All Semantic Scholar knobs (num_results, refs_limit, citations_limit,
+# arxiv_only, min_request_interval) use their defaults from
+# caesar/caesar_config.py; add a SemanticScholar: block here to override.
+# Set an optional SEMANTIC_SCHOLAR_API_KEY env var for reliable throughput.
+# ============================================================================
+
+# ============================================================================
+# SYNTHESIS
+# ============================================================================
 ArtifactSynthesizer:
   synthesis_iterations: 20
   synthesis_drafts: 3
   synthesis_merge_artifacts: true
   synthesis_eli5: false
-  synthesis_eli5_length: [null, 450]
   synthesis_human_eval: false
   synthesis_max_length: null
   synthesis_iteration_filter: null
@@ -41,15 +58,12 @@ ArtifactSynthesizer:
 # LLM CONFIGURATION
 # ============================================================================
 LLMHandler:
-  # Synthesis runs through the agent's handler (exploration has its own override
-  # above), so this is the synthesis model.
   model: gpt-5.6-sol
   reasoning_effort: medium
-  # Override the 900s default: sol needs the extra headroom, same as deepest.yaml.
   timeout: 1200
 
 # ============================================================================
-# KNOWLEDGE BASE CONFIGURATION
+# KNOWLEDGE BASE / MEMORY
 # ============================================================================
 AgentMemory:
   enabled: true

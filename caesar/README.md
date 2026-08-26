@@ -1,8 +1,12 @@
 # Caesar: Autonomous Web Exploration Agent
 
-Caesar is an LLM-powered autonomous agent that explores the web to discover, synthesize, and generate novel insights. It uses a **Perceive-Think-Act** loop to navigate web pages, extract knowledge, build a knowledge graph, and produce synthesis artifacts via an adversarial adversarial refinement loop.
+Caesar is an LLM-powered autonomous agent that explores the web to discover,
+synthesize, and generate novel insights. It uses a **Perceive-Think-Act** loop
+to navigate web pages, extract knowledge, build a knowledge graph, and produce
+synthesis artifacts via an adversarial adversarial refinement loop.
 
-See the [repo root README](../README.md) for benchmark results and project overview. This document covers configuration, usage modes, and advanced options.
+See the [repo root README](../README.md) for benchmark results and project
+overview. This document covers configuration, usage modes, and advanced options.
 
 ## Table of Contents
 
@@ -24,7 +28,8 @@ See the [repo root README](../README.md) for benchmark results and project overv
 
 ## Overview
 
-Caesar operates as an "Insight Hunter" rather than a traditional search engine. Its core philosophy:
+Caesar operates as an "Insight Hunter" rather than a traditional search engine.
+Its core philosophy:
 
 - **Break information filter bubbles**: explore beyond obvious results
 - **Recursive curiosity**: follow unexpected connections
@@ -36,14 +41,23 @@ Caesar operates as an "Insight Hunter" rather than a traditional search engine. 
 
 - **Autonomous web exploration** with LLM-guided link selection
 - **Knowledge graph construction** tracking exploration paths
-- **Vector knowledge base** for semantic insight storage and retrieval (ChromaDB + LlamaIndex)
-- **Multi-provider LLM support** via litellm: OpenAI, Anthropic, Gemini, or any OpenAI-compatible endpoint
-- **Brave Search integration** for web search (auto-fallback to DDGS if `BRAVE_API_KEY` unset)
-- **Multi-draft artifact synthesis** with adversarial query refinement, citation tracking, and generative draft merging
+- **Vector knowledge base** for semantic insight storage and retrieval
+  (ChromaDB + LlamaIndex)
+- **Multi-provider LLM support** via litellm: OpenAI, Anthropic, Gemini, or any
+  OpenAI-compatible endpoint
+- **Brave Search integration** for web search (auto-fallback to DDGS if
+  `BRAVE_API_KEY` unset)
+- **arXiv citation-graph mode** (`mode: arxiv`): explore the Semantic Scholar
+  citation graph of arXiv papers instead of the open web, building a knowledge
+  graph of papers linked by references/citations (preset: `arxiv`)
+- **Multi-draft artifact synthesis** with adversarial query refinement, citation
+  tracking, and generative draft merging
 - **Checkpoint/resume** support for long explorations
 - **Configurable role adaptation** based on exploration content
-- **Experiment summary JSON** emitted per run (tokens, cost, wall-time, artifact paths)
-- **Stealth browsing**: dynamic Referer and Sec-Fetch-Site headers computed per navigation to match real browser behavior
+- **Experiment summary JSON** emitted per run (tokens, cost, wall-time, artifact
+  paths)
+- **Stealth browsing**: dynamic Referer and Sec-Fetch-Site headers computed per
+  navigation to match real browser behavior
 
 ## Architecture
 
@@ -51,9 +65,14 @@ Caesar operates as an "Insight Hunter" rather than a traditional search engine. 
   <img src="https://jasonzliang.github.io/caesar-agent/caesar.webp" alt="Caesar architecture: Perceive-Think-Act exploration loop feeding a vector knowledge base, and adversarial artifact synthesis loop with draft merging and ELI5 post-processing" width="720"/>
 </p>
 
-**Phase 1 (left): Deep Web Exploration.** A dynamic exploration policy controls a three-stage loop (Perceive, Think, Act) to traverse the web and build a knowledge graph + knowledge base from insights.
+**Phase 1 (left): Deep Web Exploration.** A dynamic exploration policy controls
+a three-stage loop (Perceive, Think, Act) to traverse the web and build a
+knowledge graph + knowledge base from insights.
 
-**Phase 2 (right): Adversarial Artifact Synthesis.** Insights are retrieved to synthesize an initial draft. The agent then enters a recursive cycle, critiquing the current draft to generate adversarial queries for refinement, before consolidating all versions via a generative merge and ELI5 summary.
+**Phase 2 (right): Adversarial Artifact Synthesis.** Insights are retrieved to
+synthesize an initial draft. The agent then enters a recursive cycle, critiquing
+the current draft to generate adversarial queries for refinement, before
+consolidating all versions via a generative merge and ELI5 summary.
 
 ## Installation
 
@@ -82,7 +101,9 @@ cd caesar-agent && pip install -e .
 When installed from PyPI, Caesar reads and writes under `~/.caesar/`:
 
 - `~/.caesar/result/` — run artifacts (override with `CAESAR_RESULT_DIR`)
-- `~/.caesar/configs/<name>.yaml` — drop your own YAMLs here and call them by name (`caesar my_preset -q ...`). Bundled presets (`nano`, `mini`, `regular`) take precedence over same-named user configs.
+- `~/.caesar/configs/<name>.yaml` — drop your own YAMLs here and call them by
+  name (`caesar my_preset -q ...`). Bundled presets (`nano`, `mini`, `regular`)
+  take precedence over same-named user configs.
 
 Source checkouts keep the historical `caesar/result/` location unchanged.
 
@@ -96,6 +117,10 @@ export GOOGLE_API_KEY="your-google-api-key"
 
 # Optional: Brave web search (falls back to DDGS if unset)
 export BRAVE_API_KEY="your-brave-search-api-key"
+
+# Optional: Semantic Scholar key for arxiv mode (works anonymously without it,
+# but the shared anonymous pool is heavily rate-limited; a key is recommended)
+export SEMANTIC_SCHOLAR_API_KEY="your-semantic-scholar-api-key"
 ```
 
 ### Optional: Graph Visualization
@@ -114,7 +139,10 @@ pip install pygraphviz
 
 ### Optional: ChromaDB Vector Database
 
-ChromaDB handles semantic storage and retrieval of insights. Caesar auto-starts a local `chroma run` server on `localhost:8000` if one is not already listening, so no manual step is needed. To manage the server yourself (e.g. shared multi-agent setups), start it before the run:
+ChromaDB handles semantic storage and retrieval of insights. Caesar auto-starts
+a local `chroma run` server on `localhost:8000` if one is not already listening,
+so no manual step is needed. To manage the server yourself (e.g. shared
+multi-agent setups), start it before the run:
 
 ```bash
 pip install chromadb
@@ -123,15 +151,18 @@ chroma run --host localhost --port 8000
 
 ### Optional: Neo4j Graph Database
 
-Neo4j is only required if you set `use_graph: true` in config for persistent entity/relationship storage. Most users don't need this.
+Neo4j is only required if you set `use_graph: true` in config for persistent
+entity/relationship storage. Most users don't need this.
 
 **macOS:**
+
 ```bash
 brew install neo4j
 brew services start neo4j
 ```
 
 **Ubuntu/Debian:**
+
 ```bash
 curl -fsSL https://debian.neo4j.com/neotechnology.gpg.key | sudo gpg --dearmor -o /usr/share/keyrings/neo4j.gpg
 echo "deb [signed-by=/usr/share/keyrings/neo4j.gpg] https://debian.neo4j.com stable latest" | sudo tee /etc/apt/sources.list.d/neo4j.list
@@ -139,31 +170,31 @@ sudo apt-get update && sudo apt-get install neo4j
 sudo systemctl start neo4j
 ```
 
-After install, the Neo4j web UI is at `http://localhost:7474` (default creds `neo4j`/`neo4j`, will prompt to change).
+After install, the Neo4j web UI is at `http://localhost:7474` (default creds
+`neo4j`/`neo4j`, will prompt to change).
 
 ### Database Configuration Parameters
 
-**Neo4j (Graph Database) — `AgentMemory` section:**
-| Parameter | Default | Description |
-|---|---|---|
-| `use_graph` | false | Enable graph memory (requires Neo4j) |
-| `graph_url` | `bolt://localhost:7687` | Neo4j Bolt connection URL |
-| `graph_username` | `neo4j` | Neo4j username |
-| `graph_password` | unset | Neo4j password. Read from `NEO4J_PASSWORD`; `use_graph` fails closed if neither it nor a config override is set |
+**Neo4j (Graph Database) — `AgentMemory` section:** | Parameter | Default |
+Description | |---|---|---| | `use_graph` | false | Enable graph memory
+(requires Neo4j) | | `graph_url` | `bolt://localhost:7687` | Neo4j Bolt
+connection URL | | `graph_username` | `neo4j` | Neo4j username | |
+`graph_password` | unset | Neo4j password. Read from `NEO4J_PASSWORD`;
+`use_graph` fails closed if neither it nor a config override is set |
 
-**ChromaDB (Vector Database) — `ChromaClientManager` / `ChromaServerManager` sections:**
-| Parameter | Default | Description |
-|---|---|---|
-| `embedding_model` | `text-embedding-3-small` | OpenAI embedding model |
-| `host` | `localhost` | Server bind host (for standalone mode) |
-| `port` | 8000 | Server bind port |
-| `persist_path` | None | Data persistence directory (auto-set if None) |
+**ChromaDB (Vector Database) — `ChromaClientManager` / `ChromaServerManager`
+sections:** | Parameter | Default | Description | |---|---|---| |
+`embedding_model` | `text-embedding-3-small` | OpenAI embedding model | | `host`
+| `localhost` | Server bind host (for standalone mode) | | `port` | 8000 |
+Server bind port | | `persist_path` | None | Data persistence directory
+(auto-set if None) |
 
 ## Quick Start
 
 ### Basic Usage
 
-Run from the **`caesar/`** directory (config paths are relative to this location):
+Run from the **`caesar/`** directory (config paths are relative to this
+location):
 
 ```bash
 cd caesar
@@ -171,8 +202,11 @@ python run_agent.py [repository] config [-q QUERY] [--max-iterations N]
 ```
 
 **Arguments:**
-- `repository`: directory to store exploration results (optional, auto-generated under `result/` if omitted)
-- `config`: path to YAML config file, or a preset name: `regular`, `mini`, `nano`
+
+- `repository`: directory to store exploration results (optional, auto-generated
+  under `result/` if omitted)
+- `config`: path to YAML config file, or a preset name: `regular`, `mini`,
+  `nano`, `arxiv`
 - `-q, --query`: override `starting_query` from config
 - `--max-iterations`: override `max_iterations` from config
 
@@ -219,11 +253,14 @@ python run_agent.py -b experiments.jsonl --restart 3
 {"config": "config/config_creative/openended_creativity.yaml", "query": "emergent behavior", "repository": "result/custom_dir"}
 ```
 
-Each experiment runs as a separate subprocess. Status is tracked in `<batch>.status.json`. Stopped/failed experiments resume from the last checkpoint on restart.
+Each experiment runs as a separate subprocess. Status is tracked in
+`<batch>.status.json`. Stopped/failed experiments resume from the last
+checkpoint on restart.
 
 ## Configuration
 
-Configuration files are YAML documents that override default settings. Only specify settings that differ from defaults.
+Configuration files are YAML documents that override default settings. Only
+specify settings that differ from defaults.
 
 ### Configuration Structure
 
@@ -232,8 +269,8 @@ Agent:
   name: CaesarExplorer
 
 CaesarAgent:
-  starting_url: "https://example.com"     # OR
-  starting_query: "Your search query"     # (mutually exclusive)
+  starting_url: "https://example.com" # OR
+  starting_query: "Your search query" # (mutually exclusive)
   max_iterations: 100
   max_depth: 1000
   # ... more settings
@@ -244,7 +281,7 @@ ArtifactSynthesizer:
   # ... more settings
 
 LLMHandler:
-  provider: openai                  # or "anthropic", "gemini"
+  provider: openai # or "anthropic", "gemini"
   model: gpt-5.4
   cost_limit: 50.0
   temperature: 0.1
@@ -257,65 +294,67 @@ Logger:
   level: info
 ```
 
-For full configs used in published experiments, see YAMLs under `config/config_creative/`.
+For full configs used in published experiments, see YAMLs under
+`config/config_creative/`.
 
 ### Key Configuration Parameters
 
 #### CaesarAgent Settings
 
-| Parameter | Default | Description |
-|---|---|---|
-| `starting_url` | None | Initial URL to begin exploration |
-| `starting_query` | None | Initial search query (alternative to URL) |
-| `additional_starting_queries` | 5 | Generate N related queries from initial query |
-| `max_iterations` | 1000 | Total pages to explore |
-| `max_depth` | 1000 | Max tree depth before forced backtrack |
-| `max_web_searches` | 0 | Web searches allowed during exploration |
-| `allowed_domains` | `[]` | Domain whitelist; empty = starting domain only; `["*"]` = all |
-| `max_allowed_revisits` | 20 | Max times to revisit same page |
-| `checkpoint_interval` | 1 | Save checkpoint every N iterations |
-| `save_graph_interval` | 1 | Save graph snapshot every N iterations |
-| `draw_graph` | false | Generate PNG graph visualizations (requires pygraphviz) |
-| `adapt_role` | false | Dynamically adapt agent role based on content |
-| `overwrite_role_file` | None | Path to custom role definition (overrides default system prompt) |
-| `use_quick_explore` | false | Parallel single-hop mode (see [Exploration Modes](#exploration-modes)) |
-| `quick_explore_workers` | 20 | Worker threads for quick-explore mode |
-| `exploration_llm_config.model` | `gpt-5.4` | Model for exploration decisions (Perceive/Think/Act) |
-| `exploration_llm_config.temperature` | 0.9 | Exploration temperature (higher = more creative) |
-| `exploration_llm_config.reasoning_effort` | `low` | For reasoning models |
+| Parameter                                 | Default   | Description                                                            |
+| ----------------------------------------- | --------- | ---------------------------------------------------------------------- |
+| `starting_url`                            | None      | Initial URL to begin exploration                                       |
+| `starting_query`                          | None      | Initial search query (alternative to URL)                              |
+| `additional_starting_queries`             | 5         | Generate N related queries from initial query                          |
+| `max_iterations`                          | 1000      | Total pages to explore                                                 |
+| `max_depth`                               | 1000      | Max tree depth before forced backtrack                                 |
+| `max_web_searches`                        | 0         | Web searches allowed during exploration                                |
+| `allowed_domains`                         | `[]`      | Domain whitelist; empty = starting domain only; `["*"]` = all          |
+| `max_allowed_revisits`                    | 20        | Max times to revisit same page                                         |
+| `checkpoint_interval`                     | 1         | Save checkpoint every N iterations                                     |
+| `save_graph_interval`                     | 1         | Save graph snapshot every N iterations                                 |
+| `draw_graph`                              | false     | Generate PNG graph visualizations (requires pygraphviz)                |
+| `adapt_role`                              | false     | Dynamically adapt agent role based on content                          |
+| `overwrite_role_file`                     | None      | Path to custom role definition (overrides default system prompt)       |
+| `use_quick_explore`                       | false     | Parallel single-hop mode (see [Exploration Modes](#exploration-modes)) |
+| `quick_explore_workers`                   | 20        | Worker threads for quick-explore mode                                  |
+| `exploration_llm_config.model`            | `gpt-5.4` | Model for exploration decisions (Perceive/Think/Act)                   |
+| `exploration_llm_config.temperature`      | 0.9       | Exploration temperature (higher = more creative)                       |
+| `exploration_llm_config.reasoning_effort` | `low`     | For reasoning models                                                   |
 
 #### ArtifactSynthesizer Settings
 
-| Parameter | Default | Description |
-|---|---|---|
-| `synthesis_classic_mode` | false | Ask all queries at once (vs iterative Q&A chain) |
-| `synthesis_drafts` | 3 | Number of synthesis drafts |
-| `synthesis_iterations` | 20 | Q&A iterations per draft |
-| `synthesis_top_k` | 50 | KB retrieval top-k per query |
-| `synthesis_top_n` | 10 | Reranker top-n per query (when reranking enabled) |
-| `synthesis_reference_draft` | None | Optional path to external answer file used as "previous artifact" for the first draft only |
-| `synthesis_max_length` | None | Max words for artifact (None = unlimited) |
-| `synthesis_merge_artifacts` | false | Merge multiple drafts into a single final artifact |
-| `synthesis_eli5` | false | Generate "Explain Like I'm 5" summary |
-| `synthesis_eli5_length` | None | Max words for ELI5 summary |
-| `synthesis_iteration_filter` | None | Only use insights from iterations < N |
+| Parameter                    | Default | Description                                                                                |
+| ---------------------------- | ------- | ------------------------------------------------------------------------------------------ |
+| `synthesis_classic_mode`     | false   | Ask all queries at once (vs iterative Q&A chain)                                           |
+| `synthesis_drafts`           | 3       | Number of synthesis drafts                                                                 |
+| `synthesis_iterations`       | 20      | Q&A iterations per draft                                                                   |
+| `synthesis_top_k`            | 50      | KB retrieval top-k per query                                                               |
+| `synthesis_top_n`            | 10      | Reranker top-n per query (when reranking enabled)                                          |
+| `synthesis_reference_draft`  | None    | Optional path to external answer file used as "previous artifact" for the first draft only |
+| `synthesis_max_length`       | None    | Max words for artifact (None = unlimited)                                                  |
+| `synthesis_merge_artifacts`  | false   | Merge multiple drafts into a single final artifact                                         |
+| `synthesis_eli5`             | false   | Generate "Explain Like I'm 5" summary                                                      |
+| `synthesis_eli5_length`      | None    | Max words for ELI5 summary                                                                 |
+| `synthesis_iteration_filter` | None    | Only use insights from iterations < N                                                      |
 
 #### LLMHandler Settings
 
-| Parameter | Default | Description |
-|---|---|---|
-| `provider` | `openai` | LLM provider: `openai`, `anthropic`, or `gemini` |
-| `model` | `gpt-5.4` | LLM model for synthesis (rome default `gpt-4o`, overridden to `gpt-5.4` by Caesar) |
-| `cost_limit` | 300.0 | Max API spend in USD before graceful stop (rome default 500.0) |
-| `temperature` | 0.1 | Temperature for synthesis (lower = focused) |
-| `timeout` | 900 | API timeout in seconds (rome default 60) |
-| `reasoning_effort` | `medium` | For reasoning models (`low`/`medium`/`high`); None to disable (rome default None) |
-| `max_completion_tokens` | 50000 | LLM response max tokens (rome default 10000) |
-| `max_retries` | 2 | Max retries on API failure |
+| Parameter               | Default   | Description                                                                        |
+| ----------------------- | --------- | ---------------------------------------------------------------------------------- |
+| `provider`              | `openai`  | LLM provider: `openai`, `anthropic`, or `gemini`                                   |
+| `model`                 | `gpt-5.4` | LLM model for synthesis (rome default `gpt-4o`, overridden to `gpt-5.4` by Caesar) |
+| `cost_limit`            | 300.0     | Max API spend in USD before graceful stop (rome default 500.0)                     |
+| `temperature`           | 0.1       | Temperature for synthesis (lower = focused)                                        |
+| `timeout`               | 900       | API timeout in seconds (rome default 60)                                           |
+| `reasoning_effort`      | `medium`  | For reasoning models (`low`/`medium`/`high`); None to disable (rome default None)  |
+| `max_completion_tokens` | 50000     | LLM response max tokens (rome default 10000)                                       |
+| `max_retries`           | 2         | Max retries on API failure                                                         |
 
 ### Multi-Provider LLM Examples
 
 **OpenAI (default):**
+
 ```yaml
 LLMHandler:
   provider: openai
@@ -324,14 +363,16 @@ LLMHandler:
 ```
 
 **Anthropic Claude:**
+
 ```yaml
 LLMHandler:
   provider: anthropic
-  model: claude-haiku-4-5-20251001   # or claude-sonnet-4-6, claude-opus-4-6
+  model: claude-haiku-4-5-20251001 # or claude-sonnet-4-6, claude-opus-4-6
   temperature: 0.1
 ```
 
 **Google Gemini:**
+
 ```yaml
 LLMHandler:
   provider: gemini
@@ -347,18 +388,19 @@ Start from a specific URL and explore linked pages:
 ```yaml
 CaesarAgent:
   starting_url: "https://en.wikipedia.org/wiki/Artificial_intelligence"
-  allowed_domains: []      # Empty = stay on starting domain
+  allowed_domains: [] # Empty = stay on starting domain
 ```
 
 ### 2. Query-Based Exploration (Web Search)
 
-Start from a web search query. Caesar generates additional related queries to broaden the entry point:
+Start from a web search query. Caesar generates additional related queries to
+broaden the entry point:
 
 ```yaml
 CaesarAgent:
   starting_query: "Novel approaches to solving ARC-AGI benchmark"
-  additional_starting_queries: 5   # Generate 5 related queries
-  max_web_searches: 30             # Allow 30 searches during exploration
+  additional_starting_queries: 5 # Generate 5 related queries
+  max_web_searches: 30 # Allow 30 searches during exploration
 ```
 
 ### 3. Domain-Restricted Exploration
@@ -383,21 +425,54 @@ CaesarAgent:
 
 ### 5. Quick Explore (Parallel Single-Hop)
 
-Fan out to all search-result links in parallel, skipping the navigation policy. Good for breadth-first snapshots; not good for deep topological traversal:
+Fan out to all search-result links in parallel, skipping the navigation policy.
+Good for breadth-first snapshots; not good for deep topological traversal:
 
 ```yaml
 CaesarAgent:
   use_quick_explore: true
-  quick_explore_workers: 20    # Number of parallel fetch threads
+  quick_explore_workers: 20 # Number of parallel fetch threads
 ```
+
+### 6. arXiv Citation Graph (Semantic Scholar)
+
+Set `mode: arxiv` to traverse the Semantic Scholar citation graph of arXiv
+papers instead of the open web. A Semantic Scholar search seeds the graph, then
+each hop follows a reference or citation edge: nodes are papers (keyed by their
+`arxiv.org/abs/...` URL) and edges are citations. The knowledge base, synthesis,
+and checkpointing are unchanged, so citations in the final artifact become real
+arXiv links.
+
+```bash
+# Bundled `arxiv` preset (iterative citation-graph walk)
+python run_agent.py arxiv -q "give a survey on self-improving agents"
+```
+
+```yaml
+CaesarAgent:
+  mode: arxiv
+  starting_query: "self-improving agents" # required; seeds the Semantic Scholar search
+SemanticScholar:
+  arxiv_only: true # true = pure arXiv graph; false also keeps DOI/other cited papers
+  refs_limit: 100 # references (papers this one cites) pulled per node
+  citations_limit: 100 # citations (papers that cite this one) pulled per node
+```
+
+An optional `SEMANTIC_SCHOLAR_API_KEY` is used automatically if set; arxiv mode
+works anonymously but the shared pool is heavily rate-limited, so a key is
+recommended. Implementation: `caesar/arxiv_explorer.py` +
+`caesar/semantic_scholar.py`.
 
 ## Synthesis & Artifacts
 
-After exploration, Caesar synthesizes collected insights through the adversarial draft-refine-merge loop (Phase 2 of the [paper](https://arxiv.org/abs/2604.20855)).
+After exploration, Caesar synthesizes collected insights through the adversarial
+draft-refine-merge loop (Phase 2 of the
+[paper](https://arxiv.org/abs/2604.20855)).
 
 ### Synthesis Modes
 
-**Iterative mode** (default): builds understanding progressively through a Q&A chain, with each answer generating the next query:
+**Iterative mode** (default): builds understanding progressively through a Q&A
+chain, with each answer generating the next query:
 
 ```yaml
 ArtifactSynthesizer:
@@ -427,8 +502,10 @@ ArtifactSynthesizer:
 ### Output Format
 
 Each synthesis artifact includes:
+
 - **Abstract**: 80–120 word summary
-- **Main content**: synthesized insights with inline citations (`[1]`, `[2]`, ...)
+- **Main content**: synthesized insights with inline citations (`[1]`, `[2]`,
+  ...)
 - **Sources**: full citation list with URLs
 - **ELI5** (optional): simplified explanation in plain English
 
@@ -455,13 +532,17 @@ repository/
         └── {query}_{hash}.html
 ```
 
-The `exp_summary.json` contains wall-time, token/cost totals, iterations elapsed, pages visited, artifact paths, and a config snapshot for reproducibility.
+The `exp_summary.json` contains wall-time, token/cost totals, iterations
+elapsed, pages visited, artifact paths, and a config snapshot for
+reproducibility.
 
 ## Example Configs
 
 ### Presets (`config/config_preset/`)
 
-- `regular.yaml`: 250 iterations, `gpt-5.6-terra` (exploration) / `gpt-5.6-sol` at medium effort (synthesis) / `gpt-5.4-mini` (KB), adapt_role enabled, merge enabled (production default)
+- `regular.yaml`: 250 iterations, `gpt-5.6-terra` (exploration) / `gpt-5.6-sol`
+  at medium effort (synthesis) / `gpt-5.4-mini` (KB), adapt_role enabled, merge
+  enabled (production default)
 - `mini.yaml`: smaller/faster run
 - `nano.yaml`: smallest, for quick smoke tests
 
@@ -497,15 +578,18 @@ Bounded-domain exploration for debugging/demos:
 
 ### LLM-as-Judge Rubrics (`config/llm_as_judge/`)
 
-Judge prompts and rubrics for reproducing paper evaluations (used with `analysis/llm_as_judge.py`).
+Judge prompts and rubrics for reproducing paper evaluations (used with
+`analysis/llm_as_judge.py`).
 
 ## Advanced Usage
 
 ### Resume from Checkpoint
 
-Exploration automatically resumes from the last checkpoint if one exists in the repository directory. To start fresh, delete or rename the checkpoint file.
+Exploration automatically resumes from the last checkpoint if one exists in the
+repository directory. To start fresh, delete or rename the checkpoint file.
 
-For batch experiments, use `--restart` to re-queue a stopped/failed experiment (it resumes from its checkpoint):
+For batch experiments, use `--restart` to re-queue a stopped/failed experiment
+(it resumes from its checkpoint):
 
 ```bash
 python run_agent.py -b experiments.jsonl --restart 3
@@ -523,8 +607,10 @@ CaesarAgent:
 
 Available role files under `config/custom_role/`:
 
-- `self_transcend_role_v1.txt` / `v2.txt` / `v3.txt`: "recursive self-transcendence" persona used in the paper
-- `self_transcend_insights_v1.txt` / `v2.txt` / `v3.txt` / `v4.txt`: adaptive insight prompts
+- `self_transcend_role_v1.txt` / `v2.txt` / `v3.txt`: "recursive
+  self-transcendence" persona used in the paper
+- `self_transcend_insights_v1.txt` / `v2.txt` / `v3.txt` / `v4.txt`: adaptive
+  insight prompts
 
 ### Role Adaptation
 
@@ -538,7 +624,8 @@ CaesarAgent:
 
 ### Diverse Retrieval (RAG-Fusion Style)
 
-The knowledge base supports `multi_query` for diverse answer generation (useful on reasoning models where temperature has no effect):
+The knowledge base supports `multi_query` for diverse answer generation (useful
+on reasoning models where temperature has no effect):
 
 ```python
 # kb_client API
@@ -564,7 +651,7 @@ Set a cost limit to prevent runaway API usage:
 
 ```yaml
 LLMHandler:
-  cost_limit: 50.0   # Stop at $50
+  cost_limit: 50.0 # Stop at $50
 ```
 
 The agent stops gracefully when the limit is approached.
@@ -574,44 +661,58 @@ The agent stops gracefully when the limit is approached.
 ### Common Issues
 
 **Web search not working**
-- `BRAVE_API_KEY` is optional; Caesar auto-falls-back to DDGS (`pip install ddgs`).
-- For Brave: `export BRAVE_API_KEY="your-key"` (key from https://brave.com/search/api/).
+
+- `BRAVE_API_KEY` is optional; Caesar auto-falls-back to DDGS
+  (`pip install ddgs`).
+- For Brave: `export BRAVE_API_KEY="your-key"` (key from
+  https://brave.com/search/api/).
 - Force DDGS with `BraveSearch: { use_ddgs: true }` in your config.
 
 **"Rate limit exceeded" / transient 429s**
+
 - LLMHandler has exponential backoff retry logic (up to `max_retries`)
 - For persistent issues, reduce `max_web_searches` or set a longer `timeout`
 
 **"Checkpoint not loading"**
+
 - Ensure the repository path matches the original run's repository
 - Check file permissions on the checkpoint JSON
 - Corrupted checkpoint: delete and restart
 
 **"pygraphviz not found"**
+
 - Install graphviz and pygraphviz (see [Installation](#installation))
 - Or disable visualization: `draw_graph: false`
 
 **"Cost limit reached"**
+
 - Increase `cost_limit` in `LLMHandler` config
 - Or reduce `max_iterations` / `synthesis_iterations`
 
 **Bot detection / 403 / Cloudflare blocks**
-- Caesar already uses `curl_cffi` with Chrome TLS impersonation and per-navigation Referer/Sec-Fetch-Site headers
-- For very aggressive bot walls, consider narrowing `allowed_domains` to friendlier sites
-- For academic sites (arxiv, nih, springer), the default 30s timeout should be enough; increase if needed
+
+- Caesar already uses `curl_cffi` with Chrome TLS impersonation and
+  per-navigation Referer/Sec-Fetch-Site headers
+- For very aggressive bot walls, consider narrowing `allowed_domains` to
+  friendlier sites
+- For academic sites (arxiv, nih, springer), the default 30s timeout should be
+  enough; increase if needed
 
 ### Performance Tips
 
-1. **Start small**: use `config/config_test/single_agent_test.yaml` to verify setup
-2. **Tune iterations**: more iterations = more insights but higher cost (the paper shows budget-T correlates monotonically with artifact quality)
+1. **Start small**: use `config/config_test/single_agent_test.yaml` to verify
+   setup
+2. **Tune iterations**: more iterations = more insights but higher cost (the
+   paper shows budget-T correlates monotonically with artifact quality)
 3. **Use checkpoints liberally**: `checkpoint_interval: 10` for long runs
 4. **Domain restriction**: narrow `allowed_domains` to avoid tangents
-5. **Model selection**: Claude Haiku 4.5 or GPT-5.4-mini for cost efficiency; GPT-5.4 or Claude Sonnet 4.6 for quality
+5. **Model selection**: Claude Haiku 4.5 or GPT-5.4-mini for cost efficiency;
+   GPT-5.4 or Claude Sonnet 4.6 for quality
 
 ## Using Caesar in Another Repo (`git subtree`)
 
-If Caesar lives inside a larger monorepo and is shared across projects via
-git subtree (with `rome` as the remote name pointing at this repo):
+If Caesar lives inside a larger monorepo and is shared across projects via git
+subtree (with `rome` as the remote name pointing at this repo):
 
 ### Pull updates from upstream into your project
 

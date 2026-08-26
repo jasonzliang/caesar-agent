@@ -94,6 +94,10 @@ CAESAR_CONFIG = {
         #   "strategy" — query steers the meta strategy decision only (partial drift)
         #   "full"     — query anchors every per-hop link selection too (no drift)
         "query_influence": "full",
+        # Exploration mode: "web" (Brave/DDGS + open-web crawl, default) or
+        # "arxiv" (Semantic Scholar + arxiv citation-graph traversal; needs a
+        # starting_query; tunables in the "SemanticScholar" section below).
+        "mode": "web",
         # Domains to allow exploration; empty list uses starting_url domain; use ["*"] to allow any
         "allowed_domains": [],
         # Domain-level blocks: substring match against URL netloc (merged with BASELINE_BLOCKED_DOMAINS)
@@ -151,6 +155,11 @@ CAESAR_CONFIG = {
         "synthesis_drafts": 3,
         # Number of Q/A iterations per draft
         "synthesis_iterations": 20,
+        # Reasoning effort for the artifact-generating SYNTHESIS + MERGE calls;
+        # steps down high->medium->low on timeout (see _llm_call). The light
+        # post-processes (clarify, eli5, human_eval) ignore this and run at the
+        # model's default effort.
+        "synthesis_reasoning_effort": "high",
         # Top_k for synthesis query and retrieval from DB
         "synthesis_top_k": 50,
         # Top_n for synthesis query and retrieval from DB
@@ -214,6 +223,32 @@ CAESAR_CONFIG = {
         # When False, DDGS is used automatically if BRAVE_API_KEY not set
         # When True, force the DDGS backend regardless of BRAVE_API_KEY
         "use_ddgs": False,
+    },
+
+    # Semantic Scholar Graph API (only when CaesarAgent.mode == "arxiv").
+    "SemanticScholar": {
+        # Papers fetched for the initial search seed (S2 page cap: 100).
+        "num_results": 20,
+        # References / citations pulled per node. These are page SIZES, not call
+        # counts (one call each regardless, S2 max 1000/page): raising them costs
+        # response + prompt size, not rate-limited calls (429 pressure unchanged).
+        # Measured on a live run: references rarely reach even 100 (papers cite
+        # <~80), so refs_limit is headroom; citations are unbounded + unsorted,
+        # so hub papers (seen: 292 citers) truncate -- a larger citations_limit
+        # samples more before the influential-first client ranking. ~1-2 KB per
+        # neighbour (abstract incl.), so ~0.5-1 MB/node, well under S2's 10 MB.
+        "refs_limit": 200,
+        "citations_limit": 300,
+        # True = pure arxiv graph; False also keeps DOI/other cited papers.
+        "arxiv_only": True,
+        # Fetch + parse each visited paper's PDF for full-text content (via the
+        # web fetcher's pypdf path). False = S2 abstract only (cheaper, faster,
+        # shallower). Falls back to the abstract when a PDF is missing.
+        "arxiv_fetch_pdf": True,
+        # Min seconds between S2 calls, shared process-wide. Tune to your key
+        # tier (~1 rps individual). Request timeout + retry budget are constants
+        # in semantic_scholar.py, not knobs (a raisable retry is a stall risk).
+        "min_request_interval": 1.1,
     },
 
     # Default config for LLM outside of agent exploration

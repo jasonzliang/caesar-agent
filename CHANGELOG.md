@@ -2,6 +2,24 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.22] - 2026-08-26
+
+### Added
+
+- **arXiv citation-graph exploration mode** (`mode: arxiv`; bundled `arxiv`
+  preset, plus an `arXiv` preset in the web GUI). Instead of Brave/DDGS web
+  search and open-web crawling, Caesar searches Semantic Scholar and traverses
+  the arXiv citation graph: papers are graph nodes (keyed by their
+  `arxiv.org/abs/` URL), reference and citation links are edges, and the
+  synthesized artifact's citations become real arXiv links. `ArxivExplorer`
+  subclasses `WebExplorer` and overrides only node fetch/extract, so the
+  knowledge graph, vector KB, adversarial synthesis, and checkpointing are
+  unchanged. A new `SemanticScholarClient` (stdlib `requests`) adds a shared
+  process-wide rate throttle with 429/5xx backoff, and reads an optional
+  `SEMANTIC_SCHOLAR_API_KEY` (works anonymously otherwise). Each visited paper's
+  PDF is fetched and parsed for full-text content, falling back to the
+  Semantic Scholar abstract.
+
 ## [0.4.21] — 2026-08-17
 
 ### Fixed
