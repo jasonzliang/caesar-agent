@@ -2,6 +2,18 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.24] - 2026-08-26
+
+### Changed
+
+- **Migrate existing web runs off the retired `arxiv` preset id.** The 0.4.23
+  split left runs submitted under the old single `arxiv` preset pointing at a
+  preset id that no longer exists (breaking their badge, restart, and
+  resume-time config load). A startup DB value migration now rewrites
+  `runs.preset` `arxiv` -> `deeper_arxiv`, reusing the same idempotent mechanism
+  as the earlier `deep` -> `deeper` rename. Also refreshes the `/presets` smoke
+  test to the current six-preset set.
+
 ## [0.4.23] - 2026-08-26
 
 ### Changed

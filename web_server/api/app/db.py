@@ -118,6 +118,9 @@ _ADDITIVE_INDEXES: list[tuple[str, str, str]] = [
 _VALUE_RENAMES: list[tuple[str, str, str, str]] = [
     # (table, column, old_value, new_value)
     ("runs", "preset", "deep", "deeper"),
+    # The single "arxiv" web preset was split into deeper_arxiv/deepest_arxiv in
+    # 0.4.23; point existing runs at the shallower successor.
+    ("runs", "preset", "arxiv", "deeper_arxiv"),
 ]
 
 
