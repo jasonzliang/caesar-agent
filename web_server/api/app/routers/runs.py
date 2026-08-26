@@ -168,6 +168,8 @@ async def _delete_chroma_collections(
 
 def _summary_from(run: Run) -> RunSummary:
     summary = RunSummary.model_validate(run, from_attributes=True)
+    preset = preset_by_id(summary.preset)
+    summary.preset_label = preset["label"] if preset else None
     # In-flight runs haven't persisted total_cost_usd / graph_node_count
     # yet, so the cards on the home / past-runs pages render no $/nodes
     # pills until completion. Overlay the watchdog's live counters so the

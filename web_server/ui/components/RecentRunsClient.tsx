@@ -65,7 +65,7 @@ export function RecentRunsClient({ initial }: { initial: RunSummary[] }) {
           </div>
           <p className="text-sm text-gray-800 line-clamp-2 mb-1">{displayQuery}</p>
           <div className="text-xs text-gray-500 flex gap-3 mt-1.5">
-            <span className="capitalize">{r.preset}</span>
+            <span className="capitalize">{r.preset_label ?? r.preset}</span>
             {/* Hide null pills entirely rather than render fmtCost(null)→"—".
                 Caesar's agent warmup takes a few seconds before the watchdog
                 populates live_cost_usd; without this guard a freshly launched

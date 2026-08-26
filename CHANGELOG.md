@@ -2,6 +2,17 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.25] - 2026-08-26
+
+### Changed
+
+- **Web GUI shows the friendly preset name instead of the raw preset id.** Runs
+  on the `deeper_arxiv` / `deepest_arxiv` presets rendered the underscored id in
+  the run header and run lists; they now show "ArXiv" / "ArXiv Deep". The label
+  is resolved once from the preset registry in `_summary_from` and exposed as
+  `RunSummary.preset_label`, with the UI falling back to the raw id if a stored
+  id has no current entry.
+
 ## [0.4.24] - 2026-08-26
 
 ### Changed
