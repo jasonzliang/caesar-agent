@@ -149,12 +149,20 @@ PRESETS: list[dict] = [
         "estimated_time_min": 360,
     },
     {
-        "id": "arxiv",
-        "label": "arXiv",
-        "caesar_preset": "arxiv",
-        "description": "arXiv citation-graph exploration via Semantic Scholar with GPT-5.6 Sol. ~$10, ~2 h.",
-        "estimated_cost_usd": 10.00,
-        "estimated_time_min": 120,
+        "id": "deeper_arxiv",
+        "label": "ArXiv",
+        "caesar_preset": "deeper_arxiv",
+        "description": "Deep arXiv citation-graph exploration with GPT-5.6 Terra. ~$5, ~1.5 h.",
+        "estimated_cost_usd": 5.00,
+        "estimated_time_min": 90,
+    },
+    {
+        "id": "deepest_arxiv",
+        "label": "ArXiv Deep",
+        "caesar_preset": "deepest_arxiv",
+        "description": "Deepest arXiv citation-graph exploration with GPT-5.6 Sol. ~$30, ~6 h.",
+        "estimated_cost_usd": 30.00,
+        "estimated_time_min": 360,
     },
 ]
 
