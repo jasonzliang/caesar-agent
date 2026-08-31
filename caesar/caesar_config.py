@@ -14,6 +14,11 @@ MAX_TEXT_LENGTH = 100000
 # 25s accommodates slow academic/gov sites (arxiv, springer, nih) that
 # regularly take 15+s on first load. 10s caused false failures.
 REQUESTS_TIMEOUT = 30
+# Cap on per-retry exponential backoff (s), shared by the API/search clients
+# (brave_search, semantic_scholar). Without it, 2^N growth turns a wedged
+# endpoint into an unkillable multi-hour hang; this bounds retry wall-clock so
+# the retry budget actually terminates.
+MAX_BACKOFF_DELAY = 30
 # Static headers for requests when fetching html.
 # Referer and Sec-Fetch-Site are NOT included here — they depend on the
 # previous URL and are computed per-request by _compute_nav_headers().
@@ -233,12 +238,15 @@ CAESAR_CONFIG = {
         # counts (one call each regardless, S2 max 1000/page): raising them costs
         # response + prompt size, not rate-limited calls (429 pressure unchanged).
         # Measured on a live run: references rarely reach even 100 (papers cite
-        # <~80), so refs_limit is headroom; citations are unbounded + unsorted,
-        # so hub papers (seen: 292 citers) truncate -- a larger citations_limit
-        # samples more before the influential-first client ranking. ~1-2 KB per
-        # neighbour (abstract incl.), so ~0.5-1 MB/node, well under S2's 10 MB.
+        # <~80), so refs_limit is headroom; citations are unbounded, so hub
+        # papers truncate -- a large citations_limit samples more before the
+        # client-side ranking. /citations is ordered RECENCY-descending, not by
+        # relevance: on ARXIV:1706.03762 the first arXiv citer is at index 457,
+        # so a shallow page returns nothing usable under arxiv_only. 800 keeps a
+        # deep sample past that, at ~1 KB/neighbour (~0.8 MB/node, under S2's
+        # 10 MB response cap). Same call count either way.
         "refs_limit": 200,
-        "citations_limit": 300,
+        "citations_limit": 800,
         # True = pure arxiv graph; False also keeps DOI/other cited papers.
         "arxiv_only": True,
         # Fetch + parse each visited paper's PDF for full-text content (via the

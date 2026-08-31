@@ -28,18 +28,28 @@ import threading
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote, unquote
 
-from .caesar_config import MAX_NUM_LINKS, MAX_TEXT_LENGTH
+from rome.config import LONGER_SUMMARY_LEN
+
 from .semantic_scholar import SemanticScholarClient
 from .web_explorer import WebExplorer
 
 
+# Node-id prefix for an arXiv paper
 ARXIV_ABS_PREFIX = "https://arxiv.org/abs/"
+# Node-id prefix for a non-arXiv S2 paper
 S2_PAPER_PREFIX = "https://www.semanticscholar.org/paper/"
+# Node-id prefix for the seed (S2 search)
 S2_SEARCH_PREFIX = "https://www.semanticscholar.org/search?q="
 
-# Truncate the seed-overview abstract snippets so the root "content" the LLM
-# summarises stays compact.
-_SEED_ABSTRACT_SNIPPET = 300
+# Max chars of paper text fed to the LLM. Bigger than the web MAX_TEXT_LENGTH:
+# an arXiv PDF is a whole paper, and the web cap truncated the longest ~18% of
+# papers (measured). 2x captures nearly all in full; only long papers pay it.
+ARXIV_MAX_TEXT_LENGTH = 200000
+
+# Max neighbour edges (references + citations) surfaced per paper after
+# influential-first ranking -- the frontier/menu cap. Distinct from
+# MAX_EDGE_LIMIT, the S2 per-page *fetch* cap.
+ARXIV_MAX_NUM_LINKS = 1000
 
 
 def paper_node_id(paper: dict) -> Optional[str]:
@@ -101,8 +111,13 @@ class ArxivExplorer(WebExplorer):
         with self._cache_lock:
             for p in papers:
                 nid = paper_node_id(p)
-                # First write wins: a richer search/lookup dict shouldn't be
-                # clobbered by a sparser edge dict for the same paper.
+                # First write wins. Note which write is usually first: a node is
+                # normally seen as an edge neighbour (extract_links caches the
+                # whole edge page) before it is ever visited, so the edge dict is
+                # the one that sticks and _fetch_paper's get_paper() never runs
+                # for it. That is only safe because NEIGHBOR_FIELDS requests the
+                # same fields as PAPER_FIELDS except tldr -- keep the two in step
+                # or non-seed nodes silently lose whatever diverges.
                 if nid and nid not in self._paper_cache:
                     self._paper_cache[nid] = p
 
@@ -206,12 +221,12 @@ class ArxivExplorer(WebExplorer):
         thread-safe under quick_explore."""
         try:
             html = super().fetch_html(pdf_url, referer_url=referer)
-            return super().extract_text_from_html(html) if html else ""
+            return super().extract_text_from_html(html, max_length=ARXIV_MAX_TEXT_LENGTH) if html else ""
         except Exception as e:
             self.logger.error(f"[ARXIV] PDF fetch failed for {pdf_url}: {e}")
             return ""
 
-    def extract_text_from_html(self, payload, max_length: int = MAX_TEXT_LENGTH) -> str:
+    def extract_text_from_html(self, payload, max_length: int = ARXIV_MAX_TEXT_LENGTH) -> str:
         """Return the node's text (bounded by max_length). Named for
         WebExplorer signature-compatibility; `payload` is our fetch dict."""
         if not payload:
@@ -286,11 +301,20 @@ class ArxivExplorer(WebExplorer):
             kept.append(p)
 
         # Influential citations first, then by citation count, so the frontier
-        # surfaces load-bearing papers before the long tail.
-        kept.sort(key=lambda p: (not p.get("_isInfluential", False),
-                                 -(p.get("citationCount") or 0)))
+        # surfaces load-bearing papers before the long tail -- but an influential
+        # paper must have at least one citation of its own to earn that top
+        # tier. S2 sets isInfluential on brand-new papers too: measured on
+        # ARXIV:1706.03762, 40 of the 43 influential citers in a 1000-edge page
+        # had ZERO citations, so without the floor they all outranked
+        # 100k-citation references and the frontier led with noise. The floor is
+        # `> 0`, not a tuned threshold: a paper nobody has cited yet carries no
+        # corroborating signal, while a single citation still beats raw
+        # popularity (see test_frontier_ranks_influential_first).
+        kept.sort(key=lambda p: (
+            not (p.get("_isInfluential", False) and (p.get("citationCount") or 0) > 0),
+            -(p.get("citationCount") or 0)))
 
-        return [(paper_node_id(p), self._label(p)) for p in kept[:MAX_NUM_LINKS]]
+        return [(paper_node_id(p), self._label(p)) for p in kept[:ARXIV_MAX_NUM_LINKS]]
 
     @staticmethod
     def _label(p: dict) -> str:
@@ -366,5 +390,5 @@ class ArxivExplorer(WebExplorer):
             lines.append(head)
             ab = p.get("abstract")
             if ab:
-                lines.append(f"   {ab[:_SEED_ABSTRACT_SNIPPET].strip()}...")
+                lines.append(f"   {ab[:LONGER_SUMMARY_LEN].strip()}...")
         return "\n".join(lines)

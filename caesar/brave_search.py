@@ -13,6 +13,7 @@ from rome.config import (DEFAULT_CONFIG, set_attributes_from_config,
                      LONGER_SUMMARY_LEN, LONGEST_SUMMARY_LEN)
 from rome.logger import get_logger
 from rome.parsing import hash_string
+from .caesar_config import MAX_BACKOFF_DELAY
 from .caesar_config import CAESAR_CONFIG
 
 
@@ -70,11 +71,7 @@ MAX_NUM_RESULTS_PER_PAGE = 20
 MAX_NUM_RESULTS = 200
 # Multiplier for backoff during search
 BACKOFF_MULTIPLIER = 2
-# Cap on per-retry sleep. Without this the exponential backoff would reach
-# 2^N seconds at retry N (e.g. retry 30 = 34 years), turning a transient
-# endpoint outage into an unkillable hang. 30s is generous for any real
-# transient and lets max_retries actually bound wall-clock duration.
-MAX_BACKOFF_DELAY = 30
+# MAX_BACKOFF_DELAY (per-retry sleep cap) is shared from caesar_config.
 # Delay in sec between each search to avoid hitting rate limit
 SEARCH_DELAY = 1
 # Brave API query limits

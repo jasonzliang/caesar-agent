@@ -2,6 +2,22 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.26] - 2026-08-31
+
+### Changed
+
+- **arXiv citation-graph mode refinements:** visited papers parse the full PDF
+  body (no longer losing text to trafilatura), bounded by a dedicated
+  `ARXIV_MAX_TEXT_LENGTH` (200k, since ~18% of papers exceeded the 100k web
+  cap); a dedicated `ARXIV_MAX_NUM_LINKS` caps the per-node neighbour frontier;
+  the citations page is a deep recency-ordered sample (`citations_limit` 800) so
+  hub papers still surface usable arXiv citers; and the seed abstract snippet
+  reuses rome's `LONGER_SUMMARY_LEN`.
+- **Internal cleanup:** consolidated duplicated module globals
+  (`MAX_BACKOFF_DELAY`, the HTTP request timeout) into `caesar_config`, made
+  `NEIGHBOR_FIELDS` public, and standardized the arxiv/S2 config-constant
+  comments.
+
 ## [0.4.25] - 2026-08-26
 
 ### Changed

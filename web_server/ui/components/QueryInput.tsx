@@ -12,6 +12,7 @@ import {
 } from '@/lib/public-mode';
 import { PresetToggle } from './PresetToggle';
 import { ExamplePrompts } from './ExamplePrompts';
+import { HelpTip } from './HelpTip';
 import { ArrowRight, Loader2 } from 'lucide-react';
 
 type Props = { presets: Preset[] };
@@ -90,13 +91,20 @@ export function QueryInput({ presets }: Props) {
 
   return (
     <form onSubmit={onSubmit} className="w-full" suppressHydrationWarning>
-      <div className="rounded-2xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-brand-200 transition-shadow">
+      <div className="relative rounded-2xl border border-gray-200 bg-white shadow-sm focus-within:ring-2 focus-within:ring-brand-200 transition-shadow">
+        {/* Upper-right corner of the box. pl-5/pr-12 on the textarea (rather than
+            px-5) reserves room so neither the placeholder nor a long query ever
+            runs under the marker. */}
+        <HelpTip
+          className="absolute right-3 top-3.5 z-10"
+          label="Ask anything in plain language, as specific or open-ended as you like. Caesar explores the web as a knowledge graph, then writes an answer refined by adversarial self-critique. The preset sets how deep it goes: Fast is a quick pass, Deepest explores for hours. The ArXiv presets traverse the citation graph of academic papers instead of the open web."
+        />
         <textarea
           value={query}
           onChange={(e) => setQuery(e.target.value)}
           placeholder="Ask Caesar a research question, e.g. &quot;Apply the mathematical structure of calculus to cooking.&quot;"
           rows={3}
-          className="w-full resize-none rounded-t-2xl px-5 pt-4 pb-2 text-base placeholder:text-gray-400 focus:outline-none"
+          className="w-full resize-none rounded-t-2xl pl-5 pr-12 pt-4 pb-2 text-base placeholder:text-gray-400 focus:outline-none"
           disabled={submitting}
           suppressHydrationWarning
         />

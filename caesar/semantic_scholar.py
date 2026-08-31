@@ -25,52 +25,48 @@ import requests
 
 from rome.config import set_attributes_from_config
 from rome.logger import get_logger
-from .caesar_config import CAESAR_CONFIG
+from .caesar_config import CAESAR_CONFIG, REQUESTS_TIMEOUT, MAX_BACKOFF_DELAY
 
 
 # graph/v1 is the live host; partner.semanticscholar.org was retired in 2024.
 BASE_URL = "https://api.semanticscholar.org/graph/v1"
 
-# Env var holding an optional S2 API key. The name is a fixed convention (like
-# BraveSearch's BRAVE_API_KEY), not a per-run knob. Anonymous access works but
-# shares a heavily-throttled global pool, so a key is strongly recommended.
+# Env var for an optional S2 API key (fixed convention, not a per-run knob).
+# Anonymous access works but shares a heavily-throttled pool; a key is advised.
 S2_API_KEY_ENV = "SEMANTIC_SCHOLAR_API_KEY"
 
-# Fields for a fully-hydrated paper node -- exactly what ArxivExplorer reads
-# (title/authors/venue/year/abstract/tldr for the LLM text, externalIds +
-# citationCount for the node id and frontier ranking). Requesting nothing extra
-# keeps responses small (S2 caps a single response at 10 MB, which large
-# citation pages can approach).
+# Fields for a fully-hydrated paper node -- exactly what ArxivExplorer reads:
+# title/authors/venue/year/abstract/tldr for the LLM text, externalIds +
+# citationCount for the node id and ranking, openAccessPdf for _pdf_url's
+# non-arxiv fallback. Nothing extra, to keep responses under S2's 10 MB cap.
 PAPER_FIELDS = ("paperId,externalIds,title,abstract,tldr,year,authors,venue,"
-                "citationCount")
+                "citationCount,openAccessPdf")
 # Nested fields for a neighbour paper inside a citations/references edge.
-# IMPORTANT: /citations and /references REJECT `tldr` on the nested paper with a
-# 400 ("Unrecognized or unsupported fields: [tldr]") -- unlike /paper/{id} and
-# /paper/search, which accept it. Requesting tldr here makes every edge fetch
-# fail, so the graph can never grow past the seed's children (stuck at depth 2).
-# `abstract` IS supported and is kept so following an edge needs no extra lookup.
-_NEIGHBOR_FIELDS = ["paperId", "externalIds", "title", "year", "abstract",
-                    "citationCount"]
-# isInfluential is the per-edge flag ArxivExplorer ranks on; the nested paper
-# object carries the neighbour's own fields.
+# IMPORTANT: /citations and /references REJECT `tldr` here with a 400
+# ("Unrecognized or unsupported fields: [tldr]") -- unlike /paper/{id} -- so
+# requesting it makes every edge fetch fail and the graph stalls at depth 2
+# (tldr is a FullPaper-only property; abstract/authors/venue/openAccessPdf are
+# accepted, verified live). Must be set here, not just in PAPER_FIELDS: an
+# edge-discovered node is served from ArxivExplorer._paper_cache and never hits
+# get_paper(), so anything missing here is missing for good past the seed.
+NEIGHBOR_FIELDS = ["paperId", "externalIds", "title", "year", "abstract",
+                    "citationCount", "authors", "venue", "openAccessPdf"]
+# Forward edges (papers citing this one): isInfluential is the per-edge flag
+# ArxivExplorer ranks on; the nested citingPaper carries the neighbour's fields.
 CITATIONS_FIELDS = "isInfluential," + ",".join(
-    "citingPaper." + f for f in _NEIGHBOR_FIELDS)
+    "citingPaper." + f for f in NEIGHBOR_FIELDS)
+# Backward edges (papers this one cites): same shape via citedPaper.
 REFERENCES_FIELDS = "isInfluential," + ",".join(
-    "citedPaper." + f for f in _NEIGHBOR_FIELDS)
+    "citedPaper." + f for f in NEIGHBOR_FIELDS)
 
-# Backoff cap so a wedged endpoint can't turn the retry budget into an
-# unkillable multi-hour hang (mirrors brave_search.MAX_BACKOFF_DELAY reasoning).
-MAX_BACKOFF_DELAY = 30
-# HTTP request timeout (s) and retry budget. Deliberately NOT config knobs: S2
-# calls are small, fast metadata lookups, and a bounded retry budget with the
-# capped backoff above is a robustness invariant -- a user-raisable timeout /
-# retry count is exactly the "Worker stalled" footgun to avoid. The one rate
-# setting that legitimately varies per user (their API-key tier) is the
-# min_request_interval config knob.
-REQUEST_TIMEOUT = 30
+# HTTP retry budget. Deliberately NOT a config knob: a bounded retry budget plus
+# the shared capped backoff (caesar_config.MAX_BACKOFF_DELAY) is a robustness
+# invariant, not a raisable stall risk. Timeout reuses REQUESTS_TIMEOUT; the
+# per-user rate setting (API-key tier) is the min_request_interval knob.
 MAX_RETRIES = 5
-# Per-page ceilings imposed by the S2 API.
+# Max results per S2 /search page (API ceiling).
 MAX_SEARCH_LIMIT = 100
+# Max neighbours per S2 /citations or /references page (API ceiling).
 MAX_EDGE_LIMIT = 1000
 
 
@@ -128,7 +124,7 @@ class SemanticScholarClient:
             try:
                 resp = self._session.request(
                     method, url, params=params,
-                    headers=headers, timeout=REQUEST_TIMEOUT)
+                    headers=headers, timeout=REQUESTS_TIMEOUT)
             except requests.RequestException as e:
                 self.logger.error(
                     f"Semantic Scholar request error on {path}: {e}; "
@@ -155,8 +151,13 @@ class SemanticScholarClient:
                     return None
             # Reached on a request exception, a 429/5xx, or a 200 with bad JSON.
             # Jittered exponential backoff (plain runtime, so random is fine).
-            time.sleep(delay + random.uniform(0, delay * 0.25))
-            delay = min(delay * 2, MAX_BACKOFF_DELAY)
+            # Guarded: a sleep is the gap BETWEEN attempts, so skip it after the
+            # last one. Unguarded, the final (largest, ~18s) sleep fired and then
+            # the loop immediately gave up -- 53% of the total backoff spent
+            # waiting for a retry that never happened.
+            if attempt < MAX_RETRIES:
+                time.sleep(delay + random.uniform(0, delay * 0.25))
+                delay = min(delay * 2, MAX_BACKOFF_DELAY)
         self.logger.error(
             f"Semantic Scholar giving up on {path} after {MAX_RETRIES} tries")
         return None
