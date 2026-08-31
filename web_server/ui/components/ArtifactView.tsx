@@ -3,8 +3,11 @@
 import { useMemo, useState, type ReactNode } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
+import remarkMath from 'remark-math';
+import rehypeKatex from 'rehype-katex';
 import { Check, Copy } from 'lucide-react';
 import type { SynthesisOut } from '@/lib/api';
+import 'katex/dist/katex.min.css';
 
 // wrapEnabled is owned by the parent (RunPageClient) so the toggle button
 // can live in the run toolbar next to Download PDF. ArtifactView just
@@ -19,11 +22,11 @@ export function ArtifactView({
   wrapEnabled?: boolean;
 }) {
   const transformedAbstract = useMemo(
-    () => transformCitations(synthesis.abstract ?? ''),
+    () => prepareMarkdown(synthesis.abstract ?? ''),
     [synthesis.abstract],
   );
   const transformedArtifact = useMemo(
-    () => transformCitations(synthesis.artifact),
+    () => prepareMarkdown(synthesis.artifact),
     [synthesis.artifact],
   );
   // Embedded markdown images use relative paths like `images/<file>.png`;
@@ -43,13 +46,13 @@ export function ArtifactView({
             Abstract
           </div>
           <div className="prose prose-base prose-gray max-w-none text-gray-800 leading-relaxed">
-            <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+            <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { throwOnError: false }]]} components={mdComponents}>
               {transformedAbstract}
             </ReactMarkdown>
           </div>
         </aside>
       )}
-      <ReactMarkdown remarkPlugins={[remarkGfm]} components={mdComponents}>
+      <ReactMarkdown remarkPlugins={[remarkGfm, remarkMath]} rehypePlugins={[[rehypeKatex, { throwOnError: false }]]} components={mdComponents}>
         {transformedArtifact}
       </ReactMarkdown>
     </article>
@@ -191,7 +194,10 @@ function CodeBlockWithCopy({
 // emit real markdown links (no raw HTML) so we don't need rehype-raw — which
 // would let LLM-authored <script> / event-handler attributes through to the
 // DOM and create an XSS surface.
-function transformCitations(src: string): string {
+// Single code-aware pass over the raw answer: rewrites [N] citation markers
+// into anchor links and normalizes LaTeX \(...\) / \[...\] math into $ / $$ for
+// remark-math. Fenced and inline code are passed through untouched.
+function prepareMarkdown(src: string): string {
   let out = '';
   let i = 0;
   let inFence = false; // ``` ... ``` block
@@ -219,6 +225,29 @@ function transformCitations(src: string): string {
       out += src[i++];
       continue;
     }
+    // Convert the LaTeX math delimiters the synthesis LLM emits (\(inline\)
+    // and \[block\]) into the $ / $$ that remark-math understands. The code
+    // guards above skip fenced/inline code, so a literal "\(" in a code sample
+    // is preserved. The math body is emitted verbatim and never re-scanned for
+    // [N] citations, so an equation index like x[1] stays intact.
+    if (src[i] === '\\' && (src[i + 1] === '[' || src[i + 1] === '(')) {
+      const block = src[i + 1] === '[';
+      const close = block ? '\\]' : '\\)';
+      const end = src.indexOf(close, i + 2);
+      if (end !== -1) {
+        const body = src.slice(i + 2, end);
+        // Block math is emitted as flow ($$ on their own lines) so KaTeX
+        // renders it in display mode even when the source had \[...\] on a
+        // single line; inline stays $...$.
+        out += block ? `\n\n$$\n${body.trim()}\n$$\n\n` : `$${body}$`;
+        i = end + close.length;
+        continue;
+      }
+    }
+    // Escape a literal dollar sign (currency) so remark-math never reads a
+    // span like "$5 ... $10" as inline math. Math is written with \(...\)/
+    // \[...\] (converted above), so a bare $ reaching here is always currency.
+    if (src[i] === '$') { out += '\\$'; i++; continue; }
     // Try to match [N] or [N, M, ...] (not followed by `(`).
     const rest = src.slice(i);
     const m = /^\[(\d+(?:\s*,\s*\d+)*)\](?!\()/.exec(rest);

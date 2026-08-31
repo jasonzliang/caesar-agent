@@ -914,11 +914,11 @@ Respond with valid JSON only:
     "clarified_artifact": "<the rewritten artifact text in markdown>"
 }}"""
 
-        # Clarity is a light plain-language/formatting pass, not deep reasoning,
-        # so it runs at the model's default effort (no high override).
+        # Run the clarity pass at the same effort as the synthesis/merge steps
+        # it is polishing, rather than the model's default.
         llm_result = self._llm_call(prompt,
             ["clarified_abstract", "clarified_artifact"],
-            label="CLARIFY")
+            reasoning=self.synthesis_reasoning_effort, label="CLARIFY")
         if not llm_result: return None
 
         new_artifact = llm_result.get("clarified_artifact") or ""

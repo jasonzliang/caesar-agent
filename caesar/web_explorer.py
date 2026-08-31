@@ -1,5 +1,6 @@
 """Web Explorer - Web fetching, content extraction, and navigation strategy"""
 from collections import Counter
+from html import escape as html_escape, unescape as html_unescape
 import io
 import ipaddress
 from pathlib import Path
@@ -18,6 +19,14 @@ from rome.logger import get_logger
 from .brave_search import BraveSearch
 from .caesar_config import (MAX_NUM_LINKS, MAX_NUM_VISITED_LINKS, MAX_TEXT_LENGTH,
     REQUESTS_TIMEOUT, REQUESTS_HEADERS, BASELINE_BLOCKED_DOMAINS)
+
+
+# Envelope for pypdf-extracted text. fetch_html must return an HTML string (its
+# callers parse it for links), but PDF text needs no boilerplate removal, so the
+# marker lets extract_text_from_html hand it back verbatim rather than feeding
+# clean prose to trafilatura, which silently truncated long papers.
+_PDF_HTML_PREFIX = '<html><body><div data-caesar-pdf="1">'
+_PDF_HTML_SUFFIX = '</div></body></html>'
 
 
 # Schemes the crawler may fetch from the open web. Everything else is refused,
@@ -203,7 +212,12 @@ class WebExplorer:
             if is_pdf:
                 text = '\n\n'.join(page.extract_text()
                                   for page in PdfReader(io.BytesIO(response.content)).pages)
-                return f"<html><body><div>{text}</div></body></html>"
+                # Sentinel envelope, and the body is ESCAPED. pypdf output is
+                # already clean prose with no boilerplate, so
+                # extract_text_from_html returns it verbatim instead of running
+                # trafilatura over it -- see _PDF_HTML_PREFIX. Escaping also
+                # stops a '<' or '&' in the paper from corrupting the wrapper.
+                return _PDF_HTML_PREFIX + html_escape(text) + _PDF_HTML_SUFFIX
 
             return response.text
 
@@ -261,6 +275,18 @@ class WebExplorer:
     def extract_text_from_html(self, html: str, max_length: int = MAX_TEXT_LENGTH) -> str:
         """Extract clean text content from HTML using trafilatura for robust boilerplate removal"""
         try:
+            # PDF text (pypdf) bypasses trafilatura: it is already clean prose,
+            # and trafilatura's boilerplate remover treated the tail of a long
+            # single-<div> paper as boilerplate and silently dropped it, well
+            # under max_length -- measured 23,317 of 113,316 chars kept (20.6%)
+            # on arXiv 2310.03302, matching that run's logged "Parsed PDF
+            # (23117 chars)". Papers whose body survived scored ~99%, so the
+            # loss was invisible on average and severe on the tail.
+            if html.startswith(_PDF_HTML_PREFIX):
+                inner = html[len(_PDF_HTML_PREFIX):]
+                if inner.endswith(_PDF_HTML_SUFFIX):
+                    inner = inner[:-len(_PDF_HTML_SUFFIX)]
+                return ' '.join(html_unescape(inner).split())[:max_length]
             common = dict(
                 include_comments=False,
                 include_tables=True,
@@ -395,16 +421,28 @@ Respond with a JSON object in this exact format:
                          for url, text in links
                          if url not in self.agent.visited_urls and url != self.agent.current_url]
 
-            link_options.extend([
-                "- INITIAL STARTING LINK -",
-                f"1. [Back to starting LINK] ({self.agent.visited_urls.get(self.agent.starting_url, 0)} visits) {self.agent.starting_url}"
-            ])
-            url_map.append(self.agent.starting_url)
+            # The revisit cap applies here too. `links` was already filtered by
+            # it upstream, but these two back-links are injected directly from
+            # the agent's state and so used to bypass it entirely -- the LLM
+            # could keep re-selecting a node long past max_allowed_revisits.
+            # Numbering is derived from len(url_map) like every other option, so
+            # dropping one renumbers the rest correctly. Automatic _backtrack()
+            # is deliberately NOT capped: it is the escape hatch for a depth
+            # cap / no links / perceive failure, and stranding it is worse.
+            max_revisits = self.agent.max_allowed_revisits
+            under_cap = lambda u: self.agent.visited_urls.get(u, 0) <= max_revisits
 
-            if parent_url:
+            if under_cap(self.agent.starting_url):
+                link_options.extend([
+                    "- INITIAL STARTING LINK -",
+                    f"{len(url_map)+1}. [Back to starting LINK] ({self.agent.visited_urls.get(self.agent.starting_url, 0)} visits) {self.agent.starting_url}"
+                ])
+                url_map.append(self.agent.starting_url)
+
+            if parent_url and under_cap(parent_url):
                 link_options.extend([
                     "\n- IMMEDIATE PREVIOUS LINK -",
-                    f"2. [Back to previous link] ({self.agent.visited_urls.get(parent_url, 0)} visits) {parent_url}"
+                    f"{len(url_map)+1}. [Back to previous link] ({self.agent.visited_urls.get(parent_url, 0)} visits) {parent_url}"
                 ])
                 url_map.append(parent_url)
 
