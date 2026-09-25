@@ -11,7 +11,7 @@
 <p align="center">
   <a href="https://jasonzliang.github.io/caesar-agent"><strong>Project home page</strong></a>
   &nbsp;·&nbsp;
-  <a href="https://jasonzliang.github.io/"><strong>Jason Liang's homepage</strong></a>
+  <a href="https://jasonzliang.github.io/"><strong>Author Homepage</strong></a>
 </p>
 
 <p align="center">
