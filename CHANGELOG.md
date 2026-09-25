@@ -2,6 +2,30 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.27] - 2026-09-25
+
+### Fixed
+
+- **Web server: a failure during agent construction no longer bricks restarts
+  of that run.** An exception raised before `CaesarAgent.__init__` finished
+  (e.g. an invalid bring-your-own-key rejected in its role-adaptation LLM
+  call) skipped the finally that publishes "the worker thread is gone", so
+  every later restart of the run waited the full 300s takeover window on a
+  thread that no longer existed and then failed with a false "previous
+  attempt was still running" error — permanently, until a server reboot. The
+  worker-done contract now covers every exit of the worker function.
+- **Web server: crash output now survives the crash-triggered restart.**
+  `launch.sh` rotates the previous `api.log`/`ui.log` to `.log.1` instead of
+  truncating them (a segfault's faulthandler traceback used to be destroyed
+  by the systemd auto-restart seconds later), and the generated systemd units
+  set `LimitCORE=infinity` so a native crash also leaves a core file.
+
+### Changed
+
+- **`curl_cffi` floored at 0.16.3** (curl 8.21 + curl-impersonate 2.0
+  bugfixes) after a native segfault under the 20-thread quick-explore fetch
+  pool took down the web server on 0.15.0.
+
 ## [0.4.26] - 2026-08-31
 
 ### Changed

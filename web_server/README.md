@@ -119,6 +119,10 @@ web_server/.logs/ui.log on both platforms:
 
     tail -f web_server/.logs/api.log web_server/.logs/ui.log
 
+Each launch rotates the previous logs to api.log.1 / ui.log.1, so after a
+crash-triggered auto-restart the dying process's output (e.g. a segfault
+traceback) is preserved in the .1 file rather than truncated.
+
 ### After pulling code changes
 
 `launch.sh` builds the Next.js UI and starts a fresh FastAPI process every time

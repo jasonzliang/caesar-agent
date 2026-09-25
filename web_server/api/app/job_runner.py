@@ -836,170 +836,178 @@ class JobPool:
           * "refine"  — follow-up, synthesis-only: inherit KB + reference
                         draft, skip exploration, call the synthesizer.
         """
-        settings = get_settings()
-        ensure_caesar_on_path()
+        # The outer finally owns the worker_done contract: it must fire on
+        # EVERY exit of this thread function — including an exception inside
+        # CaesarAgent.__init__ (e.g. an auth failure in its role-adaptation
+        # LLM call), which the inner finally below never sees. Leaving the
+        # event cleared makes every later restart wait TAKEOVER_WAIT_S on a
+        # thread that no longer exists, then fail — forever, until reboot.
+        try:
+            settings = get_settings()
+            ensure_caesar_on_path()
 
-        from caesar.caesar_agent import CaesarAgent  # noqa: WPS433
-        from rome.config import load_config  # noqa: WPS433  (delayed import)
+            from caesar.caesar_agent import CaesarAgent  # noqa: WPS433
+            from rome.config import load_config  # noqa: WPS433  (delayed import)
 
-        yaml_path = resolve_preset_yaml(preset_id, settings)
-        if yaml_path is None or not yaml_path.exists():
-            raise FileNotFoundError(f"Preset YAML not found for {preset_id!r}: {yaml_path}")
-        config = load_config(str(yaml_path))
+            yaml_path = resolve_preset_yaml(preset_id, settings)
+            if yaml_path is None or not yaml_path.exists():
+                raise FileNotFoundError(f"Preset YAML not found for {preset_id!r}: {yaml_path}")
+            config = load_config(str(yaml_path))
 
-        # Public-mode bring-your-own-key: thread the per-run key into the
-        # LLMHandler config so chat/synthesis calls use it (rome's
-        # llm_handler prefers config["api_key"] over the env var). The
-        # embedders pick it up via the env window around construction below.
-        if state.api_key:
-            config.setdefault("LLMHandler", {})["api_key"] = state.api_key
+            # Public-mode bring-your-own-key: thread the per-run key into the
+            # LLMHandler config so chat/synthesis calls use it (rome's
+            # llm_handler prefers config["api_key"] over the env var). The
+            # embedders pick it up via the env window around construction below.
+            if state.api_key:
+                config.setdefault("LLMHandler", {})["api_key"] = state.api_key
 
-        # Public-mode synthesis-model override: point LLMHandler.model at the
-        # user's chosen model. Exploration + KB (ChromaClientManager) configs
-        # keep the preset's model, so only the synthesis/default path changes.
-        if state.synthesis_model:
-            config.setdefault("LLMHandler", {})["model"] = state.synthesis_model
+            # Public-mode synthesis-model override: point LLMHandler.model at the
+            # user's chosen model. Exploration + KB (ChromaClientManager) configs
+            # keep the preset's model, so only the synthesis/default path changes.
+            if state.synthesis_model:
+                config.setdefault("LLMHandler", {})["model"] = state.synthesis_model
 
-        # Public-mode artifact-length override. synthesis_max_length is already
-        # threaded through both the per-draft prompt and the merge prompt, so
-        # setting it here is the whole feature -- caesar needs no change. The
-        # presets all ship null (unconstrained), which is why an unset run can
-        # run to ~8k words.
-        if state.output_length:
-            config.setdefault("ArtifactSynthesizer", {})["synthesis_max_length"] = (
-                state.output_length
-            )
-
-        # For follow-up modes, fold parent + follow-up via a small LLM call
-        # so Caesar's synthesizer + search-keyword paths see a properly-scoped
-        # question instead of a terse follow-up with no conceptual anchor.
-        agent_cfg = config.setdefault("CaesarAgent", {})
-        is_followup = mode in ("explore", "refine") and bool(parent_run_id)
-        parent_artifact_path: Path | None = None
-        if is_followup:
-            parent_query = _fetch_parent_query_sync(parent_run_id)
-            parent_artifact_path = _find_parent_artifact(
-                settings.runs_dir / parent_run_id,
-            )
-            if parent_query:
-                # Cache the merge so an auto-restart of an interrupted run
-                # reuses the same starting_query (Caesar's checkpoint
-                # validator would otherwise log a mismatch).
-                cache_path = repo_dir / "__rome__" / "merged_query.txt"
-                agent_cfg["starting_query"] = _merge_followup_query(
-                    parent_query,
-                    query,
-                    cache_path=cache_path,
-                    api_key=state.api_key,
+            # Public-mode artifact-length override. synthesis_max_length is already
+            # threaded through both the per-draft prompt and the merge prompt, so
+            # setting it here is the whole feature -- caesar needs no change. The
+            # presets all ship null (unconstrained), which is why an unset run can
+            # run to ~8k words.
+            if state.output_length:
+                config.setdefault("ArtifactSynthesizer", {})["synthesis_max_length"] = (
+                    state.output_length
                 )
+
+            # For follow-up modes, fold parent + follow-up via a small LLM call
+            # so Caesar's synthesizer + search-keyword paths see a properly-scoped
+            # question instead of a terse follow-up with no conceptual anchor.
+            agent_cfg = config.setdefault("CaesarAgent", {})
+            is_followup = mode in ("explore", "refine") and bool(parent_run_id)
+            parent_artifact_path: Path | None = None
+            if is_followup:
+                parent_query = _fetch_parent_query_sync(parent_run_id)
+                parent_artifact_path = _find_parent_artifact(
+                    settings.runs_dir / parent_run_id,
+                )
+                if parent_query:
+                    # Cache the merge so an auto-restart of an interrupted run
+                    # reuses the same starting_query (Caesar's checkpoint
+                    # validator would otherwise log a mismatch).
+                    cache_path = repo_dir / "__rome__" / "merged_query.txt"
+                    agent_cfg["starting_query"] = _merge_followup_query(
+                        parent_query,
+                        query,
+                        cache_path=cache_path,
+                        api_key=state.api_key,
+                    )
+                else:
+                    agent_cfg["starting_query"] = query
             else:
                 agent_cfg["starting_query"] = query
-        else:
-            agent_cfg["starting_query"] = query
 
-        # ChromaServerManager is a first-caller-wins singleton; AgentMemory
-        # constructs it before our config can land, so pre-warm it here with
-        # the web-server-local persist path. Without this AgentMemory's
-        # defaults win (port 8000, global ~/.rome/) and our config is silently
-        # ignored.
-        chroma_dir = settings.caesar_web_data_dir.resolve() / "chroma"
-        chroma_dir.mkdir(parents=True, exist_ok=True)
-        from rome.kb_server import ChromaServerManager  # noqa: WPS433
-        ChromaServerManager.get_instance(config={
-            "host": "localhost",
-            "port": settings.chroma_port,
-            "persist_path": str(chroma_dir),
-        })
+            # ChromaServerManager is a first-caller-wins singleton; AgentMemory
+            # constructs it before our config can land, so pre-warm it here with
+            # the web-server-local persist path. Without this AgentMemory's
+            # defaults win (port 8000, global ~/.rome/) and our config is silently
+            # ignored.
+            chroma_dir = settings.caesar_web_data_dir.resolve() / "chroma"
+            chroma_dir.mkdir(parents=True, exist_ok=True)
+            from rome.kb_server import ChromaServerManager  # noqa: WPS433
+            ChromaServerManager.get_instance(config={
+                "host": "localhost",
+                "port": settings.chroma_port,
+                "persist_path": str(chroma_dir),
+            })
 
-        # The router resolves `collection_name` already (web_<run_id> for a
-        # fresh run, the parent's for a follow-up — transitive, so chains
-        # converge on the ancestor's KB).
-        client_cfg = config.setdefault("ChromaClientManager", {})
-        client_cfg["collection_name"] = collection_name or f"web_{run_id}"
+            # The router resolves `collection_name` already (web_<run_id> for a
+            # fresh run, the parent's for a follow-up — transitive, so chains
+            # converge on the ancestor's KB).
+            client_cfg = config.setdefault("ChromaClientManager", {})
+            client_cfg["collection_name"] = collection_name or f"web_{run_id}"
 
-        # Follow-up: seed draft 1 with the parent's final answer.
-        if is_followup:
-            if parent_artifact_path is not None:
-                syn_cfg = config.setdefault("ArtifactSynthesizer", {})
-                syn_cfg["synthesis_reference_draft"] = str(parent_artifact_path)
-                if parent_query:
-                    syn_cfg["synthesis_reference_query"] = parent_query
-                logger.info(
-                    "Follow-up run %s (mode=%s): inheriting KB %s, "
-                    "reference draft %s",
-                    run_id, mode, client_cfg["collection_name"],
-                    parent_artifact_path.name,
-                )
-            else:
-                logger.warning(
-                    "Follow-up run %s (mode=%s): parent %s has no synthesis "
-                    "file; proceeding without reference draft",
-                    run_id, mode, parent_run_id,
-                )
+            # Follow-up: seed draft 1 with the parent's final answer.
+            if is_followup:
+                if parent_artifact_path is not None:
+                    syn_cfg = config.setdefault("ArtifactSynthesizer", {})
+                    syn_cfg["synthesis_reference_draft"] = str(parent_artifact_path)
+                    if parent_query:
+                        syn_cfg["synthesis_reference_query"] = parent_query
+                    logger.info(
+                        "Follow-up run %s (mode=%s): inheriting KB %s, "
+                        "reference draft %s",
+                        run_id, mode, client_cfg["collection_name"],
+                        parent_artifact_path.name,
+                    )
+                else:
+                    logger.warning(
+                        "Follow-up run %s (mode=%s): parent %s has no synthesis "
+                        "file; proceeding without reference draft",
+                        run_id, mode, parent_run_id,
+                    )
 
-        if mode == "refine":
-            _configure_refine_agent_startup(config, repo_dir, parent_artifact_path)
-
-        agent_name = config.get("Agent", {}).get("name", "CaesarAgent")
-        # Fail closed: in public mode the server process has no OPENAI_API_KEY
-        # in env, so a missing per-run key must raise here rather than silently
-        # bill the operator's key (or crash deep in a litellm call).
-        if settings.public_mode:
-            assert state.api_key is not None, (
-                "public_mode requires a per-run api_key before constructing the agent"
-            )
-        # Only the construction is env-window-scoped: chromadb's embedder,
-        # mem0's embedder, and LlamaIndex capture os.environ at __init__.
-        # explore()/synthesize_artifact() below stay outside the window.
-        with _openai_env_window(state.api_key):
-            agent = CaesarAgent(name=agent_name, repository=str(repo_dir), config=config)
-        # Expose the agent to the watchdog coroutine so it can read live
-        # cost / graph snapshots while explore() runs in this worker thread.
-        state.agent = agent
-        # If JobPool.shutdown() ran during the heavy CaesarAgent init above,
-        # the per-state flag was set but we couldn't propagate to the agent
-        # (it didn't exist yet). Refuse to start explore(): the catch-up
-        # path used to set agent.shutdown_called=True and let explore() no-op,
-        # but quick_explore's submit-time filter silently produces a 0-result
-        # "completed" run with a placeholder synthesis string. Raise instead
-        # and let the outer handler mark this interrupted for auto-restart.
-        if state.shutdown_requested:
-            raise RuntimeError(
-                "shutdown requested during agent init; refusing to start "
-                "explore() to avoid silent no-op completion."
-            )
-        try:
             if mode == "refine":
-                # Synthesis-only follow-up: the synthesizer is constructed in
-                # CaesarAgent.__init__ and ready to query the inherited
-                # collection immediately. No exploration runs.
-                artifact = agent.synthesizer.synthesize_artifact()
-            else:
-                artifact = agent.explore()
-                # quick_explore never writes a graph_iter file (it skips
-                # Caesar's iterative checkpointer); force one so the UI has
-                # a graph by the time phase 2 starts.
-                self._save_final_graph(agent, repo_dir)
-            # artifact_synthesis omits cost from metadata; inject it here.
-            artifact = artifact or {}
-            handler = getattr(agent, "llm_handler", None)
-            artifact.setdefault("metadata", {})["total_cost_usd"] = (
-                float(getattr(handler, "accumulated_cost", 0.0)) if handler else 0.0
-            )
-            return artifact
+                _configure_refine_agent_startup(config, repo_dir, parent_artifact_path)
+
+            agent_name = config.get("Agent", {}).get("name", "CaesarAgent")
+            # Fail closed: in public mode the server process has no OPENAI_API_KEY
+            # in env, so a missing per-run key must raise here rather than silently
+            # bill the operator's key (or crash deep in a litellm call).
+            if settings.public_mode:
+                assert state.api_key is not None, (
+                    "public_mode requires a per-run api_key before constructing the agent"
+                )
+            # Only the construction is env-window-scoped: chromadb's embedder,
+            # mem0's embedder, and LlamaIndex capture os.environ at __init__.
+            # explore()/synthesize_artifact() below stay outside the window.
+            with _openai_env_window(state.api_key):
+                agent = CaesarAgent(name=agent_name, repository=str(repo_dir), config=config)
+            # Expose the agent to the watchdog coroutine so it can read live
+            # cost / graph snapshots while explore() runs in this worker thread.
+            state.agent = agent
+            # If JobPool.shutdown() ran during the heavy CaesarAgent init above,
+            # the per-state flag was set but we couldn't propagate to the agent
+            # (it didn't exist yet). Refuse to start explore(): the catch-up
+            # path used to set agent.shutdown_called=True and let explore() no-op,
+            # but quick_explore's submit-time filter silently produces a 0-result
+            # "completed" run with a placeholder synthesis string. Raise instead
+            # and let the outer handler mark this interrupted for auto-restart.
+            if state.shutdown_requested:
+                raise RuntimeError(
+                    "shutdown requested during agent init; refusing to start "
+                    "explore() to avoid silent no-op completion."
+                )
+            try:
+                if mode == "refine":
+                    # Synthesis-only follow-up: the synthesizer is constructed in
+                    # CaesarAgent.__init__ and ready to query the inherited
+                    # collection immediately. No exploration runs.
+                    artifact = agent.synthesizer.synthesize_artifact()
+                else:
+                    artifact = agent.explore()
+                    # quick_explore never writes a graph_iter file (it skips
+                    # Caesar's iterative checkpointer); force one so the UI has
+                    # a graph by the time phase 2 starts.
+                    self._save_final_graph(agent, repo_dir)
+                # artifact_synthesis omits cost from metadata; inject it here.
+                artifact = artifact or {}
+                handler = getattr(agent, "llm_handler", None)
+                artifact.setdefault("metadata", {})["total_cost_usd"] = (
+                    float(getattr(handler, "accumulated_cost", 0.0)) if handler else 0.0
+                )
+                return artifact
+            finally:
+                # Snapshot graph size before nulling state.agent: meta's
+                # pages_visited (= len(visited_urls)) understates by every node
+                # the agent discovered but didn't visit.
+                try:
+                    state.live_graph_node_count = int(agent.graph.number_of_nodes())
+                except Exception:  # noqa: BLE001, S110
+                    pass
+                state.agent = None
+                try:
+                    agent.shutdown()
+                except Exception:  # noqa: BLE001
+                    logger.exception("agent.shutdown() failed for run %s", run_id)
         finally:
-            # Snapshot graph size before nulling state.agent: meta's
-            # pages_visited (= len(visited_urls)) understates by every node
-            # the agent discovered but didn't visit.
-            try:
-                state.live_graph_node_count = int(agent.graph.number_of_nodes())
-            except Exception:  # noqa: BLE001, S110
-                pass
-            state.agent = None
-            try:
-                agent.shutdown()
-            except Exception:  # noqa: BLE001
-                logger.exception("agent.shutdown() failed for run %s", run_id)
             # Last statements in the thread: from here on nothing else touches
             # the run directory, so a restart may safely take it over. Deregister
             # only our own event, so a newer attempt's registration survives.

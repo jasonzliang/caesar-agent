@@ -254,9 +254,11 @@ CAESAR_CONFIG = {
         # shallower). Falls back to the abstract when a PDF is missing.
         "arxiv_fetch_pdf": True,
         # Min seconds between S2 calls, shared process-wide. Tune to your key
-        # tier (~1 rps individual). Request timeout + retry budget are constants
-        # in semantic_scholar.py, not knobs (a raisable retry is a stall risk).
-        "min_request_interval": 1.1,
+        # tier: the ~1 rps individual tier still 429s in practice under bursts,
+        # so 2s (~0.5 rps) gives headroom and cuts the retry/backoff churn (a
+        # 429 costs up to ~31s of retries and can drop a node's edges). Request
+        # timeout + retry budget are constants in semantic_scholar.py, not knobs.
+        "min_request_interval": 2.0,
     },
 
     # Default config for LLM outside of agent exploration

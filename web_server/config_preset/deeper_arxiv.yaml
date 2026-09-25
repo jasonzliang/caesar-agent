@@ -56,9 +56,12 @@ ChromaClientManager:
   model: gpt-5.4-mini
   reasoning_effort: low
 
-# Semantic Scholar knobs use their defaults from caesar/caesar_config.py; add a
-# SemanticScholar: block to override (num_results / refs_limit / citations_limit
-# / arxiv_only / min_request_interval).
+# Semantic Scholar knobs otherwise default from caesar/caesar_config.py. Space
+# S2 calls wider than the default to stay under this key tier's rate limit
+# (fewer 429 retries / dropped edges); other knobs (num_results / refs_limit /
+# citations_limit / arxiv_only) can be added here too.
+SemanticScholar:
+  min_request_interval: 2.0
 
 Logger:
   include_caller_info: "rome"

@@ -246,6 +246,10 @@ ${PASSWORD_UNIT_ENV}${instance_env}# Source shell rc so LLM API keys exported th
 ExecStart=/bin/bash -c '$SERVICE_COMMAND'
 Restart=on-failure
 RestartSec=10s
+# Segfault forensics: with kernel.core_pattern=core a crash drops a core file
+# in the API's cwd (web_server/api). Pairs with PYTHONFAULTHANDLER=1 in
+# launch.sh (Python-side traceback) to make native crashes diagnosable.
+LimitCORE=infinity
 StandardOutput=append:$logs_dir/systemd.log
 StandardError=append:$logs_dir/systemd.log
 KillMode=mixed
