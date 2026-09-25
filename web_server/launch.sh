@@ -184,6 +184,14 @@ mkdir -p "$LOGS_DIR"
 API_LOG="$LOGS_DIR/api.log"
 UI_LOG="$LOGS_DIR/ui.log"
 
+# Keep one previous generation of each log. The launch lines below open the
+# logs with `>` (truncate), so without this a crash's dying output — e.g. the
+# PYTHONFAULTHANDLER traceback after a segfault — would be destroyed by the
+# systemd Restart=on-failure relaunch seconds later.
+for _log in "$API_LOG" "$UI_LOG"; do
+    if [ -s "$_log" ]; then mv -f "$_log" "$_log.1"; fi
+done
+
 # Next.js distDir for build/start — kept in sync across the build and
 # launch lines below. Exported so next.config.mjs picks it up.
 export NEXT_DIST_DIR="${NEXT_DIST_DIR:-.next${INSTANCE_SUFFIX}}"

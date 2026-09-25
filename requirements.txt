@@ -27,7 +27,7 @@ mem0ai
 # Casear Agent Packages
 anthropic
 beautifulsoup4
-curl_cffi
+curl_cffi>=0.16.3     # floor, not a pin: 0.15.0 segfaulted the web API under threaded quick-explore (2026-09-24); 0.16 ships curl 8.21 + curl-impersonate 2.0 bugfixes
 ddgs
 google-genai>=2.16.0   # floor, not a pin: 2.2.0 was 14 minor versions behind on a PREVIEW
                        # surface (Interactions / Deep Research) whose vendor's standing advice

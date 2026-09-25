@@ -413,3 +413,35 @@ async def test_takeover_wait_is_announced_as_its_own_event(client):
         job_pool._worker_done.pop(run_id, None)
 
     await _wait_terminal(client, run_id)
+
+
+async def test_worker_done_set_when_invoke_fails_before_agent_exists(client, monkeypatch):
+    """A failure before CaesarAgent exists (auth error in its init, missing
+    preset, import error) must still set worker_done. The 2026-09-25 incident:
+    a bad per-run key made construction raise, the old inner finally never ran,
+    and every later retry waited TAKEOVER_WAIT_S on a thread that no longer
+    existed — failing with a false "still running" error until a server reboot."""
+    from app import job_runner
+    from app.job_runner import _RunState, job_pool
+
+    run_id = uuid.uuid4().hex
+    state = _RunState(run_id, "fast", api_key=VALID_KEY)
+
+    def _boom() -> None:
+        raise RuntimeError("simulated pre-construction failure")
+
+    monkeypatch.setattr(job_runner, "ensure_caesar_on_path", _boom)
+
+    # Mirror _run's choreography right before the thread starts.
+    state.worker_done.clear()
+    job_pool._worker_done[run_id] = state.worker_done
+    try:
+        with pytest.raises(RuntimeError, match="simulated pre-construction"):
+            job_pool._invoke_caesar(run_id, make_query(), "fast", _rome_dir(run_id).parent, state)
+        assert state.worker_done.is_set(), (
+            "constructor-path failure left worker_done cleared; the next retry "
+            "of this run would takeover-wait on a thread that never existed"
+        )
+        assert run_id not in job_pool._worker_done
+    finally:
+        job_pool._worker_done.pop(run_id, None)

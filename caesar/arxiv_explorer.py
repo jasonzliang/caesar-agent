@@ -44,7 +44,7 @@ S2_SEARCH_PREFIX = "https://www.semanticscholar.org/search?q="
 # Max chars of paper text fed to the LLM. Bigger than the web MAX_TEXT_LENGTH:
 # an arXiv PDF is a whole paper, and the web cap truncated the longest ~18% of
 # papers (measured). 2x captures nearly all in full; only long papers pay it.
-ARXIV_MAX_TEXT_LENGTH = 200000
+ARXIV_MAX_TEXT_LENGTH = 150000
 
 # Max neighbour edges (references + citations) surfaced per paper after
 # influential-first ranking -- the frontier/menu cap. Distinct from
