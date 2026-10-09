@@ -31,8 +31,8 @@ async def test_models_endpoint_lists_openai_only(client):
     # (gpt-4o / gpt-4.1) are excluded.
     assert not any(i.startswith(("claude-", "gemini-", "gpt-4")) for i in ids)
     assert not any("realtime" in i for i in ids)
-    # o-series models are offered alongside GPT-5.x.
-    assert "o3" in ids
+    # The o-series is no longer offered (retired or scheduled for retirement upstream).
+    assert not any(i.startswith("o") and i[1:2].isdigit() for i in ids)
     # Single source of truth: the endpoint exactly mirrors (order included)
     # LLMHandler.synthesis_models() — no separate web-side list.
     from app.config import ensure_caesar_on_path

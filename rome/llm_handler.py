@@ -6,6 +6,15 @@ import threading
 import warnings
 from typing import Dict, Optional, Any, Union, List
 
+# litellm reads its model price map at import: from GitHub over HTTPS, or the copy
+# bundled with the installed release when this variable is "True" or the fetch fails.
+# The bundled copy is the same file the fetch falls back to, and LLMHandler registers
+# its own price table over either (see _register_known_models), so nothing here
+# depends on the remote copy. Defaulting to the bundle saves one network round trip
+# per process start and lets an offline start behave like an online one; an explicit
+# LITELLM_LOCAL_MODEL_COST_MAP=False in the environment still restores the fetch.
+os.environ.setdefault("LITELLM_LOCAL_MODEL_COST_MAP", "True")
+
 # Mute litellm's `asyncio.get_event_loop()` DeprecationWarning fired at import
 # time on Python 3.12+. Upstream issue; filter is scoped to the litellm import
 # so we don't muffle anyone else's deprecation warnings.
@@ -99,13 +108,6 @@ class LLMHandler:
         # OpenAI GPT-4o series
         "gpt-4o": {"input": 2.5, "output": 10.0},
         "gpt-4o-mini": {"input": 0.15, "output": 0.6},
-        # OpenAI o-series reasoning models
-        "o1": {"input": 15.0, "output": 60.0},
-        "o1-mini": {"input": 1.10, "output": 4.40},
-        "o1-pro": {"input": 150.0, "output": 600.0},
-        "o3": {"input": 2.0, "output": 8.0},
-        "o3-mini": {"input": 1.10, "output": 4.40},
-        "o4-mini": {"input": 1.10, "output": 4.40},
         # OpenAI Realtime models
         "gpt-realtime": {"input": 4.0, "output": 16.0},
         "gpt-realtime-mini": {"input": 0.60, "output": 2.40},
@@ -142,13 +144,6 @@ class LLMHandler:
         # OpenAI GPT-4o series
         "gpt-4o": 128000,
         "gpt-4o-mini": 128000,
-        # OpenAI o-series reasoning models
-        "o1": 200000,
-        "o1-mini": 128000,
-        "o1-pro": 200000,
-        "o3": 200000,
-        "o3-mini": 200000,
-        "o4-mini": 200000,
         # OpenAI Realtime models
         "gpt-realtime": 128000,
         "gpt-realtime-mini": 128000,
@@ -162,19 +157,18 @@ class LLMHandler:
         "gemini-3.1-flash-lite-preview": 1048576,
     }
 
-    # Models that support reasoning_effort or equivalent thinking parameters.
-    # is_reasoning_model() also falls back to a `gpt-5*` prefix match so any
-    # future GPT-5.x release (e.g. 5.7) is auto-detected. That prefix rule does
-    # NOT cover the o-series, so every o-model must be listed explicitly.
+    # Models that take reasoning_effort and reject temperature. is_reasoning_model()
+    # also accepts any `gpt-5*` name, so new GPT-5.x releases gate correctly before
+    # they are listed here; the explicit entries keep the older ones visible.
     #
     # This is the single source of truth. rome/kb_client.py kept a hand-maintained
     # second copy until it drifted: its copy was missing the whole GPT-5.6 family,
     # so the `mini` preset's KB model (gpt-5.6-luna) failed the membership test
     # and had its configured reasoning_effort silently dropped at construction.
     REASONING_MODELS = {
-        "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5-pro", "gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-5.4-mini", "gpt-5-mini", "gpt-5-nano", "gpt-5-pro", "o1", "o1-mini", "o1-pro", "o3", "o3-mini", "o4-mini",
+        "gpt-5.6-sol", "gpt-5.6-terra", "gpt-5.6-luna", "gpt-5.5-pro", "gpt-5.5", "gpt-5.4", "gpt-5.2", "gpt-5.1", "gpt-5", "gpt-5.4-mini", "gpt-5-mini", "gpt-5-nano", "gpt-5-pro",
         # Merged in from kb_client's former copy.
-        "gpt-5.1-codex-max", "gpt-5.2-pro", "gpt-5.4-nano", "gpt-5.4-pro", "o3-pro",
+        "gpt-5.1-codex-max", "gpt-5.2-pro", "gpt-5.4-nano", "gpt-5.4-pro",
     }
 
     # Unique identifier for chat completion requests
@@ -183,14 +177,16 @@ class LLMHandler:
     @classmethod
     def synthesis_models(cls) -> list[str]:
         """OpenAI current-generation text models offered as synthesis targets:
-        the GPT-5.x family and the o-series, in MODEL_PRICING order. The legacy
-        GPT-4.x line, audio/realtime models, and non-OpenAI providers are all
-        excluded by construction, so there is no second list to keep in sync
-        with MODEL_PRICING — add a new gpt-5.x/o-series entry there and it is
-        offered automatically."""
+        the GPT-5.x family, in MODEL_PRICING order. The legacy GPT-4.x line,
+        audio/realtime models, and non-OpenAI providers are all excluded by
+        construction, so there is no second list to keep in sync with
+        MODEL_PRICING — add a new gpt-5.x entry there and it is offered
+        automatically. The o-series was dropped once OpenAI scheduled o1, o1-pro,
+        o3-mini and o4-mini for retirement (2026-10-23) and had already retired
+        o1-mini."""
         return [
             m for m in cls.MODEL_PRICING
-            if (m.startswith("gpt-5") or re.match(r"o\d", m)) and "realtime" not in m
+            if m.startswith("gpt-5") and "realtime" not in m
         ]
 
     def __init__(self, config: Dict = None):
@@ -222,9 +218,50 @@ class LLMHandler:
         if not self.api_key:
             raise ValueError(f"API key not found in environment (looked for {env_key})")
 
+        self._register_known_models()
         self.logger.info(f"LLM handler initialized: provider={self.provider}, model={self.model}")
         if self.cost_limit:
             self.logger.info(f"Cost limit enabled: ${self.cost_limit:.2f}")
+
+    _known_models_registered = False
+
+    @classmethod
+    def _register_known_models(cls):
+        """Push MODEL_PRICING and MODEL_CONTEXT_SIZE into litellm's cost map, once per process.
+
+        litellm loads its map at import: fetched from GitHub, or the copy bundled with the
+        installed release when LITELLM_LOCAL_MODEL_COST_MAP=True or the fetch fails. That copy
+        ages with the pin (1.95.0's bundle prices gpt-5.6-luna at 5x today's rate) and may lack
+        a model this table carries, and completion_cost() reads it before this handler's own table. Registering
+        the table makes every model here resolvable and priced the way the table says, whichever
+        map was loaded. Entries litellm already has keep their other fields; only what is set here
+        is overridden.
+        """
+        if cls._known_models_registered:
+            return
+        entries = {}
+        for model in set(cls.MODEL_PRICING) | set(cls.MODEL_CONTEXT_SIZE):
+            provider = ("anthropic" if model.startswith("claude") else
+                        "gemini" if model.startswith("gemini") else "openai")
+            entry = {"litellm_provider": provider, "mode": "chat"}
+            price = cls.MODEL_PRICING.get(model)
+            if price:
+                entry["input_cost_per_token"] = price["input"] / 1_000_000
+                entry["output_cost_per_token"] = price["output"] / 1_000_000
+            ctx = cls.MODEL_CONTEXT_SIZE.get(model)
+            if ctx:
+                entry["max_input_tokens"] = ctx
+            if model not in litellm.model_cost:
+                # No cache pricing is known for a model litellm has never heard of; saying so
+                # explicitly is what keeps register_model from warning about it at every start.
+                entry["cache_read_input_token_cost"] = 0.0
+                entry["cache_creation_input_token_cost"] = 0.0
+            entries[model] = entry
+        try:
+            litellm.register_model(entries)
+            cls._known_models_registered = True
+        except Exception as e:
+            get_logger().warning(f"litellm.register_model failed; cost lookups fall back to the handler table: {e}")
 
     def _get_litellm_model(self, model: str = None) -> str:
         """Get litellm-formatted model string with provider prefix."""
@@ -270,9 +307,19 @@ class LLMHandler:
 
     @lru_cache(maxsize=1)
     def _get_model_context_length(self) -> int:
-        """Get context length for the current model."""
+        """Context window of the current model, in input tokens.
+
+        litellm.get_max_tokens() answers a different question: the largest completion the
+        model will produce. Read as a context window it made gpt-4o a 16k model and gpt-5.4 a
+        128k one, so context management compressed and truncated far too early. The window is
+        get_model_info()['max_input_tokens']; the handler's own table (registered into that map
+        at init) is the fallback for a model litellm does not know.
+        """
         try:
-            return litellm.get_max_tokens(self._get_litellm_model())
+            info = litellm.get_model_info(self._get_litellm_model())
+            window = info.get("max_input_tokens") or info.get("max_tokens")
+            if window:
+                return int(window)
         except Exception:
             pass
         base_model = self._get_base_model()

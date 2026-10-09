@@ -25,9 +25,7 @@ import traceback
 # Add the parent directory to sys.path to import from the module
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from caesar.caesar_agent import CaesarAgent
 from rome.config import LOG_DIR_NAME, load_config, format_yaml_like
-from rome.llm_handler import FatalLLMError
 from rome.logger import get_logger
 
 
@@ -362,6 +360,11 @@ def run_single(config_path, logger, repository=None, query=None, max_iterations=
     If repository_out is a list, the resolved repository path is appended to it on
     successful resolution (before exploration starts) so callers can post-process
     the run dir even if exploration is interrupted."""
+    # Imported here, not at module level: this pulls in litellm, chromadb and mem0
+    # (about five seconds), which --help, argument errors, --version and the batch
+    # control commands never need.
+    from caesar.caesar_agent import CaesarAgent
+    from rome.llm_handler import FatalLLMError
     agent = None
     try:
         # Load configuration

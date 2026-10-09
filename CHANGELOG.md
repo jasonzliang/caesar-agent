@@ -2,6 +2,86 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.31] - 2026-10-09
+
+### Changed
+
+- Contact addresses, the paper link and the citation metadata now point at the
+  author and at arXiv instead of a former institutional affiliation.
+- `release.sh` derives the source repository from `origin` and reads its
+  affiliation gate pattern from a gitignored `.release.env`, so the tree never
+  has to name what it bans.
+
+### Removed
+
+- The employer-specific container build-and-push workflow. The deploy comments
+  no longer reference an external manifest repository.
+
+## [0.4.30] - 2026-09-28
+
+### Fixed
+
+- **Context management used each model's output cap as its context window.**
+  `LLMHandler._get_model_context_length()` read `litellm.get_max_tokens()`,
+  which is the largest completion a model will produce, so gpt-4o counted as a
+  16,384-token model and gpt-5.4 as 128,000. Under the default 10,000-token
+  completion budget that left gpt-4o about 6,000 input tokens and made every
+  model whose output cap is smaller than its window compress and truncate far
+  too early. The window now comes from `get_model_info()['max_input_tokens']`,
+  with the handler's own table as the fallback. Effective input budgets, before
+  -> after: gpt-4o 6,384 -> 118,000; gpt-5.4 118,000 -> 912,000; gpt-5.6
+  118,000 -> 1,040,000; claude-sonnet-4-6 118,000 -> 990,000. Runs carry more
+  context per call and cost accordingly; set `max_input_tokens` in the
+  LLMHandler config to cap it.
+
+## [0.4.29] - 2026-09-28
+
+### Removed
+
+- **o-series models (`o1`, `o1-mini`, `o1-pro`, `o3`, `o3-mini`, `o4-mini`; `o3-pro`
+  from the reasoning set).** OpenAI has retired `o1-mini` and scheduled `o1`,
+  `o1-pro`, `o3-mini` and `o4-mini` for retirement on 2026-10-23. The pricing,
+  context-size and reasoning-model tables no longer list them, and the synthesis
+  model list (mirrored by the web dropdown) offers the GPT-5.x family alone. A
+  config that still names one keeps calling it through litellm until OpenAI
+  switches it off, but it is no longer gated as a reasoning model, so OpenAI
+  rejects its temperature parameter; pick a GPT-5.x model.
+
+### Changed
+
+- **litellm loads its bundled price map by default.** `LLMHandler` sets
+  `LITELLM_LOCAL_MODEL_COST_MAP=True` before importing litellm unless the
+  environment already says otherwise. The bundled copy is the same file litellm
+  falls back to when its GitHub fetch fails, and the handler's own price table
+  is registered over it (0.4.28), so nothing depended on the remote copy. One
+  HTTPS round trip less per process start, no DNS lookup during import, and an
+  offline start behaves like an online one. `LITELLM_LOCAL_MODEL_COST_MAP=False`
+  restores the fetch.
+- **`requirements.txt` reorganized**: named sections, alphabetical within each,
+  every note a full-line comment above its package, wrapped at 96 columns. Same
+  33 specifiers and the same four floors.
+
+## [0.4.28] - 2026-09-28
+
+### Fixed
+
+- **`run_agent.py` answers `--help`, `--version` and argument errors in well
+  under a second.** The CLI imported `CaesarAgent` at module level, so every
+  invocation loaded litellm, chromadb and mem0 (about 2,500 modules and 1,800
+  pydantic classes, plus litellm's HTTPS fetch of its price map) before
+  argparse ran: 5.5–6.5 s to print a usage line. The import now happens
+  inside `run_single()`, the only path that needs it; batch control commands
+  never load the agent stack at all. A real run is unchanged.
+- **Every model in `LLMHandler`'s tables now resolves in litellm's cost map,
+  at the table's prices.** litellm's `completion_cost()` consults its own map
+  before the handler's `MODEL_PRICING`, and that map is either fetched from
+  GitHub at import or, when `LITELLM_LOCAL_MODEL_COST_MAP=True` or the fetch
+  fails, the copy bundled with the installed litellm — which ages with the
+  pin (1.95.0's copy prices `gpt-5.6-luna` at 5x today's rate and has no
+  `o1-mini`). The handler registers its tables with `litellm.register_model`
+  once per process, so cost accounting matches the table whichever map was
+  loaded, and an offline or local-map start no longer degrades it.
+
 ## [0.4.27] - 2026-09-25
 
 ### Fixed
@@ -25,6 +105,9 @@ All notable changes to Caesar are documented in this file. Format follows [Keep 
 - **`curl_cffi` floored at 0.16.3** (curl 8.21 + curl-impersonate 2.0
   bugfixes) after a native segfault under the 20-thread quick-explore fetch
   pool took down the web server on 0.15.0.
+- **`ARXIV_MAX_TEXT_LENGTH` lowered from 200k to 150k chars** (1.5x the web
+  cap, was 2x). The 0.4.26 entry below describes the 200k value that release
+  shipped with.
 
 ## [0.4.26] - 2026-08-31
 

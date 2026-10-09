@@ -128,7 +128,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 >
                   Jason Liang
                 </a>
-                , Elliot Meyerson, Risto Miikkulainen
+                , Elliot Meyerson, and Risto Miikkulainen
               </span>
               <span>
                 <a

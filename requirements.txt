@@ -1,9 +1,13 @@
-# pyproject reads this file via setuptools' dynamic dependencies. Do NOT use pip's `-r` to pull in
-# another file here: setuptools does not expand -r and passes the literal line through as a PEP 508
-# specifier, which made `pip install .` die with
+# Runtime dependencies. pyproject.toml reads this file through setuptools' dynamic
+# `dependencies`, so every non-comment line must be a valid PEP 508 specifier: pip's `-r
+# other-file` is not expanded by setuptools and once broke `pip install .` with
 # `InvalidRequirement: Expected package name at the start of dependency specifier`.
+#
+# Conventions: one package per line, alphabetical within a section, a version floor only where a
+# release is known to break (each floor carries its reason directly above it), and every note as
+# a full-line comment above the package it describes, wrapped at 96 columns.
 
-# Rome Core Packages
+# Core
 litellm
 networkx
 numpy
@@ -14,51 +18,54 @@ pytest
 scipy
 tinydb
 
-# KB/Memory Packages
+# Knowledge base and memory
 chromadb
 llama-index
-llama-index-vector-stores-chroma
 llama-index-embeddings-openai
 llama-index-llms-openai
-pillow  # llama-index-core imports PIL at import time; not always pulled transitively
-# mem0ai[graph]
+llama-index-vector-stores-chroma
+# Not installed: mem0ai[graph].
 mem0ai
+# llama-index-core imports PIL at import time and does not always pull it in transitively.
+pillow
 
-# Casear Agent Packages
+# Caesar agent
 anthropic
 beautifulsoup4
-curl_cffi>=0.16.3     # floor, not a pin: 0.15.0 segfaulted the web API under threaded quick-explore (2026-09-24); 0.16 ships curl 8.21 + curl-impersonate 2.0 bugfixes
+# Floor, not a pin: 0.15.0 segfaulted the web API under the threaded quick-explore fetch pool
+# (2026-09-24); 0.16 ships curl 8.21 and curl-impersonate 2.0.
+curl_cffi>=0.16.3
 ddgs
-google-genai>=2.16.0   # floor, not a pin: 2.2.0 was 14 minor versions behind on a PREVIEW
-                       # surface (Interactions / Deep Research) whose vendor's standing advice
-                       # for intermittent 400 INVALID_ARGUMENT on that endpoint is 'update the
-                       # SDK'. Upgraded 2026-08-01 and re-verified every surface the adapters
-                       # touch: agent id and both agent_config keys are still declared, and a
-                       # live shape test reached the server (rejected on credentials, not
-                       # structure). NB the SDK version is NOT in adapter_fp -- see below.
+# Floor, not a pin: 2.2.0 was 14 minor versions behind on a preview surface (Interactions / Deep
+# Research) whose vendor's standing advice for intermittent 400 INVALID_ARGUMENT on that
+# endpoint is "update the SDK". Upgraded 2026-08-01 and re-verified every surface the adapters
+# touch: the agent id and both agent_config keys are still declared, and a live shape test
+# reached the server (rejected on credentials, not structure). The SDK version is not part of
+# adapter_fp.
+google-genai>=2.16.0
 pygraphviz
 pypdf
-# Reached the packaging path via crest/requirements.txt until crest moved to its own repo. rome
-# imports yaml directly (rome/config.py, rome/base_agent.py, web_server/api/app/config.py,
-# benchmark/evalplus_multi_agent.py), so it has to be declared here now.
+# Reached the packaging path through crest/requirements.txt until crest moved to its own repo.
+# rome imports yaml directly (rome/config.py, rome/base_agent.py, web_server/api/app/config.py,
+# benchmark/evalplus_multi_agent.py), so it is declared here.
 pyyaml>=6.0
 tenacity
-trafilatura>=2.1.0  # PR #856 fixes Document() mutable-default lxml-element race that segfaulted under ThreadPoolExecutor
+# Floor, not a pin: PR #856 fixes the Document() mutable-default lxml-element race that
+# segfaulted under ThreadPoolExecutor.
+trafilatura>=2.1.0
 
-# Imported at module import time, so they must be declared rather than relied on
-# to arrive transitively. fastapi backs rome/agent_api.py, which rome/agent.py
-# imports whenever Agent.agent_api is true -- and it defaults to true, so
-# rome.Agent could not start from a clean install without it.
+# Imported at module import time, so declared here rather than relied on to arrive transitively.
+# fastapi backs rome/agent_api.py, which rome/agent.py imports whenever Agent.agent_api is true;
+# it defaults to true, so rome.Agent could not start from a clean install without it.
 fastapi
 pytz
 requests
 rich
 
-# Rome Optional Packages
-# NB llmlingua (prompt compression) and evalplus (benchmark harness) moved to
-# pyproject [project.optional-dependencies]. llmlingua alone pulls torch and
-# transformers -- ~730MB for a feature reached through one lazy import.
+# Optional features. llmlingua (prompt compression) and evalplus (benchmark harness) live in
+# pyproject's [project.optional-dependencies]: llmlingua alone pulls torch and transformers,
+# about 730 MB, for a feature reached through one lazy import.
 graphviz
-# ribs
+# Not installed: ribs.
 tiktoken
 xxhash
