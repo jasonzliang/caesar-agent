@@ -128,16 +128,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
                 >
                   Jason Liang
                 </a>
-                , Elliot Meyerson, Risto Miikkulainen (
-                <a
-                  href="https://jasonzliang.github.io/"
-                  target="_blank"
-                  rel="noopener"
-                  className="hover:underline hover:text-gray-900"
-                >
-                  
-                </a>
-                )
+                , Elliot Meyerson, Risto Miikkulainen
               </span>
               <span>
                 <a
