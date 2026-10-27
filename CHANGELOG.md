@@ -2,6 +2,20 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.32] - 2026-10-27
+
+### Fixed
+
+- Citation suggestions deduplicate eligible source URLs before the five-source
+  limit, so repeated chunks and navigation pages cannot crowd out distinct
+  sources. The complete source list remains available.
+
+### Changed
+
+- Synthesis guidance asks for supporting citations beside factual claims,
+  empirical numbers, and borrowed methods, while distinguishing original
+  proposals, assumptions, and calculations. It sets no minimum citation count.
+
 ## [0.4.31] - 2026-10-09
 
 ### Changed

@@ -392,7 +392,8 @@ Drawing heavily upon the patterns that emerged from the key insights{', and buil
         b. Novel discoveries, connections, or applications
         c. Surprising new directions or perspectives
         d. Interesting tensions, contradictions, or open questions
-    - Cite from "SOURCES" using [n] notation to support relevant claims and statements (e.g., "This pattern emerged... [1,3]") with up to {MAX_SYNTHESIS_QUERY_SOURCES} citations per claim, but do NOT create a "SOURCES" or "References" section
+    - Cite supplied "SOURCES" using [n] beside externally checkable factual claims, empirical numbers, and borrowed methods, only where the source supports the claim (up to {MAX_SYNTHESIS_QUERY_SOURCES} citations per claim).
+    - Label original proposals, assumptions, and calculations; cite external evidence they rely on. Fiction needs no citations. Acknowledge insufficient evidence, never invent sources, and do NOT create a "SOURCES" or "References" section.
     {('- The previous artifact is the prior answer to an earlier question. Assume the reader has internalized its framework; do not restate its structure or definitions. Start directly from what the current query asks beyond that prior answer. Reuse established terminology where accurate; do not repeat, paraphrase, or extend prior exposition.' if is_external_ref else '- Build upon the previous artifact by analyzing it for weaknesses in organization, arguments, or content, and then use key insights to deepen, improve, and extend the previous artifact') if previous_artifact else ''}
 
 {'IMPORTANT: do NOT mention or reference the previous artifact, the new artifact should make sense by itself as a standalone text' if previous_artifact else ''}
@@ -794,9 +795,11 @@ Respond with JSON:
                 if url not in source_map:
                     source_map[url] = len(source_map) + 1
 
-            # Format with citations (only for URLs in source_map)
-            refs = ", ".join([f"[{source_map[s['url']]}]"
-                for s in sources[:MAX_SYNTHESIS_QUERY_SOURCES] if s.get('url') and s['url'] in source_map])
+            # Limit distinct eligible sources, not repeated chunks from one page.
+            source_urls = list(dict.fromkeys(s.get('url') for s in sources
+                if s.get('url') in source_map))
+            refs = ", ".join(f"[{source_map[url]}]"
+                for url in source_urls[:MAX_SYNTHESIS_QUERY_SOURCES])
             answers.append(f"({i+1}) Question: {q}\n\nAnswer: {a} {refs}")
 
         qa_list = "\n\n\n".join(answers)
