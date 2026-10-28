@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "caesar-agent"
-version = "0.4.32"
+version = "0.4.33"
 authors = [
     {name = "Jason Liang"},
     {name = "Elliot Meyerson"},
@@ -16,8 +16,7 @@ maintainers = [
 description = "Caesar: autonomous AI research agent with graph-based deep web exploration and adversarial answer synthesis."
 readme = "README.md"
 license = "Apache-2.0"
-# Explicit, not setuptools' default glob: Apache-2.0 4(a) requires the licence
-# to travel with redistributions, and that should not depend on a default.
+# Include the license and attribution notice in distributions.
 license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.10,<3.14"
 classifiers = [
@@ -49,17 +48,15 @@ Paper = "https://arxiv.org/abs/2604.20855"
 Changelog = "https://github.com/jasonzliang/caesar-agent/releases"
 
 [project.optional-dependencies]
-# Prompt compression. Pulls torch + transformers (~730MB); the code path is a
-# lazy import guarded by ImportError, so the package works fully without it.
-compress = ["llmlingua"]
-# EvalPlus benchmark harness. Only benchmark/ imports it, and benchmark/ is
-# export-ignored, so nothing in the wheel needs it.
+# Benchmark tools are optional and used outside the runtime packages.
 benchmark = ["evalplus"]
+# Prompt compression is optional and imports its ML dependencies lazily.
+compress = ["llmlingua"]
 dev = [
-    "pytest-cov>=4.1.0",
     "black>=23.0.0",
-    "mypy>=1.7.0",
     "ipython>=8.0.0",
+    "mypy>=1.7.0",
+    "pytest-cov>=4.1.0",
 ]
 test = [
     "pytest>=7.4.0",
@@ -70,25 +67,20 @@ test = [
 [project.scripts]
 caesar = "caesar.run_agent:main"
 
+[tool.setuptools]
+include-package-data = false
+
 [tool.setuptools.dynamic]
-# crest moved to its own repo (github.com/jasonzliang/crest), taking crest/requirements.txt with
-# it. pyyaml was the one entry rome itself depends on -- it is now declared in requirements.txt
-# directly, so it stays on the packaging path rather than being merely transitive.
+# Keep runtime dependencies in one place.
 dependencies = {file = ["requirements.txt"]}
 
 [tool.setuptools.packages.find]
 where = ["."]
-include = ["rome", "rome.*", "caesar", "caesar.*"]
-exclude = [
-    "test*", "benchmark*", "monitor*", "web_app*",
-    "__pycache__*", "*.egg-info", ".git*", ".mypy_cache*",
-    "rome.action.obsolete*",
-]
+# caesar.analysis is a namespace package; keep experiment and archived directories out.
+include = ["rome", "rome.action", "caesar", "caesar.analysis"]
 
 [tool.setuptools.package-data]
-# Keep this tight on purpose. Broad globs like "**/*.txt" sweep in experiment
-# artifacts (caesar/result/, caesar/query_result/) and balloon the wheel.
-rome = ["py.typed"]
+# Package configuration files, excluding generated research artifacts.
 caesar = [
     "config/**/*.yaml",
     "config/**/*.yml",

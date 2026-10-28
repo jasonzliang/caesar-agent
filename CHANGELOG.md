@@ -2,6 +2,16 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.33] - 2026-10-28
+
+### Fixed
+
+- Declare direct runtime dependencies and explicitly select packaged modules
+  and configuration files, excluding generated artifacts and archived packages.
+- Require `curl_cffi>=0.17.0` and patched Node runtimes during installation.
+  Existing web-server environments are checked before startup, and the local
+  Node fallback and container build now use the patched Node 24 release line.
+
 ## [0.4.32] - 2026-10-27
 
 ### Fixed

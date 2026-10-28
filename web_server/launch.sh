@@ -22,7 +22,7 @@
 #   UI_PORT            default 3000
 #   CAESAR_DRY_RUN     default 0
 #   CAESAR_MAX_CONCURRENT  default 8
-#   NODE_VERSION       fallback Node version, default 20.18.0
+#   NODE_VERSION       fallback Node version, default 24.22.1
 #   NODE20_ROOT        fallback Node install dir, default $HOME/.local/node20
 #   NODE20_BIN         fallback Node bin dir, default $NODE20_ROOT/bin
 
@@ -210,22 +210,19 @@ fi
 # user-local Node install. If the fallback is missing, install a pinned Node
 # release without sudo. This keeps launch.sh usable in non-interactive shells
 # without changing the user's global shell or system Node default.
-NODE_VERSION="${NODE_VERSION:-20.18.0}"
+NODE_VERSION="${NODE_VERSION:-24.22.1}"
 NODE20_ROOT="${NODE20_ROOT:-$HOME/.local/node20}"
 NODE20_BIN="${NODE20_BIN:-$NODE20_ROOT/bin}"
 
-node_major() {
-    if ! command -v node >/dev/null 2>&1; then
-        echo 0
-        return
-    fi
-    node -p 'process.versions.node.split(".")[0]' 2>/dev/null || echo 0
-}
-
 node_toolchain_ok() {
-    local major
-    major=$(node_major)
-    [ "${major:-0}" -ge 20 ] 2>/dev/null && command -v npm >/dev/null 2>&1
+    command -v node >/dev/null 2>&1 && command -v npm >/dev/null 2>&1 || return 1
+    # Patched supported release lines for CVE-2026-111497; reject prereleases.
+    node -e '
+        if (!/^\d+\.\d+\.\d+$/.test(process.versions.node)) process.exit(1);
+        const [major, minor, patch] = process.versions.node.split(".").map(Number);
+        const floor = {22: [23, 4], 24: [22, 1], 26: [12, 1]}[major];
+        process.exit(floor && (minor > floor[0] || (minor === floor[0] && patch >= floor[1])) ? 0 : 1);
+    ' >/dev/null 2>&1
 }
 
 prepend_local_node() {
@@ -258,7 +255,7 @@ install_local_node() {
 
     local platform archive url tmp
     platform=$(node_platform)
-    [ -n "$platform" ] || fail "No Node binary mapping for $(uname -s)/$(uname -m). Install Node 20+ manually."
+    [ -n "$platform" ] || fail "No Node binary mapping for $(uname -s)/$(uname -m). Install patched Node 24.22.1+ manually."
 
     archive="node-v$NODE_VERSION-$platform.tar.xz"
     url="https://nodejs.org/dist/v$NODE_VERSION/$archive"
@@ -313,8 +310,7 @@ install_hint() {
             if   command -v apt-get >/dev/null 2>&1; then
                 case "$tool" in
                     python3) echo "sudo apt install python3 python3-venv" ;;
-                    # Default apt nodejs is often <20 — point at NodeSource.
-                    node|npm) echo "see https://github.com/nodesource/distributions for Node 20+" ;;
+                    node|npm) echo "see https://github.com/nodesource/distributions for patched Node 24" ;;
                     curl)    echo "sudo apt install curl" ;;
                 esac
             elif command -v dnf >/dev/null 2>&1; then
@@ -361,10 +357,9 @@ if [ "$PY_OK" != "1" ]; then
     fail "Python 3.10+ required (have $(python3 -V 2>&1)).${hint:+ Install: $hint}"
 fi
 
-NODE_MAJOR=$(node_major)
-if ! [ "${NODE_MAJOR:-0}" -ge 20 ] 2>/dev/null; then
+if ! node_toolchain_ok; then
     hint=$(install_hint node)
-    fail "Node 20+ required (have $(node -v 2>&1)).${hint:+ Install: $hint}"
+    fail "Patched Node 22.23.4+, 24.22.1+, or 26.12.1+ required (have $(node -v 2>&1)).${hint:+ Install: $hint}"
 fi
 
 # ---------------------------------------------------------------------------
@@ -389,7 +384,7 @@ fi
 # if a sentinel set is already importable AND any pinned versions match.
 #
 # Sentinel set covers the heaviest deps; if any are missing we re-run the
-# full install. Smaller deps (networkx, beautifulsoup4, curl_cffi, PyPDF2,
+# full install. Smaller deps (networkx, beautifulsoup4, pypdf,
 # tiktoken, etc.) are pulled in transitively via the sentinel set or
 # requirements.txt itself.
 #
@@ -401,10 +396,12 @@ EXPECTED_CHROMADB=""
 if [ -f "../requirements.txt" ]; then
     EXPECTED_CHROMADB=$(sed -n 's/^chromadb==\([0-9][0-9.]*\).*/\1/p' ../requirements.txt | head -1)
 fi
-SENTINEL_PY="import litellm, chromadb, llama_index, anthropic, ddgs"
+SENTINEL_PY="import litellm, chromadb, llama_index, anthropic, ddgs, curl_cffi"
 if [ -n "$EXPECTED_CHROMADB" ]; then
     SENTINEL_PY="$SENTINEL_PY; assert chromadb.__version__ == '$EXPECTED_CHROMADB', f'chromadb {chromadb.__version__} != pin $EXPECTED_CHROMADB'"
 fi
+# An explicit exit keeps the security check active under PYTHONOPTIMIZE.
+SENTINEL_PY="$SENTINEL_PY; import sys; from packaging.version import Version; sys.exit(0 if Version(curl_cffi.__version__) >= Version('0.17.0') else 1)"
 if ! "$PY" -c "$SENTINEL_PY" 2>/dev/null; then
     step "Installing Caesar runtime deps (rome/requirements.txt, minus pygraphviz)"
     [ -f "../requirements.txt" ] || fail "../requirements.txt not found — Caesar can't run without it. Run launch.sh from web_server/ inside the rome repo."

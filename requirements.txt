@@ -1,22 +1,22 @@
-# Runtime dependencies. pyproject.toml reads this file through setuptools' dynamic
-# `dependencies`, so every non-comment line must be a valid PEP 508 specifier: pip's `-r
-# other-file` is not expanded by setuptools and once broke `pip install .` with
-# `InvalidRequirement: Expected package name at the start of dependency specifier`.
-#
-# Conventions: one package per line, alphabetical within a section, a version floor only where a
-# release is known to break (each floor carries its reason directly above it), and every note as
-# a full-line comment above the package it describes, wrapped at 96 columns.
+# Shared with pyproject.toml; use one PEP 508 requirement per line, without pip-only options.
 
 # Core
 litellm
 networkx
 numpy
 openai
+# Used by the launcher's dependency version checks.
+packaging
 portalocker
 psutil
+# The executor runs pytest on generated tests.
 pytest
-scipy
+pyyaml>=6.0
+pytz
+rich
+tiktoken
 tinydb
+xxhash
 
 # Knowledge base and memory
 chromadb
@@ -24,48 +24,31 @@ llama-index
 llama-index-embeddings-openai
 llama-index-llms-openai
 llama-index-vector-stores-chroma
-# Not installed: mem0ai[graph].
 mem0ai
 # llama-index-core imports PIL at import time and does not always pull it in transitively.
 pillow
 
-# Caesar agent
-anthropic
+# Web research and PDF extraction
 beautifulsoup4
-# Floor, not a pin: 0.15.0 segfaulted the web API under the threaded quick-explore fetch pool
-# (2026-09-24); 0.16 ships curl 8.21 and curl-impersonate 2.0.
-curl_cffi>=0.16.3
+# 0.17.0 bundles patched Brotli 1.2.1 (CVE-2026-111497).
+curl_cffi>=0.17.0
 ddgs
-# Floor, not a pin: 2.2.0 was 14 minor versions behind on a preview surface (Interactions / Deep
-# Research) whose vendor's standing advice for intermittent 400 INVALID_ARGUMENT on that
-# endpoint is "update the SDK". Upgraded 2026-08-01 and re-verified every surface the adapters
-# touch: the agent id and both agent_config keys are still declared, and a live shape test
-# reached the server (rejected on credentials, not structure). The SDK version is not part of
-# adapter_fp.
-google-genai>=2.16.0
-pygraphviz
+httpx
 pypdf
-# Reached the packaging path through crest/requirements.txt until crest moved to its own repo.
-# rome imports yaml directly (rome/config.py, rome/base_agent.py, web_server/api/app/config.py,
-# benchmark/evalplus_multi_agent.py), so it is declared here.
-pyyaml>=6.0
-tenacity
-# Floor, not a pin: PR #856 fixes the Document() mutable-default lxml-element race that
-# segfaulted under ThreadPoolExecutor.
+requests
+# 2.1.0 fixes a threaded Document() race that could segfault (upstream PR #856).
 trafilatura>=2.1.0
 
-# Imported at module import time, so declared here rather than relied on to arrive transitively.
-# fastapi backs rome/agent_api.py, which rome/agent.py imports whenever Agent.agent_api is true;
-# it defaults to true, so rome.Agent could not start from a clean install without it.
+# Agent API
 fastapi
-pytz
-requests
-rich
+uvicorn
 
-# Optional features. llmlingua (prompt compression) and evalplus (benchmark harness) live in
-# pyproject's [project.optional-dependencies]: llmlingua alone pulls torch and transformers,
-# about 730 MB, for a feature reached through one lazy import.
+# Evaluation and visualization
+anthropic
+# Minimum SDK verified with the Interactions / Deep Research API.
+google-genai>=2.16.0
 graphviz
-# Not installed: ribs.
-tiktoken
-xxhash
+# Requires the Graphviz system libraries when built from source.
+pygraphviz
+scipy
+tenacity
