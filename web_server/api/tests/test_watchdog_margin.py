@@ -8,6 +8,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
+import pytest
 import yaml
 
 
@@ -49,3 +50,58 @@ def test_llm_attempt_heartbeat_matches_watchdog_regex():
         assert JobPool.LLM_ATTEMPT_RE.search(line), f"{label} heartbeat not matched"
     # A non-heartbeat synthesis line must NOT match (avoid false resets).
     assert not JobPool.LLM_ATTEMPT_RE.search("[SYNTHESIS] Generating synthesis artifact")
+
+
+def test_image_failure_lines_match_watchdog_regex():
+    from app.job_runner import EVENT_TYPES, JobPool
+
+    assert "image_failed" in EVENT_TYPES
+    reason = ("the OpenAI organization behind this API key is not verified for image "
+              "models (BadRequestError: OpenAIException - Your organization must be verified)")
+    # The three producers: image_generator (generation) and artifact_synthesis
+    # (embedding, import). Each line is the plain console-log format.
+    for prefix in ("[IMAGE] Image generation failed: ",
+                   "[IMAGE] Image embedding failed: ",
+                   "[IMAGE] Cannot import image_generator: "):
+        line = f"05:53:15 - Agent.t1 - ERROR - {prefix}{reason}"
+        m = JobPool.IMAGE_FAIL_RE.search(line)
+        assert m, line
+        assert m.group("reason") == reason
+    # The start banner and a successful write must not read as failures.
+    for line in ("[IMAGE] Generating 1 image(s) across 1 artifact section(s)",
+                 "Image 1/1 written to /x/y.webp (via images.generate, refs_used=0)",
+                 "[IMAGE] Embedded image(s) and re-saved synthesis"):
+        assert not JobPool.IMAGE_FAIL_RE.search(line), line
+
+
+@pytest.mark.asyncio
+async def test_tail_emits_one_scrubbed_image_failed_event(tmp_path):
+    from app.job_runner import JobPool, _RunState
+
+    pool = JobPool()
+    emitted: list[tuple[str, dict]] = []
+
+    async def _record(state, event, **payload):
+        emitted.append((event, payload))
+
+    pool._emit = _record  # type: ignore[method-assign]
+    key = "sk-live-ABCDEFGHIJKLMNOP"
+    state = _RunState("run-1", "fast", api_key=key)
+    rome_dir = tmp_path / "__rome__"
+    rome_dir.mkdir()
+    log = rome_dir / "agent_CaesarExplorer.console.log"
+    line = ("05:53:15 - Agent.t1 - ERROR - [IMAGE] Image generation failed: "
+            f"OpenAI rejected the API key (AuthenticationError: Incorrect API key "
+            f"provided: {key})\n")
+    log.write_text(line + line, encoding="utf-8")  # duplicated on purpose
+
+    first = await pool._tail_console_log(state, tmp_path, 0, 0, 0, 0, (0, 0), 0)
+    # Second tick from the returned offset: nothing new, nothing re-emitted.
+    await pool._tail_console_log(state, tmp_path, *first)
+
+    failures = [p for ev, p in emitted if ev == "image_failed"]
+    assert len(failures) == 1, emitted
+    message = failures[0]["message"]
+    assert key not in message and "sk-live" not in message
+    assert "[REDACTED]" in message
+    assert message.startswith("OpenAI rejected the API key")

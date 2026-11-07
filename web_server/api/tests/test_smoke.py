@@ -636,6 +636,8 @@ async def test_merge_followup_query_llm_success_writes_cache(tmp_path, monkeypat
     class _Resp:
         choices = [_Choice()]
 
+    # Exercise the mocked completion path, not a missing-credential fallback.
+    monkeypatch.setenv("OPENAI_API_KEY", "offline-test-placeholder-not-a-real-key")
     monkeypatch.setattr("litellm.completion", lambda **_kw: _Resp())
 
     cache = tmp_path / "nested" / "merged_query.txt"

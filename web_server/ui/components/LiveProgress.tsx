@@ -59,6 +59,11 @@ export function LiveProgress({ run, events }: Props) {
     // go of the run directory. Every stat beside it is frozen on the old
     // attempt's numbers until then, which reads as a hung run unless we say so.
     let awaitingTakeover = false;
+    // Why the illustration step failed (image_failed event). The run still
+    // completes, so this is the only place the reader learns why the
+    // artifact has no picture. Cleared on resume: a restarted attempt runs
+    // a fresh image step.
+    let imageFailed: string | null = null;
     let synth: {
       draft: number;
       total_drafts: number;
@@ -111,6 +116,10 @@ export function LiveProgress({ run, events }: Props) {
         // current cycle has actually finished.
         synth = null;
         seenDrafts.clear();
+        imageFailed = null;
+      } else if (e.event === 'image_failed') {
+        const m = e.payload?.message;
+        imageFailed = typeof m === 'string' && m.trim() ? m.trim() : 'unknown error';
       } else if (e.event === 'synthesis_progress') {
         const p = e.payload as SynthesisProgressPayload;
         const t = Number(p.total_drafts) || 1;
@@ -163,6 +172,7 @@ export function LiveProgress({ run, events }: Props) {
       liveCost,
       synth,
       awaitingTakeover,
+      imageFailed,
     };
   }, [events]);
 
@@ -358,8 +368,14 @@ export function LiveProgress({ run, events }: Props) {
         </div>
       )}
 
+      {summary.imageFailed && (
+        <div className="whitespace-pre-wrap break-words rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 text-sm text-amber-800">
+          No illustration was generated: {summary.imageFailed}
+        </div>
+      )}
+
       {run.status === 'failed' && run.error_message && (
-        <div className="rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
+        <div className="whitespace-pre-wrap break-words rounded-lg bg-red-50 border border-red-200 px-3 py-2 text-sm text-red-700">
           {run.error_message}
         </div>
       )}

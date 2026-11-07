@@ -1,11 +1,12 @@
 'use client';
 
-import { useMemo, useState, type ReactNode } from 'react';
+import { useMemo, useState } from 'react';
 import ReactMarkdown from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
 import { Check, Copy } from 'lucide-react';
+import { extractText, prepareMarkdown } from '../lib/artifact-markdown.mjs';
 import type { SynthesisOut } from '@/lib/api';
 import 'katex/dist/katex.min.css';
 
@@ -126,19 +127,6 @@ function resolveImgSrc(src: string, runId: string, artifactDir: string): string 
   return `/api/runs/${encodeURIComponent(runId)}/file/${path}`;
 }
 
-// Recursively extract the plain text from a ReactNode tree. Used to pull the
-// code body out of <pre><code>...</code></pre> for the clipboard write.
-function extractText(node: ReactNode): string {
-  if (node == null || typeof node === 'boolean') return '';
-  if (typeof node === 'string' || typeof node === 'number') return String(node);
-  if (Array.isArray(node)) return node.map(extractText).join('');
-  if (typeof node === 'object' && 'props' in node) {
-    const props = (node as { props?: { children?: ReactNode } }).props;
-    return extractText(props?.children);
-  }
-  return '';
-}
-
 function CodeBlockWithCopy({
   children,
   ...rest
@@ -187,82 +175,4 @@ function CodeBlockWithCopy({
       </button>
     </div>
   );
-}
-
-// Replace bare [N] and [N,M,...] citations with markdown links to #source-N,
-// but skip text already inside fenced code blocks or inline code spans. We
-// emit real markdown links (no raw HTML) so we don't need rehype-raw — which
-// would let LLM-authored <script> / event-handler attributes through to the
-// DOM and create an XSS surface.
-// Single code-aware pass over the raw answer: rewrites [N] citation markers
-// into anchor links and normalizes LaTeX \(...\) / \[...\] math into $ / $$ for
-// remark-math. Fenced and inline code are passed through untouched.
-function prepareMarkdown(src: string): string {
-  let out = '';
-  let i = 0;
-  let inFence = false; // ``` ... ``` block
-  let inInline = false; // single-backtick span
-  while (i < src.length) {
-    // Detect a fenced code block opener/closer at line start.
-    if (!inInline && (i === 0 || src[i - 1] === '\n') && src.slice(i, i + 3) === '```') {
-      const nl = src.indexOf('\n', i);
-      const end = nl === -1 ? src.length : nl + 1;
-      out += src.slice(i, end);
-      i = end;
-      inFence = !inFence;
-      continue;
-    }
-    if (inFence) {
-      out += src[i++];
-      continue;
-    }
-    if (src[i] === '`') {
-      inInline = !inInline;
-      out += src[i++];
-      continue;
-    }
-    if (inInline) {
-      out += src[i++];
-      continue;
-    }
-    // Convert the LaTeX math delimiters the synthesis LLM emits (\(inline\)
-    // and \[block\]) into the $ / $$ that remark-math understands. The code
-    // guards above skip fenced/inline code, so a literal "\(" in a code sample
-    // is preserved. The math body is emitted verbatim and never re-scanned for
-    // [N] citations, so an equation index like x[1] stays intact.
-    if (src[i] === '\\' && (src[i + 1] === '[' || src[i + 1] === '(')) {
-      const block = src[i + 1] === '[';
-      const close = block ? '\\]' : '\\)';
-      const end = src.indexOf(close, i + 2);
-      if (end !== -1) {
-        const body = src.slice(i + 2, end);
-        // Block math is emitted as flow ($$ on their own lines) so KaTeX
-        // renders it in display mode even when the source had \[...\] on a
-        // single line; inline stays $...$.
-        out += block ? `\n\n$$\n${body.trim()}\n$$\n\n` : `$${body}$`;
-        i = end + close.length;
-        continue;
-      }
-    }
-    // Escape a literal dollar sign (currency) so remark-math never reads a
-    // span like "$5 ... $10" as inline math. Math is written with \(...\)/
-    // \[...\] (converted above), so a bare $ reaching here is always currency.
-    if (src[i] === '$') { out += '\\$'; i++; continue; }
-    // Try to match [N] or [N, M, ...] (not followed by `(`).
-    const rest = src.slice(i);
-    const m = /^\[(\d+(?:\s*,\s*\d+)*)\](?!\()/.exec(rest);
-    if (m) {
-      const ids = m[1]
-        .split(',')
-        .map((s) => s.trim())
-        .filter(Boolean);
-      if (ids.length > 0) {
-        out += ids.map((id) => `[${id}](#source-${id})`).join('');
-        i += m[0].length;
-        continue;
-      }
-    }
-    out += src[i++];
-  }
-  return out;
 }

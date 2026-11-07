@@ -287,6 +287,16 @@ class WebExplorer:
                 if inner.endswith(_PDF_HTML_SUFFIX):
                     inner = inner[:-len(_PDF_HTML_SUFFIX)]
                 return ' '.join(html_unescape(inner).split())[:max_length]
+            if "<header" in html.lower():
+                soup = BeautifulSoup(html, 'html.parser')
+                # Article/main headers can contain abstracts, findings or
+                # caveats. Both precision extraction and //header pruning
+                # discard them. Normalize only these content headers, leaving
+                # site banners/navigation subject to the existing cleanup.
+                for header in soup.select("article header, main header, [role='main'] header"):
+                    if header.get('role') not in {'banner', 'navigation', 'contentinfo'}:
+                        header.name = 'div'
+                html = str(soup)
             common = dict(
                 include_comments=False,
                 include_tables=True,

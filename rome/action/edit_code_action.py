@@ -68,8 +68,7 @@ def _query_knowledge_base(agent, file_path: str, file_content: str,
         # Use the kb_manager.query method which returns a string response
         kb_response = agent.kb_manager.query(
             question=query_text,
-            top_k=5,  # Get top K most relevant results
-            show_scores=True  # Don't show scores in logs for cleaner output
+            top_k=5,  # Get top K most relevant results.
         )
 
         # Check if we got a meaningful response

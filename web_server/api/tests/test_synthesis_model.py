@@ -72,7 +72,7 @@ async def test_new_models_priced_and_sized(client):
         assert LLMHandler.MODEL_PRICING[mid] == {"input": inp, "output": out}
         assert LLMHandler.MODEL_CONTEXT_SIZE[mid] == 1050000
         # gpt-5* prefix already makes these reasoning models; assert explicitly.
-        assert LLMHandler()._is_reasoning_model(mid) is True
+        assert LLMHandler.is_reasoning_model(mid) is True
 
 
 @pytest.mark.asyncio

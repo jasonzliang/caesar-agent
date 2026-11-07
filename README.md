@@ -293,6 +293,22 @@ roughly $0.30 and 10 minutes. A 250-iteration deep run with the `regular` preset
 **Can I reproduce the benchmarks?** Yes. Configs, judge rubrics, and evaluation
 scripts are in `caesar/config/` and `caesar/analysis/`.
 
+## Tests
+
+Run the unit suite from the repository root:
+
+```bash
+python -m pytest
+```
+
+The default suite exercises application logic with deterministic model,
+knowledge-base, and DNS fixtures. It does not require provider credentials,
+downloaded compressor weights, a running Chroma server, or external DNS.
+Fixtures remove provider keys from the test process and block unexpected
+network calls. These tests check the application contracts, not pretrained
+model quality or live-service availability. Manual integration scripts may
+contact real services and should be run separately and deliberately.
+
 ## Contributing & Community
 
 - ⭐ **Star the repo** if Caesar is useful for your research

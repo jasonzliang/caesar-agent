@@ -2,6 +2,7 @@
 from concurrent.futures import ThreadPoolExecutor
 import json
 import hashlib
+import inspect
 from typing import Optional, List, Dict
 import os
 from pathlib import Path
@@ -22,6 +23,7 @@ try:
     from llama_index.core.node_parser import SentenceSplitter
     from llama_index.core.postprocessor.llm_rerank import LLMRerank
     from llama_index.core.response_synthesizers import get_response_synthesizer
+    from llama_index.core.indices.prompt_helper import PromptHelper
     from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterOperator
     from llama_index.embeddings.openai import OpenAIEmbedding
     from llama_index.llms.openai import OpenAI
@@ -306,6 +308,25 @@ class ChromaClientManager:
             embed_model=self.embed_model  # Use instance-specific embed model
         )
 
+    def _response_synthesizer_for_llm(self):
+        """Pack against this KB model, never an unrelated global helper.
+
+        Some LlamaIndex factories prefer a lazily created 3900-token Settings
+        helper even when an explicit large-context LLM is provided. Supply the
+        helpers directly and do not mutate Settings shared by other instances.
+        """
+        metadata = self.llm.metadata
+        options = {
+            "response_mode": "compact", "llm": self.llm,
+            "prompt_helper": PromptHelper.from_llm_metadata(metadata),
+        }
+        # ChatPromptHelper was added after the text helper. Preserve support for
+        # older factory signatures without silently falling back on new ones.
+        if "chat_prompt_helper" in inspect.signature(get_response_synthesizer).parameters:
+            from llama_index.core.indices.prompt_helper import ChatPromptHelper
+            options["chat_prompt_helper"] = ChatPromptHelper.from_llm_metadata(metadata)
+        return get_response_synthesizer(**options)
+
     def _setup_reranker(self):
         """Setup LLMRerank if enabled"""
         if self.enable_reranking:
@@ -314,12 +335,7 @@ class ChromaClientManager:
                 top_n=self.rerank_top_n,
                 llm=self.llm
             )
-            self.response_synthesizer = get_response_synthesizer(
-                response_mode="compact",
-                llm=self.llm,
-                # streaming=False,
-                # use_async=False
-            )
+            self.response_synthesizer = self._response_synthesizer_for_llm()
             self.logger.debug("LLMRerank enabled")
         else:
             self.reranker = None
@@ -443,9 +459,8 @@ class ChromaClientManager:
             should_rerank = self.reranker is not None
             top_k = max([top_k or self.rerank_top_k, self.rerank_top_n, 1]) if should_rerank else max(top_k or self.top_k, 1)
 
-            nodes = self._retrieve_nodes(question, top_k, filters)
-
             if should_rerank:
+                nodes = self._retrieve_nodes(question, top_k, filters)
                 # Single top_n value used for both diversification and rerank,
                 # floored at rerank_top_n so the rerank pool stays viable.
                 top_n = max(top_n or self.rerank_top_n, self.rerank_top_n, 1)
@@ -465,12 +480,33 @@ class ChromaClientManager:
                     f.write(f"\n\nQUERY: {question}\n\nRESPONSE: {response}\n\n")
 
             if return_sources:
-                sources = [
-                    {'url': m['url'], 'depth': m.get('depth'), 'iteration': m.get('iteration')}
-                    for node in nodes
-                    if (m := getattr(node.node if hasattr(node, 'node') else node, 'metadata', {}))
-                    and 'url' in m
-                ]
+                sources = []
+                for wrapped in nodes:
+                    node = wrapped.node if hasattr(wrapped, 'node') else wrapped
+                    metadata = getattr(node, 'metadata', {}) or {}
+                    if not isinstance(metadata, dict):
+                        continue
+                    url = metadata.get('url')
+                    if not isinstance(url, str) or not url.strip():
+                        continue
+                    source = {'url': url, 'depth': metadata.get('depth'),
+                              'iteration': metadata.get('iteration')}
+                    # Preserve optional context without promoting a generated KB
+                    # note to primary-page evidence. Metadata-only callers retain
+                    # their legacy payload and non-source queries are unchanged.
+                    note = getattr(node, 'text', None)
+                    if isinstance(note, str) and note:
+                        digest = hashlib.sha256(note.encode('utf-8')).hexdigest()
+                        node_id = getattr(node, 'node_id', None)
+                        source.update(
+                            node_id=node_id if isinstance(node_id, str) and node_id else digest,
+                            note_sha256=digest,
+                            research_note=note,
+                            evidence_origin='generated_or_unverified_research_note',
+                            primary_excerpt=None,
+                            primary_content_status='not_retained_in_source_payload',
+                        )
+                    sources.append(source)
                 return response, sources
 
             return response
@@ -604,7 +640,10 @@ class ChromaClientManager:
             response_mode="compact",
             llm=self.llm,
             embed_model=self.embed_model,
-            filters=filters)
+            filters=filters,
+            # RetrieverQueryEngine.from_args does not forward helper kwargs;
+            # pass the fully configured synthesizer instead.
+            response_synthesizer=self._response_synthesizer_for_llm())
         question = f"{question}\n\nIMPORTANT: Keep your response under {self.response_max_length} words!" if self.response_max_length else question
         response = engine.query(question)
         return str(response), getattr(response, "source_nodes", []) or []
@@ -730,8 +769,12 @@ class ChromaClientManager:
                 seen, dedup = set(), []
                 for s in all_sources:
                     url = s.get('url')
-                    if url and url not in seen:
-                        seen.add(url)
+                    # One URL may have multiple generated notes/chunks. Keep
+                    # their identities; metadata-only sources still dedupe by
+                    # URL because both identity fields are absent.
+                    key = (url, s.get('node_id'), s.get('note_sha256'))
+                    if url and key not in seen:
+                        seen.add(key)
                         dedup.append(s)
                 return fused, dedup
             return fused

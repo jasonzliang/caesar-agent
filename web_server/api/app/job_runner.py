@@ -44,6 +44,10 @@ EVENT_TYPES = (
     "resumed",
     "done",
     "error",
+    # The artifact finished but its illustration did not. payload.message is
+    # the reason parsed from the console log. The run still completes, so
+    # this is the only trace the run page gets of why there is no picture.
+    "image_failed",
 )
 
 CAESAR_SHUTDOWN_GRACE_S = 15.0  # grace per agent to checkpoint before force-cancel
@@ -65,6 +69,9 @@ TAKEOVER_WAIT_S = 300.0
 # kept visible separately by the per-attempt heartbeat the synthesizer logs
 # (matched by LLM_ATTEMPT_RE below).
 WATCHDOG_STALL_S = 1800.0  # 30 minutes
+# Longest image_failed reason persisted per event. image_generator already
+# caps its text at 600 chars; this guards the older/other producers.
+IMAGE_FAIL_REASON_MAX_CHARS = 600
 
 # Public-mode bring-your-own-key handling. Chat/synthesis LLM calls get the
 # per-run key threaded through config["LLMHandler"]["api_key"], but chromadb's
@@ -381,6 +388,13 @@ class _RunState:
         # Bounded so a stuck SSE client can't grow memory; oldest event drops.
         self.queue: asyncio.Queue[dict[str, Any]] = asyncio.Queue(maxsize=512)
         self.finished = asyncio.Event()
+        # Successful completion wakes the sole log reader for one final pass;
+        # the run waits for it before publishing a terminal status or `done`.
+        self.drain_watchdog = asyncio.Event()
+        self.watchdog_log_seed: tuple[int, int] | None = None
+        # Reasons already emitted as image_failed events, so a line the tail
+        # re-reads (rotation reset, duplicate log handlers) is reported once.
+        self.image_failures: set[str] = set()
         # Worker thread writes, watchdog reads. GIL-atomic.
         self.agent: Any | None = None
         # Set by shutdown() to bridge the window where shutdown fires before
@@ -654,6 +668,9 @@ class JobPool:
                         "Restart again once it has finished."
                     )
 
+            # Capture history before the worker can write, even if it returns
+            # before the watchdog coroutine first gets scheduled.
+            state.watchdog_log_seed = _seed_watchdog_from_log(repo_dir)
             watchdog_task = asyncio.create_task(
                 self._watchdog(run_id, repo_dir, state),
                 name=f"caesar-watchdog-{run_id}",
@@ -707,6 +724,15 @@ class JobPool:
                     )
             else:
                 graph_node_count = kg_nodes if kg_nodes else meta.get("pages_visited")
+
+            # Keep the watchdog as the sole reader/emitter: canceling it here
+            # can interrupt an image_failed persistence call or lose the last
+            # log lines. Wake it and await a complete post-worker pass instead.
+            state.drain_watchdog.set()
+            # The watchdog suppresses CancelledError during cleanup. Shield it
+            # so cancellation of this run still propagates to our own finally,
+            # which cancels and joins the watchdog without completing the job.
+            await asyncio.shield(watchdog_task)
 
             # If the stall watchdog already flipped this run to `failed`,
             # don't silently overwrite the terminal status with `completed`
@@ -1147,6 +1173,17 @@ class JobPool:
     IMAGE_GEN_START_RE = re.compile(
         r"\[IMAGE\]\s+Generating\s+(?P<n>\d+)\s+image"
     )
+    # Phase-4 image-gen failure. The run completes anyway, so without this
+    # the artifact page shows no illustration and no explanation. Matches the
+    # terminal "[IMAGE] ... failed: <reason>" lines from
+    # image_generator.embed_images_in_artifact (generation) and
+    # artifact_synthesis (embedding / import). The reason is whatever
+    # describe_image_error() produced; it can carry provider wording, so it
+    # is scrubbed before it leaves the process.
+    IMAGE_FAIL_RE = re.compile(
+        r"\[IMAGE\]\s+(?:Image generation failed|Image embedding failed|"
+        r"Cannot import image_generator):\s*(?P<reason>[^\r\n]*)"
+    )
     # Synthesizer retry-ladder heartbeat: "[LABEL] attempt k/N
     # (reasoning_effort=...)" logged right before each blocking, otherwise
     # watchdog-invisible synthesis/merge/clarify LLM call. Seeing a new one is
@@ -1189,10 +1226,21 @@ class JobPool:
         # On resume: skip past existing log + seed kb_total from the historic
         # "KB ingest started (N)" marker so post-resume "Added insights"
         # lines aren't dropped by the kb_total>0 gate.
-        log_offset, kb_total = _seed_watchdog_from_log(repo_dir)
+        log_offset, kb_total = (
+            state.watchdog_log_seed
+            if state.watchdog_log_seed is not None
+            else _seed_watchdog_from_log(repo_dir)
+        )
         try:
             while not state.finished.is_set():
-                await asyncio.sleep(1.5)
+                try:
+                    await asyncio.wait_for(state.drain_watchdog.wait(), timeout=1.5)
+                except asyncio.TimeoutError:
+                    pass
+                # Snapshot at the START of the pass. If the worker finishes
+                # while an emit below is awaiting persistence, we still need
+                # another pass to read anything written after this one read.
+                final_pass = state.drain_watchdog.is_set()
 
                 if state.agent is not None:
                     try:
@@ -1273,6 +1321,9 @@ class JobPool:
                         n_nodes = 0
                     if n_nodes > 0:
                         state.live_graph_node_count = n_nodes
+
+                if final_pass:
+                    return
 
                 # Stall detection. `last_activity_mono` is refreshed on every
                 # non-ping _emit; if it's stale, the worker has stopped
@@ -1442,6 +1493,19 @@ class JobPool:
                 iter_n=1,
                 iter_total=1,
             )
+
+        # ---- Image-gen failure ----
+        # One event per distinct reason within this attempt: the tail can
+        # re-read a line after a rotation reset. A restarted attempt gets a
+        # fresh _RunState, so a repeat failure after retry is reported again.
+        for m_fail in self.IMAGE_FAIL_RE.finditer(chunk):
+            reason = (m_fail.group("reason") or "").strip() or "unknown error"
+            reason = (_scrub_secrets(reason, state.api_key) or "unknown error")
+            reason = reason[:IMAGE_FAIL_REASON_MAX_CHARS]
+            if reason in state.image_failures:
+                continue
+            state.image_failures.add(reason)
+            await self._emit(state, "image_failed", message=reason)
 
         # Synthesis LLM retry-ladder heartbeat. A new "[LABEL] attempt k/N"
         # line means the worker is alive and advancing to a fresh attempt, so

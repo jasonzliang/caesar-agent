@@ -316,7 +316,7 @@ export function RunPageClient({ initial }: Props) {
             detailsHref={`/run/${run.id}/graph`}
           />
         </div>
-        <div className="lg:col-span-2 space-y-6">
+        <div className="lg:col-span-2 min-w-0 space-y-6">
           <LiveProgress run={run} events={events} />
           <GraphStatsCard stats={graphStats} />
         </div>

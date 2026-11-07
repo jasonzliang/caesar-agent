@@ -463,6 +463,67 @@ def _parse_score(txt: str) -> float:
 
 # ── ImageGenerator ────────────────────────────────────────────────────────
 
+# ── Failure reporting ──────────────────────────────────────────────────
+
+# OpenAI-style keys, including the provider's own masked echo ("sk-proj-***9f9f")
+# that still leaks the prefix and the last four characters.
+_SECRET_RE = re.compile(r"sk-[A-Za-z0-9_*-]{8,}")
+# Cap on provider text kept in logs, metadata, and events. litellm messages
+# can run to several KB once debug info and the request body are appended.
+IMAGE_ERROR_MAX_CHARS = 600
+
+# (needles in the lowercased "Type: message" text) -> plain-language reason.
+# First hit wins, so the specific account-state phrases sit above the generic
+# auth and billing ones.
+_IMAGE_ERROR_HINTS: Tuple[Tuple[Tuple[str, ...], str], ...] = (
+    (("must be verified", "verify organization", "organization verification"),
+     "the OpenAI organization behind this API key is not verified for image models"),
+    (("insufficient permissions", "missing scopes", "api.images"),
+     "this API key is not permitted to use the OpenAI Images API"),
+    (("model_not_found", "does not have access to model",
+      "does not exist or you do not have access"),
+     "this OpenAI project has no access to the image model"),
+    (("moderation_blocked", "safety system", "content_policy", "content policy"),
+     "the prompt was rejected by OpenAI's image safety filter"),
+    (("spend limit", "insufficient_quota", "no credits", "billing",
+      "exceeded your current quota"),
+     "the OpenAI account behind this API key has hit a billing or quota limit"),
+    (("missing openai api key", "no key is set", "api_key client option must be set"),
+     "no OpenAI API key was available for image generation"),
+    (("incorrect api key", "invalid api key", "invalid_api_key", "authenticationerror"),
+     "OpenAI rejected the API key"),
+)
+
+
+def _redact_secrets(text: str) -> str:
+    """Mask anything that looks like an API key before it reaches a log line,
+    a metadata file, or an SSE event."""
+    return _SECRET_RE.sub("sk-***", text or "")
+
+
+def describe_image_error(exc: BaseException) -> str:
+    """One line a user can act on, followed by the provider's own words.
+
+    The image step runs on the visitor's own key in the public web server, so
+    most failures are account-side refusals: an organization not verified for
+    gpt-image models, a restricted key without the Images scope, a project
+    with the model switched off. litellm maps every OpenAI
+    ``invalid_request_error`` body to BadRequestError regardless of HTTP
+    status, so the exception *name* cannot tell those apart from a malformed
+    request. Only the message can, and this is the one place it is kept.
+    """
+    raw = _redact_secrets(f"{type(exc).__name__}: {exc}").strip()
+    raw = " ".join(raw.split())  # collapse litellm's multi-line debug blocks
+    if len(raw) > IMAGE_ERROR_MAX_CHARS:
+        raw = raw[:IMAGE_ERROR_MAX_CHARS].rstrip() + "..."
+    low = raw.lower()
+    for needles, reason in _IMAGE_ERROR_HINTS:
+        if any(n in low for n in needles):
+            return f"{reason} ({raw})"
+    return raw
+
+
+
 class ImageGenerator:
     """End-to-end pipeline: Caesar artifact + cited URLs → generated image.
 
@@ -1297,11 +1358,14 @@ class ImageGenerator:
                     "picked_pool": metadata_refs,
                     "refs_sent_to_api": list(render_refs),
                     "error_type": type(gen_err).__name__,
+                    "error_message": describe_image_error(gen_err),
                     "candidate_count": len(candidates),
                     "cited_urls_scraped": min(len(urls), self.max_cited_urls),
                     "size": self.size, "quality": self.quality,
                 }, indent=2))
-                self.logger.error(f"Generation {idx + 1}/{n} failed; partial metadata at {meta_path}")
+                self.logger.error(f"Generation {idx + 1}/{n} failed: "
+                                  f"{describe_image_error(gen_err)}; "
+                                  f"partial metadata at {meta_path}")
                 raise
             self.logger.info(f"Image {idx + 1}/{n} written to {out} (via {gen_info['via']}, "
                              f"refs_used={gen_info['refs_used']})")
@@ -1341,15 +1405,16 @@ class ImageGenerator:
                     results[i] = fut.result()
                 except Exception as e:
                     self.logger.error(f"Image {i + 1}/{n} failed: "
-                                      f"{e.__class__.__name__}: {e}")
+                                      f"{describe_image_error(e)}")
                     errors.append(e)
                     results[i] = {"image_path": str(output_paths[i]),
-                                  "error": str(e),
+                                  "error": _redact_secrets(str(e)),
                                   "error_type": type(e).__name__}
         success_count = sum(1 for r in results if r and "error" not in r)
         if success_count == 0:
             raise RuntimeError(
-                f"All {n} image generations failed; last error: {errors[-1]}")
+                f"All {n} image generations failed; last error: "
+                f"{describe_image_error(errors[-1])}")
         self.logger.info(f"Generated {success_count}/{n} images")
         return results
 
@@ -1565,7 +1630,10 @@ def embed_images_in_artifact(artifact_text: str, urls: List[str],
             artifact_text=artifact_text, urls=urls, output_path=out_path,
             n=n, per_image_texts=per_image_texts)
     except Exception as e:
-        logger.error(f"[IMAGE] Image generation failed: {type(e).__name__}")
+        # Keep the "[IMAGE] Image generation failed:" prefix: the web server's
+        # watchdog (job_runner.IMAGE_FAIL_RE) turns this line into the only
+        # explanation the run page gets for a missing illustration.
+        logger.error(f"[IMAGE] Image generation failed: {describe_image_error(e)}")
         return None
 
     # n=1 returns Dict, n>1 returns List[Dict]. Preserve slot alignment with

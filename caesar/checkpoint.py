@@ -20,7 +20,7 @@ class CheckpointManager:
         """Get checkpoint file path"""
         return os.path.join(self.agent.get_log_dir(), f"{self.agent.get_id()}.checkpoint.json")
 
-    def save(self, iteration: int, save_graph_interval: int | None = None) -> None:
+    def save(self, iteration: int, save_graph_interval: int | None = None) -> bool:
         """Save exploration state with optional graph data.
 
         ``save_graph_interval`` overrides the agent's default for this call.
@@ -28,6 +28,7 @@ class CheckpointManager:
         quick_explore where ``iteration`` is a per-URL id in arbitrary
         completion order, so the agent's modulo gate rarely fires).
         """
+        checkpoint_saved = False
         try:
             if not self.agent.url_stack:
                 error_msg = f"Cannot save checkpoint on iteration {iteration}: empty url_stack"
@@ -46,6 +47,7 @@ class CheckpointManager:
                 'url_stack': self.agent.url_stack,
                 'failed_urls': list(self.agent.failed_urls),
                 'visited_urls': self.agent.visited_urls,
+                'quick_explore': getattr(self.agent, 'quick_explore_state', None),
                 'web_searches_used': self.agent.web_searches_used,
                 'reseeds_used': self.agent.reseeds_used,
                 'traversal_history': self.agent.traversal_history,
@@ -69,9 +71,14 @@ class CheckpointManager:
                 },
             }
 
-            # Save checkpoint
-            with open(self.get_path(), 'w', encoding='utf-8') as f:
+            # Keep the previous journal intact if writing the next one fails.
+            checkpoint_path = self.get_path()
+            with open(checkpoint_path + ".tmp", 'w', encoding='utf-8') as f:
                 json.dump(checkpoint_data, f, indent=4, ensure_ascii=False)
+                f.flush()
+                os.fsync(f.fileno())
+            os.replace(checkpoint_path + ".tmp", checkpoint_path)
+            checkpoint_saved = True
             self.logger.info(f"Checkpoint saved on iteration {iteration}")
 
             # Save separate graph file if at interval
@@ -93,6 +100,8 @@ class CheckpointManager:
 
         except Exception as e:
             self.logger.error(f"Failed to save checkpoint on iteration {iteration}: {e}")
+        # Graph rendering may fail after the authoritative checkpoint is safe.
+        return checkpoint_saved
 
     def load(self) -> bool:
         """Load exploration state from checkpoint"""
@@ -125,8 +134,11 @@ class CheckpointManager:
                 return False
             self.agent.current_depth = len(self.agent.url_stack)
             self.agent.current_url = self.agent.url_stack[-1]
-            # Disabled due to having separating loading mechanism or not necessary
-            # self.agent.failed_urls = set(data.get('failed_urls', self.agent.failed_urls))
+            self.agent.quick_explore_state = data.get('quick_explore')
+            if getattr(self.agent, 'use_quick_explore', False):
+                # Failed quick-mode targets are completed attempts, not pending
+                # paid work. Preserve the regular explorer's existing behavior.
+                self.agent.failed_urls = set(data.get('failed_urls', []))
 
             # Restore graph inline
             self.agent.graph = nx.node_link_graph(data.get('graph', self.agent.graph), edges="edges")

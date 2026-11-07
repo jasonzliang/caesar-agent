@@ -2,6 +2,20 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.34] - 2026-11-07
+
+### Fixed
+
+- Restore inline Q&A source citations and original draft/merge citation prompts
+  while preserving cross-draft and external-reference URL remapping, CommonMark
+  and math citation protection, and post-merge clarification citation guards.
+- Scope LlamaIndex prompt helpers to each knowledge-base model instance, skip
+  redundant preliminary retrieval when reranking is disabled, and persist
+  synthesis reasoning step-down floors only after transport timeouts.
+- Persist resumable quick-explore phases with atomic checkpoint writes, preserve
+  article and main content headers during HTML extraction, restore CLI synthesis
+  iteration presets, and bound plain-text artifact framing parsing.
+
 ## [0.4.33] - 2026-10-28
 
 ### Fixed

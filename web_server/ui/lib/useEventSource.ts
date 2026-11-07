@@ -87,6 +87,7 @@ export function useEventSource(url: string | null) {
       'resumed',
       'done',
       'error',
+      'image_failed',
       'ping',
     ]) {
       es.addEventListener(t, onMessage as EventListener);

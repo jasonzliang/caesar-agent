@@ -1,6 +1,7 @@
 """Caesar Agent - Web exploration agent with graph-based navigation"""
 import concurrent.futures
 import copy
+import hashlib
 import os
 import sys
 import time
@@ -295,6 +296,7 @@ IMPORATNT: Your response must start with "Your role:" followed by the adapted ro
         self.session_start_cost = 0.0
         self.session_start_calls = 0
         self.reseeds_used = 0
+        self.quick_explore_state = None
 
     def _validate_caesar_config(self) -> None:
         """Validate Caesar-specific configuration"""
@@ -804,100 +806,136 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
             return None
 
     def quick_explore(self) -> str:
-        """Fast parallel exploration: perceive+think all search result links, skip the act phase."""
-        if self.current_iteration > 0 and self.visited_urls:
-            self.logger.info("[QUICK_EXPLORE] Checkpoint found — skipping exploration, going straight to synthesis")
+        """Resume a durable URL plan; generated notes are the ingestion journal."""
+        state = getattr(self, "quick_explore_state", None)
+        if state and state.get("phase") == "complete":
+            self.logger.info("[QUICK_EXPLORE] Checkpoint complete — going straight to synthesis")
             return self.synthesizer.synthesize_artifact()
+        if state is None:
+            # Legacy checkpoints have notes but no trustworthy completion flag.
+            state = {"phase": "fetching", "targets": None}
+            self.quick_explore_state = state
 
-        self.logger.info("[QUICK_EXPLORE] Starting parallel exploration of search result links")
+        def save_progress(graph_interval=None):
+            if self.checkpoint_manager.save(
+                    self.current_iteration, save_graph_interval=graph_interval) is False:
+                raise RuntimeError("Could not persist quick-explore progress")
 
-        # Search-results page is only used for its outbound links —
-        # per-page insights come from the worker pool below.
-        content, links = self.perceive()
-        if not content or not links:
-            self.logger.error("[QUICK_EXPLORE] No content or links from starting page")
-            return self.synthesizer.synthesize_artifact()
+        if state["targets"] is None and self.max_iterations > 0:
+            content, links = self.perceive()
+            if content and links:
+                # Persist before starting workers. Filtering completed/failed
+                # URLs must not renumber the remaining submission identities.
+                state["targets"] = [
+                    {"url": url, "iteration": self.graph.nodes[url].get("iteration", i)
+                     if url in self.graph else i}
+                    for i, (url, _) in enumerate(links[:self.max_iterations], 1)
+                ]
+            else:
+                self.logger.error("[QUICK_EXPLORE] No content or links from starting page")
+            save_progress()
 
-        links_to_explore = [url for url, _ in links
-                            if url not in self.visited_urls
-                            and url not in self.failed_urls][:self.max_iterations]
-        n_links = len(links_to_explore)
+        targets = state["targets"] or []
+
+        def has_note(url):
+            return (url in self.graph and url in self.visited_urls
+                    and bool(self.graph.nodes[url].get("insights")))
+
+        pending = [target for target in targets
+                   if not has_note(target["url"]) and target["url"] not in self.failed_urls]
         self.logger.info(
-            f"[QUICK_EXPLORE] Found {len(links)} links, exploring {n_links} in parallel")
+            f"[QUICK_EXPLORE] Found {len(targets)} links, exploring {len(pending)} in parallel")
+        if state["phase"] == "fetching" and self.max_iterations > 0 and pending:
+            graph_save_every = max(5, min(20, len(targets) // 20))
+            executor = concurrent.futures.ThreadPoolExecutor(max_workers=self.quick_explore_workers)
+            try:
+                futures = {
+                    executor.submit(self._quick_perceive_and_think,
+                                    target["url"], target["iteration"]): target
+                    for target in pending if not self.shutdown_called
+                }
+                for future in concurrent.futures.as_completed(futures):
+                    if self.shutdown_called:
+                        break
+                    target = futures[future]
+                    url, iteration = target["url"], target["iteration"]
+                    try:
+                        result = future.result()
+                    except FatalLLMError:
+                        raise
+                    except Exception as exc:
+                        self.logger.error(f"[QUICK_EXPLORE] Worker exception for {url}: {exc}")
+                        result = None
+                    if result and result.get("insights"):
+                        self.visited_urls[url] = self.visited_urls.get(url, 0) + 1
+                        self.graph.add_node(url, insights=result["insights"], depth=2,
+                                            iteration=iteration,
+                                            visit_count=self.visited_urls[url])
+                        self.graph.add_edge(self.starting_url, url)
+                        completed = sum(has_note(target["url"]) for target in targets)
+                        self.logger.info(
+                            f"[QUICK_EXPLORE] Completed {completed}/{len(targets)}: {url}")
+                    else:
+                        self.failed_urls.add(url)
+                    self.current_iteration = max(self.current_iteration, iteration)
+                    # Every observed result is durable, not just each graph
+                    # refresh. Unconsumed in-flight work cannot be recovered.
+                    save_progress(graph_save_every)
+            finally:
+                executor.shutdown(wait=not self.shutdown_called,
+                                  cancel_futures=self.shutdown_called)
 
-        # Throttle snapshots — save_graph_interval=1 (the config default)
-        # would otherwise rewrite the full checkpoint on every completion.
-        graph_save_every = max(5, min(20, n_links // 20))
-        results: List[Dict[str, Any]] = []
-        executor = concurrent.futures.ThreadPoolExecutor(
-            max_workers=self.quick_explore_workers)
-        try:
-            futures = {
-                executor.submit(self._quick_perceive_and_think, url, i): url
-                for i, url in enumerate(links_to_explore, start=1)
-                if not self.shutdown_called
-            }
-            for f in concurrent.futures.as_completed(futures):
-                if self.shutdown_called:
-                    break
-                try:
-                    result = f.result()
-                except FatalLLMError:
-                    raise  # one fatal worker error aborts the whole run
-                except Exception as e:
-                    self.logger.error(f"[QUICK_EXPLORE] Worker exception for {futures[f]}: {e}")
-                    continue
-                if not result:
-                    continue
-                results.append(result)
-                url, iteration = result["url"], result["iteration"]
-                self.visited_urls[url] = self.visited_urls.get(url, 0) + 1
-                # depth=2 since these are one-hop children of the root.
-                self.graph.add_node(url, insights=result["insights"], depth=2,
-                    iteration=iteration, visit_count=self.visited_urls[url])
-                self.graph.add_edge(self.starting_url, url)
-                self.current_iteration = max(self.current_iteration, iteration)
-
-                self.logger.info(f"[QUICK_EXPLORE] Completed {len(results)}/{n_links}: {url}")
-
-                # Use the completion count, not `iteration` (the per-URL
-                # submission id) — completions land out of order, so
-                # filename-monotonic snapshots need a sequential id.
-                if len(results) % graph_save_every == 0:
-                    self.checkpoint_manager.save(len(results), save_graph_interval=1)
-        finally:
-            # Cancel pending futures on shutdown rather than draining them.
-            executor.shutdown(
-                wait=not self.shutdown_called,
-                cancel_futures=self.shutdown_called)
-
-        # KB inserts in iteration order — synthesis expects iteration
-        # metadata to be monotonic relative to insertion order.
-        # Marker lets the web watchdog show progress through this otherwise
-        # silent ~minutes-long phase.
-        ordered = sorted(results, key=lambda r: r["iteration"])
-        self.logger.info(
-            f"[QUICK_EXPLORE] KB ingest started ({len(ordered)} results)")
-        # Single batched upsert — Chroma's embedding function round-trips
-        # the LLM provider once for the whole list instead of per-item, which
-        # turns a ~50s phase into ~2s for ~120 pages.
-        self.kb_manager.add_texts(
-            [(r["insights"],
-              {"url": r["url"], "depth": 2, "iteration": r["iteration"]})
-             for r in ordered]
-        )
-        # Emit per-item lines after the batch returns so the watchdog regex
-        # (`Added insights (N length) for URL`) keeps incrementing the
-        # kb_ingest progress counter the UI is bound to.
-        for r in ordered:
+        complete = state["targets"] is not None and all(
+            has_note(target["url"]) or target["url"] in self.failed_urls for target in targets)
+        state["phase"] = "ingesting" if complete else "fetching"
+        save_progress()
+        # Recover legacy notes too, including their original depth/iteration.
+        # Chroma's content-keyed upserts make replay safe if a batch committed
+        # only partly before interruption. Embeddings may repeat, but saved
+        # page fetching and note generation do not.
+        notes = sorted(
+            [(url, self.graph.nodes[url]) for url in self.visited_urls if has_note(url)],
+            key=lambda item: item[1].get("iteration", 0))
+        if notes:
+            self.logger.info(f"[QUICK_EXPLORE] KB ingest started ({len(notes)} results)")
+            # Match add_texts' first-occurrence content identity before
+            # filtering; otherwise skipping the first of two equal notes could
+            # accidentally replace its provenance with the second URL.
+            unique = {}
+            for url, node in notes:
+                text = node["insights"]
+                metadata = {"url": url, "depth": node.get("depth", 2),
+                            "iteration": node.get("iteration", 0)}
+                unique.setdefault(hashlib.sha256(text.encode()).hexdigest(), (text, metadata))
+            to_ingest = list(unique.values())
+            try:
+                stored = self.kb_manager.collection.get(
+                    ids=list(unique), include=["documents", "metadatas"])
+                committed = set()
+                for key, text, metadata in zip(
+                        stored["ids"], stored["documents"], stored["metadatas"]):
+                    expected = unique.get(key)
+                    if (expected and text == expected[0] and isinstance(metadata, dict)
+                            and all(metadata.get(k) == v for k, v in expected[1].items())):
+                        committed.add(key)
+                to_ingest = [item for key, item in unique.items() if key not in committed]
+            except Exception as exc:
+                self.logger.warning(f"[QUICK_EXPLORE] Cannot verify committed notes; replaying: {exc}")
+            # Only complete, matching content IDs prove a note was committed.
+            # Oversized notes stored as chunks (or failed lookups) are replayed:
+            # a matching URL alone cannot prove every passage survived.
+            if to_ingest:
+                self.kb_manager.add_texts(to_ingest)
+            for url, node in notes:
+                self.logger.info(
+                    f"[QUICK_EXPLORE] Added insights ({len(node['insights'])} length) for {url} to knowledge base")
+        state["phase"] = "complete" if complete else "fetching"
+        save_progress(1)
+        if complete:
             self.logger.info(
-                f"[QUICK_EXPLORE] Added insights ({len(r['insights'])} length) for {r['url']} to knowledge base")
-
-        # Terminal snapshot. save_graph_interval=1 bypasses save()'s modulo
-        # gate so the final write always lands.
-        self.checkpoint_manager.save(self.current_iteration, save_graph_interval=1)
-        self.logger.info(
-            f"[QUICK_EXPLORE] Complete: explored {len(results)}/{n_links} links")
+                f"[QUICK_EXPLORE] Complete: explored {len(notes)}/{len(targets)} links")
+        if self.shutdown_called:
+            return ""
         return self.synthesizer.synthesize_artifact()
 
     def explore(self) -> str:

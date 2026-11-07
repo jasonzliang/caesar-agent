@@ -50,33 +50,47 @@ def _parse_synthesis_txt(text: str) -> dict:
         [1] https://...
         [2] https://...
     """
-    sections: dict[str, str] = {"abstract": "", "artifact": "", "sources": ""}
-    current: str | None = None
-    buf: list[str] = []
-    for line in text.splitlines():
-        stripped = line.strip()
-        upper = stripped.upper()
-        if upper in ("ABSTRACT:", "ARTIFACT:", "SOURCES:"):
-            if current is not None:
-                sections[current] = "\n".join(buf).strip()
-            current = upper.rstrip(":").lower()
-            buf = []
-            continue
-        if current is not None:
-            buf.append(line)
-    if current is not None:
-        sections[current] = "\n".join(buf).strip()
+    lines = text.splitlines()
+    abstract = ""
+    body_start = 0
+    first = next((i for i, line in enumerate(lines) if line.strip()), None)
+    if first is not None:
+        header = lines[first].strip().upper()
+        if header == "ARTIFACT:":
+            body_start = first + 1
+        elif header == "ABSTRACT:":
+            boundary = next((i for i in range(first + 1, len(lines))
+                             if lines[i].strip().upper() == "ARTIFACT:"), None)
+            if boundary is not None:
+                abstract = "\n".join(lines[first + 1:boundary]).strip("\n")
+                body_start = boundary + 1
 
+    # Native serialization appends sources last. Only a nonempty, source-row-only
+    # suffix is a footer; headings anywhere else remain generated content. In
+    # particular, never reset the body on later ARTIFACT:/ABSTRACT: lines.
     sources: dict[str, int] = {}
+    body_end = len(lines)
     src_re = re.compile(r"^\s*\[(\d+)\]\s+(\S.*)$")
-    for line in sections["sources"].splitlines():
-        m = src_re.match(line)
-        if m:
-            sources[m.group(2).strip()] = int(m.group(1))
+    for i in range(len(lines) - 1, body_start - 1, -1):
+        if lines[i].strip().upper() != "SOURCES:":
+            continue
+        # Native headings are unindented. Keep legacy surrounding whitespace,
+        # but do not turn an indented code example into source metadata.
+        if lines[i].startswith(("    ", "\t")):
+            continue
+        rows = [src_re.fullmatch(line) for line in lines[i + 1:] if line.strip()]
+        if rows and all(rows):
+            sources = {row.group(2).strip(): int(row.group(1)) for row in rows}
+            body_end = i
+        break
 
+    # The old unescaped format cannot distinguish prose that exactly mimics a
+    # terminal footer (or an abstract's first ARTIFACT: delimiter) from framing.
+    # Keep every nonconforming tail and every later delimiter as literal text.
+    # Strip framing newlines only: leading spaces can be executable code.
     return {
-        "abstract": sections["abstract"],
-        "artifact": sections["artifact"],
+        "abstract": abstract,
+        "artifact": "\n".join(lines[body_start:body_end]).strip("\n"),
         "sources": sources,
         "metadata": {},
     }
