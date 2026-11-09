@@ -2,8 +2,6 @@
 
 # Core
 litellm
-# CommonMark and linkification protect source syntax during citation remapping.
-markdown-it-py[linkify]>=2.2.0
 networkx
 numpy
 openai

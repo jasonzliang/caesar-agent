@@ -489,24 +489,11 @@ class ChromaClientManager:
                     url = metadata.get('url')
                     if not isinstance(url, str) or not url.strip():
                         continue
-                    source = {'url': url, 'depth': metadata.get('depth'),
-                              'iteration': metadata.get('iteration')}
-                    # Preserve optional context without promoting a generated KB
-                    # note to primary-page evidence. Metadata-only callers retain
-                    # their legacy payload and non-source queries are unchanged.
-                    note = getattr(node, 'text', None)
-                    if isinstance(note, str) and note:
-                        digest = hashlib.sha256(note.encode('utf-8')).hexdigest()
-                        node_id = getattr(node, 'node_id', None)
-                        source.update(
-                            node_id=node_id if isinstance(node_id, str) and node_id else digest,
-                            note_sha256=digest,
-                            research_note=note,
-                            evidence_origin='generated_or_unverified_research_note',
-                            primary_excerpt=None,
-                            primary_content_status='not_retained_in_source_payload',
-                        )
-                    sources.append(source)
+                    sources.append({
+                        'url': url,
+                        'depth': metadata.get('depth'),
+                        'iteration': metadata.get('iteration'),
+                    })
                 return response, sources
 
             return response
@@ -769,12 +756,8 @@ class ChromaClientManager:
                 seen, dedup = set(), []
                 for s in all_sources:
                     url = s.get('url')
-                    # One URL may have multiple generated notes/chunks. Keep
-                    # their identities; metadata-only sources still dedupe by
-                    # URL because both identity fields are absent.
-                    key = (url, s.get('node_id'), s.get('note_sha256'))
-                    if url and key not in seen:
-                        seen.add(key)
+                    if url and url not in seen:
+                        seen.add(url)
                         dedup.append(s)
                 return fused, dedup
             return fused

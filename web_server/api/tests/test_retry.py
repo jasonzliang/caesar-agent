@@ -415,6 +415,7 @@ async def test_takeover_wait_is_announced_as_its_own_event(client):
     await _wait_terminal(client, run_id)
 
 
+@pytest.mark.asyncio
 async def test_worker_done_set_when_invoke_fails_before_agent_exists(client, monkeypatch):
     """A failure before CaesarAgent exists (auth error in its init, missing
     preset, import error) must still set worker_done. The 2026-09-25 incident:

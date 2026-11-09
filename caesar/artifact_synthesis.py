@@ -2,7 +2,6 @@
 import json
 import os
 import re
-from bisect import bisect_left
 from datetime import datetime
 from typing import Dict, List, Optional, Tuple
 from urllib.parse import urlsplit
@@ -10,7 +9,6 @@ from urllib.parse import urlsplit
 from litellm.exceptions import Timeout as LLMTimeout
 
 from llama_index.core.vector_stores import MetadataFilters, MetadataFilter, FilterOperator
-from markdown_it import MarkdownIt
 
 from rome.config import set_attributes_from_config
 from rome.llm_handler import FatalLLMError
@@ -160,12 +158,11 @@ class ArtifactSynthesizer:
             for url, idx in sorted(sources.items(), key=lambda x: x[1]))
 
     def _load_reference_draft(self, path: str) -> Optional[Dict]:
-        """Load reference text and only its explicit, unambiguous cited URL map.
+        """Load reference text and its explicit, unambiguous cited HTTP(S) URL map.
 
         Saved synthesis JSON may carry source identities across runs. Plain text
-        and unknown IDs have no mapping, so their numeric prose brackets become
-        literals. Code/math are preserved, and untrusted provenance sidecars are
-        not imported. The draft assembler remaps known IDs into the new run.
+        and unknown IDs have no mapping, so unmapped citation markers are stripped
+        while code and math brackets are preserved.
         """
         if not os.path.exists(path):
             self.logger.error(f"[SYNTHESIS] Reference draft path not found: {path}")
@@ -191,15 +188,13 @@ class ArtifactSynthesizer:
                         continue
         except (json.JSONDecodeError, ValueError):
             pass
-        # Leading indentation can mark code, so do not strip the document
-        # before classifying its numeric brackets.
         if not content.strip():
             return None
         cited = self._extract_cited_indices(content)
         source_urls = {idx: url for idx, url in source_urls.items() if idx in cited}
         return {
             "artifact": self._remap_citations(
-                content, {idx: idx for idx in source_urls}, escape_unmapped=True),
+                content, {idx: idx for idx in source_urls}, drop_unmapped=True),
             "sources": {url: idx for idx, url in source_urls.items()},
         }
 
@@ -399,7 +394,7 @@ class ArtifactSynthesizer:
                         source_map[url] = len(source_map) + 1
                     prior_to_current[old_idx] = source_map[url]
             previous_text = self._remap_citations(
-                previous_text, prior_to_current, escape_unmapped=True)
+                previous_text, prior_to_current, drop_unmapped=True)
             previous_context = f"""{query_block}
 PREVIOUS ARTIFACT:
 {previous_text}
@@ -513,143 +508,58 @@ Respond with JSON:
     # Explicit [n](url) links carry their own URL, not a source-map ID.
     _CITE_RE = re.compile(r'\[\s*(\d+(?:\s*,\s*\d+)*)\s*\](?!\()')
 
-    @staticmethod
-    def _markdown_prose_ranges(text: str):
-        """Original-source ranges outside Markdown code, links, escapes and math.
+    # Spans where numeric brackets and '*' are literal syntax rather than prose:
+    # fenced/indented code, single-paragraph inline code, LaTeX math, links/URLs,
+    # HTML entities, and backslash-escaped characters.
+    _PROTECTED_SPAN_RE = re.compile(
+        r"(?P<fence>^[ \t]{0,3}(?P<fence_delim>`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^[ \t]{0,3}(?P=fence_delim)[~`]*[ \t]*$|\Z))"
+        r"|(?P<indented>(?:\A|(?<=\n\n)|(?<=\r\n\r\n))(?:(?: {4}|\t)[^\n]*(?:\r?\n|$)+)+)"
+        r"|(?P<inline_code>(?P<ticks>`+)(?!`)(?:(?<!\n)\n(?![ \t]*(?:[-*+]|\d+[.)]|>|#)[ \t]|\r?\n)|[^\n])*?(?<!`)(?P=ticks)(?!`))"
+        r"|(?P<math>\\\((?:\\[\s\S]|[^\\])*?\\\)|\\\[(?:\\[\s\S]|[^\\])*?\\\])"
+        r"|(?P<link_def>^[ \t]{0,3}\[[^\]\n]+\]:[ \t]*\S+[^\n]*)"
+        r"|(?P<link>!?\[(?:[^\[\]\n]|\[[^\]\n]*\])*\]\((?:<[^>\n]*>|[^)\n])*(?:\n[ \t]*>?[ \t]*[^)\n]*)*\))"
+        r"|(?P<ref_link>!?\[(?:[^\[\]\n]|\[[^\]\n]*\])*\]\[[^\]\n]*\])"
+        r"|(?P<autolink><https?://[^>\s]+>)"
+        r"|(?P<bare_url>https?://[^\s<>()]+(?<![.,;:!?]))"
+        r"|(?P<entity>&#\d+;|&#x[0-9a-fA-F]+;|&[a-zA-Z]\w*;)"
+        r"|(?P<escape>\\[\s\S])",
+        re.MULTILINE,
+    )
+    _LIST_LINE_RE = re.compile(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+")
 
-        Parse inline content separately for each CommonMark block, so a backtick
-        in one list item cannot hide a citation in another. Native inline rules
-        identify whole links (including labels, destinations and titles), rather
-        than trying to recognize their individual pieces with regex exceptions.
-        Nothing is rendered or reconstructed: edits use offsets into the input.
-        """
-        md = MarkdownIt("commonmark", {"linkify": True}).enable("linkify")
-        env = {}
-        blocks = md.parse(text, env)
-        line_offsets = [0] + [m.end() for m in re.finditer(r"\r\n?|\n", text)]
-        line_offsets.append(len(text))
-        content = None
-        protected = []
-        math_ranges = []
-        url_ranges = []
-
-        def protect(rule):
-            def wrapped(state, silent):
-                start = state.pos
-                matched = rule(state, silent)
-                # Image labels are parsed recursively with a different source;
-                # their outer image rule already protects the entire image.
-                if matched and not silent and state.src is content:
-                    protected.append((start, state.pos))
-                return matched
-            return wrapped
-
-        native_rules = dict(zip(md.inline.ruler.get_active_rules(), md.inline.ruler.getRules("")))
-        for name in ("backticks", "link", "image", "autolink", "html_inline", "escape", "entity"):
-            md.inline.ruler.at(name, protect(native_rules[name]))
-
-        def math(state, silent):
-            # Silent probes locate link labels before the link is recognized;
-            # they must not let a label's literal opener swallow later prose.
-            if silent or state.src is not content or state.linkLevel:
-                return False
-            opener = state.src[state.pos:state.pos + 2]
-            if opener not in (r"\(", r"\["):
-                return False
-            if any(start <= state.pos < end for start, end in url_ranges):
-                return False
-            original_start = offsets[state.pos]
-            if any(start <= original_start < end for start, end in math_ranges):
-                return False
-            # An opener confirmed to be in prose can enclose blank lines and
-            # code-like indentation. Its original-source span outlives this
-            # inline block; do not expose indices in subsequent paragraphs.
-            close_char = ")" if opener == r"\(" else "]"
-            closing = original_start + 2
-            # Consume escaped pairs just as the renderer does: two backslashes
-            # before ')' or ']' are body text, not a closing math delimiter.
-            while closing + 1 < len(text):
-                if text[closing] == "\\":
-                    if text[closing + 1] == close_char:
-                        break
-                    closing += 2
-                else:
-                    closing += 1
-            else:
-                return False
-            math_ranges.append((original_start, closing + 2))
-            state.pos = min(state.posMax, bisect_left(offsets, closing + 2))
-            state.push("math_inline", "", 0)
-            return True
-
-        def outside_math(start, end):
-            for math_start, math_end in math_ranges:
-                if math_start >= end:
-                    break
-                if math_end <= start:
+    @classmethod
+    def _markdown_prose_ranges(cls, text: str):
+        """Yield (start, end) slices of text outside code, math, links, URLs, and escapes."""
+        cursor = 0
+        for match in cls._PROTECTED_SPAN_RE.finditer(text):
+            start, end = match.span()
+            if match.lastgroup == "indented" and start > 0:
+                prev_block = text[:start].rstrip("\r\n")
+                prev_line = prev_block.rsplit("\n", 1)[-1]
+                if (cls._LIST_LINE_RE.match(prev_line)
+                        and not match.group(0).startswith(("        ", "\t\t"))):
                     continue
-                if start < math_start:
-                    yield start, math_start
-                start = max(start, math_end)
-            if start < end:
-                yield start, end
-
-        # These are the LaTeX delimiters accepted by the production renderer.
-        # Native escape handling still decides whether an opener is escaped.
-        md.inline.ruler.before("escape", "artifact_math", protect(math))
-
-        for block in blocks:
-            if block.type != "inline" or block.map is None or not block.content:
-                continue
-            content = block.content
-            # Block parsing removes container prefixes and normalizes CRLF.
-            # Map each content line back to its original characters; partial
-            # indentation tabs can also become leading spaces in the content.
-            offsets = []
-            content_lines = content.split("\n")
-            for i, line in enumerate(content_lines):
-                original_start = line_offsets[block.map[0] + i]
-                original_end = line_offsets[block.map[0] + i + 1]
-                original = text[original_start:original_end].rstrip("\r\n")
-                core = line.strip(" \t")
-                column = original.replace("\0", "\ufffd").find(core)
-                if column < 0:
-                    raise ValueError("Cannot locate Markdown inline content in original source")
-                column -= len(line) - len(line.lstrip(" \t"))
-                offsets.extend(original_start + min(max(column + j, 0), len(original))
-                               for j in range(len(line)))
-                if i < len(content_lines) - 1:
-                    offsets.append(original_start + len(original))
-            offsets.append(original_start + min(max(column + len(line), 0), len(original)))
-
-            # Linkify returns positions in the unrendered inline source,
-            # including bare URL paths containing citation-shaped brackets.
-            url_ranges = [(link.index, link.last_index)
-                          for link in (md.linkify.match(content) or [])]
-            protected = list(url_ranges)
-            md.inline.parse(content, md, env, [])
-            cursor = 0
-            for start, end in sorted(protected):
-                if start > cursor:
-                    yield from outside_math(offsets[cursor], offsets[start])
-                cursor = max(cursor, end)
-            if cursor < len(content):
-                yield from outside_math(offsets[cursor], offsets[-1])
+            if start > cursor:
+                yield cursor, start
+            cursor = end
+        if cursor < len(text):
+            yield cursor, len(text)
 
     @classmethod
     def _citation_matches(cls, text: str):
-        """Find numeric markers only in parser-identified prose source ranges."""
+        """Find numeric markers only in prose source ranges."""
         for start, end in cls._markdown_prose_ranges(text):
             yield from cls._CITE_RE.finditer(text, start, end)
 
-
-    @staticmethod
-    def _source_urls_by_index(sources) -> Dict[int, str]:
-        """Accept only unambiguous positive integer IDs in a URL→ID map."""
+    @classmethod
+    def _source_urls_by_index(cls, sources) -> Dict[int, str]:
+        """Accept only unambiguous positive integer IDs in an eligible URL→ID map."""
         if not isinstance(sources, dict):
             return {}
         by_index, ambiguous = {}, set()
         for url, idx in sources.items():
+            if not cls._eligible_source_url(url):
+                continue
             if isinstance(idx, bool) or not isinstance(idx, (int, str)):
                 continue
             if isinstance(idx, str) and not re.fullmatch(r"\d+", idx.strip()):
@@ -663,53 +573,45 @@ Respond with JSON:
             if idx in by_index and by_index[idx] != url:
                 ambiguous.add(idx)
             by_index[idx] = url
-        # Establish ambiguity before eligibility filtering: an excluded seed
-        # sharing an ID with a real URL cannot legitimize the latter's binding.
-        return {idx: url for idx, url in by_index.items()
-                if idx not in ambiguous and isinstance(url, str) and url.strip()
-                and not url.startswith('file://') and 'semanticscholar.org/search' not in url}
+        return {idx: url for idx, url in by_index.items() if idx not in ambiguous}
 
     @classmethod
     def _remap_citations(cls, text: str, mapping: Dict[int, int],
-                         drop_unmapped: bool = True,
-                         escape_unmapped: bool = False) -> str:
+                         drop_unmapped: bool = True) -> str:
         """Rewrite [n] / [n,m,...] markers via an int→int mapping.
 
-        By default unknown IDs are dropped; drop_unmapped=False preserves them.
-        At namespace boundaries, escape_unmapped takes precedence: unknown
-        brackets become literal bracket entities, preserving numeric content
-        without accidentally citing an unrelated source assigned the same ID.
-        Entities also avoid ArtifactView interpreting backslash brackets as math.
+        With drop_unmapped=True (default), indices not in `mapping` are dropped
+        so unmapped markers cannot collide across draft namespaces; with
+        drop_unmapped=False they pass through unchanged so non-citation
+        bracketed numbers (e.g. years like [2024]) survive final renumbering.
         """
         def _sub(m):
-            parts, literals = [], []
+            parts = []
             for tok in m.group(1).split(','):
                 try:
                     n = int(tok.strip())
                 except ValueError:
-                    # Python also rejects very long digit strings. Preserve
-                    # literal numbers rather than failing synthesis on them.
-                    if not escape_unmapped:
-                        return m.group(0)
-                    literals.append(tok.strip())
-                    continue
+                    return m.group(0)
                 g = mapping.get(n)
                 if g is not None:
                     parts.append(str(g))
-                elif escape_unmapped:
-                    literals.append(tok.strip())
                 elif not drop_unmapped:
                     parts.append(str(n))
-            rewritten = f"[{','.join(parts)}]" if parts else ""
-            if literals:
-                literal = ','.join(literals) if parts else m.group(0)[1:-1]
-                return (rewritten + " " if rewritten else "") + "&#91;" + literal + "&#93;"
-            return rewritten
+            return f"[{','.join(parts)}]" if parts else ""
         fragments = []
         cursor = 0
         for match in cls._citation_matches(text):
-            fragments.extend((text[cursor:match.start()], _sub(match)))
-            cursor = match.end()
+            start, end = match.span()
+            replacement = _sub(match)
+            # Clean up a single preceding space when an unmapped citation before
+            # punctuation is dropped (e.g. "Claim [1]." -> "Claim.").
+            if (not replacement and start > cursor and text[start - 1] == " "
+                    and end < len(text) and text[end] in ".,;:!?)"):
+                fragments.append(text[cursor:start - 1])
+            else:
+                fragments.append(text[cursor:start])
+            fragments.append(replacement)
+            cursor = end
         fragments.append(text[cursor:])
         return "".join(fragments)
 
@@ -758,7 +660,7 @@ Respond with JSON:
         for i, (r, sources) in enumerate(zip(all_drafts, draft_sources), 1):
             local_to_global = {idx: global_sources[url] for idx, url in sources.items()}
             rewritten = self._remap_citations(r['artifact'], local_to_global,
-                escape_unmapped=True)
+                drop_unmapped=True)
             artifacts_context.append(
                 f"--- DRAFT {i} ---\n\n"
                 f"ARTIFACT:\n{rewritten}\n\n"
@@ -1175,17 +1077,22 @@ Respond with valid JSON only:
 
     @classmethod
     def _normalize_formatting(cls, text: str) -> str:
-        """Normalize prose emphasis without rewriting code, math or link source."""
+        """Normalize prose emphasis, trailing spaces, and blank-line runs without touching code, math, or links."""
         fragments = []
         cursor = 0
         for start, end in cls._markdown_prose_ranges(text):
             prose = text[start:end]
-            # Keep the existing prose style, but never run cleanup on protected
-            # syntax. Preserve whitespace too: it can carry Markdown semantics
-            # (hard breaks, indentation) or be part of an executable example.
+            # 1. Collapse bold-wrapping-italic (**Foo *Bar***) -> **Foo Bar**
             prose = re.sub(r'\*\*([^*\n]*?)\*([^*\n]+?)\*([^*\n]*?)\*\*',
                            r'**\1\2\3**', prose)
+            # 2. Convert standalone italic (*foo*) to bold (**foo**)
             prose = re.sub(r'(?<!\*)\*([^*\n]+?)\*(?!\*)', r'**\1**', prose)
+            # 3. Strip trailing horizontal whitespace at line ends in prose
+            prose = re.sub(r'[ \t]+(?=\r?\n)', '', prose)
+            if end == len(text):
+                prose = re.sub(r'[ \t]+\Z', '', prose)
+            # 4. Collapse runs of >2 blank lines in prose
+            prose = re.sub(r'\n{3,}', '\n\n', prose)
             fragments.extend((text[cursor:start], prose))
             cursor = end
         fragments.append(text[cursor:])

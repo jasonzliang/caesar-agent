@@ -12,8 +12,6 @@ const verbatimTypes = new Set([
 /**
  * Normalize citations, LaTeX delimiters and currency only in Markdown prose.
  * Parser source positions protect all CommonMark/GFM code forms and links.
- * Work on raw source, never decoded text nodes: backend &#91;1&#93; literals
- * must not turn back into citations after the parser decodes their entities.
  * @param {string} src
  * @returns {string}
  */
@@ -47,11 +45,9 @@ export function prepareMarkdown(src) {
   protectedRanges.sort((a, b) => a[0] - b[0]);
 
   // The parser decides where code and link syntax begin/end. Token matching
-  // only handles our prose conventions; it never tries to recognize Markdown.
-  // Escaped pairs preserve odd/even backslash semantics. A LaTeX opener in
-  // prose takes precedence over code-like source or reference links in its
-  // body, while one inside real code/link syntax must remain literal.
-  const tokens = /\\\(((?:\\[\s\S]|[^\\])*?)\\\)|\\\[((?:\\[\s\S]|[^\\])*?)\\\]|\\[\s\S]|\$|\[(\d+(?:\s*,\s*\d+)*)\]/g;
+  // only handles our prose conventions; citations use horizontal whitespace
+  // so a malformed prefix cannot span across blank lines into a code block.
+  const tokens = /\\\(((?:\\[\s\S]|[^\\])*?)\\\)|\\\[((?:\\[\s\S]|[^\\])*?)\\\]|\\[\s\S]|\$|\[(\d+(?:[ \t]*,[ \t]*\d+)*)\]/g;
   let out = '';
   let cursor = 0;
   let rangeIndex = 0;
@@ -65,11 +61,6 @@ export function prepareMarkdown(src) {
       // Skip the whole protected node, not just the token: a literal math
       // opener inside code/a URL must not consume subsequent prose.
       tokens.lastIndex = range[1];
-      continue;
-    }
-    if (inlineMath === undefined && blockMath === undefined && range && range[0] < tokens.lastIndex) {
-      // Unlike math, a citation cannot straddle a code/Markdown boundary.
-      tokens.lastIndex = range[0];
       continue;
     }
     let replacement = token;

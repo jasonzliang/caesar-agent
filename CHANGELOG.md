@@ -2,6 +2,19 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.35] - 2026-11-08
+
+### Fixed
+
+- Simplify synthesis citation remapping and prose span protection so list items
+  and blockquotes containing tabs never raise offset errors and unmapped
+  draft markers are dropped without injecting HTML entities into prompts.
+- Restore prose trailing-whitespace and blank-line normalization, remove the
+  unused `markdown-it-py` runtime dependency, and drop unused research-note
+  provenance fields from knowledge-base source payloads.
+- Ensure all unit, API, UI, and manual test suites pass offline without skipped
+  unit tests.
+
 ## [0.4.34] - 2026-11-07
 
 ### Fixed

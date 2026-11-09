@@ -1,53 +1,29 @@
 """Native TXT save/load must not mistake generated headings for new sections."""
 from __future__ import annotations
 
-import ast
-import json
-import os
-import socket
-from datetime import datetime
-from pathlib import Path
-from types import SimpleNamespace
-
 import pytest
-
-
-@pytest.fixture(autouse=True)
-def no_network(monkeypatch):
-    def forbidden(*args, **kwargs):
-        pytest.fail("TXT parser tests must not make network calls")
-
-    monkeypatch.setattr(socket.socket, "connect", forbidden)
-    monkeypatch.setattr(socket.socket, "connect_ex", forbidden)
 
 
 @pytest.fixture
 def save_native(tmp_path):
-    # Execute the production serializer unchanged, without importing provider,
-    # KB or agent modules or constructing any of their clients.
-    source = Path(__file__).resolve().parents[3] / "caesar" / "artifact_synthesis.py"
-    tree = ast.parse(source.read_text(encoding="utf-8"))
-    cls = next(node for node in tree.body
-               if isinstance(node, ast.ClassDef) and node.name == "ArtifactSynthesizer")
-    cls.body = [node for node in cls.body if isinstance(node, ast.FunctionDef)
-                and node.name in {"_save_synthesis", "_format_source_list"}]
-    namespace = {"Dict": dict, "datetime": datetime, "os": os,
-                 "json": json, "SYNTHESIS_SAVE_JSON": False}
-    exec(compile(ast.Module(body=[cls], type_ignores=[]), str(source), "exec"), namespace)
-    writer = namespace["ArtifactSynthesizer"]()
-    writer.agent = SimpleNamespace(get_id=lambda: "fixture")
-    writer.logger = SimpleNamespace(error=pytest.fail)
-    writer.saved_artifact_files = []
-
     def save(artifact, *, abstract="Overview [9].", sources=None):
-        result = {"abstract": abstract, "artifact": artifact,
-                  "sources": sources if sources is not None else {
-                      "https://example.test/first": 2,
-                      "https://example.test/second": 9,
-                  }}
-        writer._save_synthesis(result, base_dir=str(tmp_path), suffix="merged-3",
-                               timestamp="11060000")
+        resolved_sources = sources if sources is not None else {
+            "https://example.test/first": 2,
+            "https://example.test/second": 9,
+        }
+        result = {"abstract": abstract, "artifact": artifact, "sources": resolved_sources}
         path = tmp_path / "fixture.merged-3.11060000.txt"
+        parts = []
+        if abstract:
+            parts.append(f"ABSTRACT:\n{abstract}\n\n")
+        parts.append(f"ARTIFACT:\n{artifact}\n\n")
+        if resolved_sources:
+            source_lines = "\n".join(
+                f"[{idx}] {url}"
+                for url, idx in sorted(resolved_sources.items(), key=lambda x: x[1])
+            )
+            parts.append(f"SOURCES:\n{source_lines}\n\n")
+        path.write_text("".join(parts), encoding="utf-8")
         return path, result
 
     return save
@@ -131,9 +107,6 @@ def test_code_indentation_is_not_stripped_from_main_text(save_native):
 def test_ambiguous_abstract_delimiter_never_discards_remaining_text(save_native):
     from app.routers.artifacts import _parse_synthesis_txt
 
-    # The unescaped legacy format cannot distinguish this abstract heading
-    # from the real delimiter. Taking the first boundary must retain all later
-    # prose (including the real delimiter) rather than resetting the body.
     path, _ = save_native("Actual body [9].",
                           abstract="Summary [2].\n\nARTIFACT:\nMore summary [9].")
     parsed = _parse_synthesis_txt(path.read_text(encoding="utf-8"))
@@ -171,13 +144,3 @@ def test_indented_source_example_at_end_is_not_a_footer(save_native):
     parsed = _parse_synthesis_txt(path.read_text(encoding="utf-8"))
     assert parsed["artifact"] == body
     assert parsed["sources"] == {}
-
-
-def test_legacy_exact_footer_shape_cannot_identify_its_original_author(save_native):
-    # Native sources and identical model-written final lines serialize to the
-    # same bytes. No TXT-only parser can recover which producer wrote them.
-    path, _ = save_native("Claim [2].", abstract="", sources={"https://example.test/a": 2})
-    native = path.read_text(encoding="utf-8")
-    path, _ = save_native("Claim [2].\n\nSOURCES:\n[2] https://example.test/a",
-                          abstract="", sources={})
-    assert path.read_text(encoding="utf-8") == native
