@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "caesar-agent"
-version = "0.4.35"
+version = "0.4.36"
 authors = [
     {name = "Jason Liang"},
     {name = "Elliot Meyerson"},
@@ -52,6 +52,8 @@ Changelog = "https://github.com/jasonzliang/caesar-agent/releases"
 benchmark = ["evalplus"]
 # Prompt compression is optional and imports its ML dependencies lazily.
 compress = ["llmlingua"]
+# Graph PNGs (draw_graph); needs the Graphviz system libraries to build.
+graph = ["pygraphviz"]
 dev = [
     "black>=23.0.0",
     "ipython>=8.0.0",

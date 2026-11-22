@@ -5,7 +5,10 @@ import os
 
 import networkx as nx
 
-from caesar.analysis.prepare_artifact import find_synthesis, DEFAULT_CONFIG, CATEGORIES
+if __package__:  # imported as caesar.analysis.transfer_configs (e.g. installed wheel)
+    from .prepare_artifact import find_synthesis, DEFAULT_CONFIG, CATEGORIES
+else:  # run as a script / imported as a sibling by prepare_artifact.py's __main__
+    from prepare_artifact import find_synthesis, DEFAULT_CONFIG, CATEGORIES
 
 
 # ---------------------------------------------------------------------------

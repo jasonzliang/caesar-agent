@@ -1,8 +1,8 @@
 """Semantic Scholar Graph API client for arxiv citation-graph exploration.
 
-A thin, dependency-light wrapper (stdlib `requests` only, already a Caesar
-dependency) around the Semantic Scholar Academic Graph API. Purpose-built for a
-citation-graph crawler:
+A thin, dependency-light wrapper (just the third-party `requests` package,
+already a Caesar dependency) around the Semantic Scholar Academic Graph API.
+Purpose-built for a citation-graph crawler:
 
   * a single process-wide inter-request delay (S2 grants ~1 rps to an individual
     API key, shared across ALL endpoints, so the throttle is class-level and
@@ -47,8 +47,9 @@ PAPER_FIELDS = ("paperId,externalIds,title,abstract,tldr,year,authors,venue,"
 # requesting it makes every edge fetch fail and the graph stalls at depth 2
 # (tldr is a FullPaper-only property; abstract/authors/venue/openAccessPdf are
 # accepted, verified live). Must be set here, not just in PAPER_FIELDS: an
-# edge-discovered node is served from ArxivExplorer._paper_cache and never hits
-# get_paper(), so anything missing here is missing for good past the seed.
+# edge-discovered node is normally served from ArxivExplorer._paper_cache, not
+# get_paper() (only a cache miss does), so anything missing here is missing
+# for almost every node past the seed.
 NEIGHBOR_FIELDS = ["paperId", "externalIds", "title", "year", "abstract",
                     "citationCount", "authors", "venue", "openAccessPdf"]
 # Forward edges (papers citing this one): isInfluential is the per-edge flag
@@ -71,7 +72,7 @@ MAX_EDGE_LIMIT = 1000
 
 
 class SemanticScholarClient:
-    """Rate-limited Semantic Scholar Graph API client (stdlib requests)."""
+    """Rate-limited Semantic Scholar Graph API client (over `requests`)."""
 
     # One throttle shared across ALL instances/threads in a process: S2's rate
     # limit is per-key and global, not per-object, and quick_explore fans this
@@ -163,12 +164,17 @@ class SemanticScholarClient:
         return None
 
     # ── public API ────────────────────────────────────────────────────────
-    def search(self, query: str, limit: int = None) -> List[dict]:
-        """Relevance search. Returns a list of paper dicts (possibly empty)."""
+    def search(self, query: str, limit: int = None) -> Optional[List[dict]]:
+        """Relevance search. Returns a list of paper dicts -- empty when the
+        query genuinely has no hits -- or None when the request FAILED (gave up
+        after retries, or a non-retryable error), so callers can tell an S2
+        outage / 429 burst apart from "no results"."""
         limit = min(limit or self.num_results, MAX_SEARCH_LIMIT)
         data = self._request("GET", "/paper/search", params={
             "query": query, "limit": limit, "fields": PAPER_FIELDS})
-        return (data or {}).get("data") or []
+        if data is None:
+            return None
+        return data.get("data") or []
 
     def get_paper(self, paper_id: str) -> Optional[dict]:
         """Fetch one paper by S2 paperId / ARXIV:<id> / DOI:<doi> / etc."""

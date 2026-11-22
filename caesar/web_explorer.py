@@ -366,7 +366,7 @@ Consider:
 - Risk/reward of new exploration vs consolidation
 - Trade-off between current branch and revisiting earlier paths (e.g. returning to root)
 
-IMPORTANT: Only select WEB_SEARCH if exploration has stagnated and there are still uses remaining. The less uses remaining, the most sparingly WEB_SEARCH should be used.
+IMPORTANT: Only select WEB_SEARCH if exploration has stagnated and there are still uses remaining. The fewer uses remaining, the more sparingly WEB_SEARCH should be used.
 IMPORTANT: BACKTRACK is for dead, stagnant, or saturated branches; commit to EXPLORE/REVISIT when merely uncertain.
 IMPORTANT: Use your role as a guide on how to respond!
 

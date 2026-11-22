@@ -8,11 +8,14 @@ remove, and asks. Answer anything but "yes" and nothing happens.
 
 Usage:
     python cleanup_chroma.py                       # scan the disk, then ask
-    python cleanup_chroma.py --store rome          # just this one, no scan
-    python cleanup_chroma.py --include run-dirs,unmatched
+    python cleanup_chroma.py --no-scan             # configured stores only, no scan
     python cleanup_chroma.py --path /some/chroma   # this dir, no discovery
-    python cleanup_chroma.py --json                # report only, no prompt
+    python cleanup_chroma.py --artifact-root DIR   # also look here for run dirs
+    python cleanup_chroma.py < /dev/null           # report only, no prompt
     python cleanup_chroma.py --force               # unattended; answers yes
+
+Opt-in groups (empty-live, unmatched, run-dirs) are offered one at a time,
+itemised, at the prompt; --force never takes them.
 
 Stores are located from configuration rather than guesswork -- instantly, and
 correctly even on a relocated checkout:
@@ -24,8 +27,10 @@ correctly even on a relocated checkout:
 A store counts as a web-server store when caesar_web.sqlite sits beside it, so
 run-aware classification follows the data instead of a hardcoded path. Running
 with no arguments also sweeps the filesystem for stores those rules miss; that
-costs about a minute, so naming --store or --path skips it. Works on macOS and
-Linux, and the only external commands are find, lsof and pgrep, each optional.
+costs about a minute, so --no-scan or --path skips it. Works on macOS and
+Linux, and the only external commands are find, lsof and pgrep, each optional --
+though without lsof (or pgrep, for a web store) whether a store is open is
+unknown, so the steps that write to sqlite are skipped as if it were.
 
 If a store is open -- the web server holds its own -- the steps that write to
 sqlite are deferred and the rest still run, since moving directories Chroma has
@@ -97,7 +102,7 @@ QUESTION_RE = re.compile(r"^q\d+_[0-9a-f]{6,}(_[0-9a-f]{6,})?$")
 CLI_RUN_RE = re.compile(r"^\d{2}-\d{2}-\d{2}_.+_q-[0-9a-f]{6,}_t-\d+(_id-.+)?$")
 MEM0_RE = re.compile(r"^mem0_(?P<base>.+)_agent_[A-Za-z0-9_]+$")
 WEB_RUN_RE = re.compile(r"^(?:web|mem0)_(?P<run>[0-9a-f]{32})(?:_agent_[A-Za-z0-9_]+)?$")
-PRUNE_DIRS = {".git", "node_modules", ".venv", "__pycache__", "paper", ".mypy_cache"}
+PRUNE_DIRS = {".git", "node_modules", ".venv", "__pycache__", ".mypy_cache"}
 
 # Finding kinds, in the order they are reported.
 ORPHAN_DIR = "orphan-index-dir"
@@ -107,7 +112,7 @@ DEAD_RUN = "dead-run-collection"
 UNMATCHED = "unmatched-collection"
 ORPHAN_RUN_DIR = "orphan-run-dir"
 
-# Removed by default; the rest need naming in --include.
+# Removed by default; the rest are offered at the prompt.
 DEFAULT_KINDS = {ORPHAN_DIR, EMPTY_ORPHAN, DEAD_RUN}
 OPT_IN = {
     "empty-live": EMPTY_LIVE,
@@ -177,14 +182,27 @@ def caesar_result_roots() -> list[Path]:
     """Where plain `caesar` CLI runs write their output.
 
     Mirrors caesar/run_agent.py::default_result_root. That function picks one
-    root; we consider every candidate that exists, because a run left behind by
-    an older layout must not be mistaken for a dead one.
+    root; we consider CAESAR_RESULT_DIR plus every default that exists, not one
+    instead of the other, because a run left behind by an older layout or an
+    unset variable must not be mistaken for a dead one. CAESAR_RESULT_DIR is
+    kept even if missing (unmounted, mistyped): indexing then fails, and CLI
+    collections are kept rather than judged against the other roots.
     """
     env = os.environ.get("CAESAR_RESULT_DIR")
-    if env:
-        return [Path(env).expanduser().resolve()]
-    return [p for p in (REPO_ROOT / "caesar" / "result",
-                        Path("~/.caesar/result").expanduser()) if p.is_dir()]
+    roots = [Path(env).expanduser().resolve()] if env else []
+    for p in (REPO_ROOT / "caesar" / "result", Path("~/.caesar/result").expanduser()):
+        if p.is_dir() and p.resolve() not in roots:
+            roots.append(p.resolve())
+    return roots
+
+
+def collection_name_for(dirname: str) -> str:
+    """The collection name rome/kb_client.py::_path_to_collection_name gives a
+    run directory. It lowercases and replaces characters, so a directory name
+    is only comparable with a collection name after the same treatment."""
+    name = re.sub(r"[^a-z0-9._-]", "_", Path(dirname).stem.lower())
+    name = re.sub(r"(^[^a-z0-9]+|[^a-z0-9]+$|_{2,}|\.{2,})", "_", name).strip("_")
+    return (name if len(name) >= 3 else f"doc_{name}")[:128]
 
 
 @dataclass
@@ -207,20 +225,43 @@ def index_artifacts(roots: list[Path], cli_roots: list[Path]) -> Artifacts:
     """Directory names a collection can be matched against.
 
     The task_hle / task_fp pipelines nest a directory per question under
-    `caesar_runs/`; the CLI writes one directory per run directly under its
-    result root. Both name the directory exactly as the collection, so
-    membership means the run still exists.
+    `caesar_runs/`; the CLI writes one directory per run under its result
+    root, sometimes inside a subfolder (e.g. exp_03_2026/<run>), so the whole
+    tree is searched. Both name the collection after the directory (via
+    collection_name_for), so membership means the run still exists.
+
+    A root of either family that is missing or cannot be walked completely
+    leaves that family empty, so its collections are reported as unmatched
+    rather than judged dead from a partial index.
     """
     art = Artifacts()
-    for root in roots:
-        if not root.exists():
-            continue
-        for dirpath, dirnames, _ in os.walk(root):
-            dirnames[:] = [d for d in dirnames if d not in PRUNE_DIRS]
-            if Path(dirpath).name == "caesar_runs":
-                art.pipeline.update(dirnames)
-    for root in cli_roots:
-        art.cli.update(c.name for c in root.iterdir() if c.is_dir())
+
+    def _fail(err: OSError):
+        raise err
+
+    try:
+        for root in roots:
+            for dirpath, dirnames, _ in os.walk(root, onerror=_fail):
+                dirnames[:] = [d for d in dirnames if d not in PRUNE_DIRS]
+                if Path(dirpath).name == "caesar_runs":
+                    art.pipeline.update(collection_name_for(d) for d in dirnames)
+    except OSError as exc:
+        print(f"WARNING: could not index pipeline runs ({exc}); pipeline collections "
+              f"will be reported as unmatched, not judged dead", file=sys.stderr)
+        art.pipeline = set()
+
+    try:
+        for root in cli_roots:
+            for dirpath, dirnames, _ in os.walk(root, onerror=_fail):
+                # No PRUNE_DIRS here: any directory under a result root may hold runs.
+                dirnames[:] = [d for d in dirnames if d != "__rome__"]
+                art.cli.update(collection_name_for(d) for d in dirnames)
+                # A run directory holds run output, not more runs: don't descend.
+                dirnames[:] = [d for d in dirnames if not CLI_RUN_RE.match(collection_name_for(d))]
+    except OSError as exc:
+        print(f"WARNING: could not index CLI runs ({exc}); CLI collections will be "
+              f"reported as unmatched, not judged dead", file=sys.stderr)
+        art.cli = set()
     return art
 
 
@@ -401,7 +442,10 @@ def survey(store: str, path: Path, artifacts: Artifacts) -> Survey:
             m = WEB_RUN_RE.match(name)
             if m:
                 run = m.group("run")
-                return run in run_ids or (run_dir / run).is_dir()
+                if run in run_ids or (run_dir / run).is_dir():
+                    return True
+                # An unreadable app DB lists no runs, which is not "every run is gone".
+                return False if app_db_ok else None
             return None
         # Judge a name only against its own family, and only if that family
         # produced any artifacts at all. Otherwise "the run is gone" and "we
@@ -426,15 +470,22 @@ def survey(store: str, path: Path, artifacts: Artifacts) -> Survey:
                     alive = True  # shadowed collection is still present in this store
 
         if n_emb == 0:
+            # Only a run known to be gone makes an empty collection an orphan.
+            # Unknown liveness is kept: a run that has just started is empty too.
             if alive:
                 findings.append(
                     Finding(EMPTY_LIVE, name,
                             "0 embeddings, but its run still exists",
                             collection_id=col["id"]))
-            else:
+            elif alive is False:
                 findings.append(
                     Finding(EMPTY_ORPHAN, name,
                             "0 embeddings and no surviving run artifacts",
+                            collection_id=col["id"]))
+            else:
+                findings.append(
+                    Finding(UNMATCHED, name,
+                            "0 embeddings; name does not map to a known run layout",
                             collection_id=col["id"]))
             continue
 
@@ -481,25 +532,28 @@ def survey(store: str, path: Path, artifacts: Artifacts) -> Survey:
 # safety
 # --------------------------------------------------------------------------
 
-def holders(db: Path, is_web: bool) -> list[str]:
+def holders(db: Path, is_web: bool) -> list[str] | None:
     """Processes with the store open, plus the web server if it is up.
 
     Chroma opens SQLite lazily, so lsof alone can come back empty while the
     server is very much alive and one request away from writing.
+
+    None means a check could not run (lsof or pgrep missing, or timed out), so
+    whether the store is open is unknown; callers treat that as open.
     """
     found = []
     try:
         out = subprocess.run(["lsof", "-t", str(db)], capture_output=True, text=True, timeout=15)
         found += [p for p in out.stdout.split() if p.strip()]
     except (OSError, subprocess.SubprocessError):
-        pass
+        return None
     if is_web:
         try:
             out = subprocess.run(["pgrep", "-f", "uvicorn app.main:app"],
                                  capture_output=True, text=True, timeout=15)
             found += [p for p in out.stdout.split() if p.strip()]
         except (OSError, subprocess.SubprocessError):
-            pass
+            return None
     return sorted(set(found))
 
 
@@ -669,7 +723,7 @@ def report(sv: Survey) -> None:
             print(f"      {f.name}{size}")
             print(f"        {f.reason}")
         if len(shown) < len(group):
-            print(f"      ... and {len(group) - len(shown)} more (--verbose to list)")
+            print(f"      ... and {len(group) - len(shown)} more (the plan lists every one before anything is removed)")
 
 
 def manifest(sv: Survey, selected: list[Finding], do_wal: bool) -> int:
@@ -738,11 +792,14 @@ def confirm(store: str) -> bool:
 
 
 def resolve_stores(args) -> dict[str, Path]:
-    """Work out which stores to consider: explicit paths, a scan, or config.
+    """Work out which stores to consider: explicit paths, or config plus a scan.
 
-    Config-derived lookup is the default because it is instant and exact. A
-    scan is opt-in since walking a home directory costs seconds and can turn up
-    stores that belong to something else entirely.
+    --path uses exactly the dirs named. Otherwise the config-derived stores,
+    which are instant and exact, are joined by a sweep of the home directory
+    for stores those rules miss -- on by default, since running with no
+    arguments means "tell me what is out there"; --no-scan skips it. A swept
+    store can belong to something else entirely, which is why a collection
+    whose run cannot be identified is reported, never removed by default.
     """
     if args.path:
         out = {}
@@ -841,8 +898,11 @@ def main() -> int:
         writes = ([f"{n_deletes} collection deletion(s)"] if n_deletes else []) \
             + (["WAL purge + VACUUM"] if do_wal else [])
         busy = holders(sv.db, web_app_db(sv.path).exists()) if writes else []
-        if busy:
-            print(f"\n  {sv.store} is held open by pid(s) {', '.join(busy)}, so "
+        if busy is None or busy:
+            # Unknown counts as open: the sqlite writes are what a live holder breaks.
+            why = (f"is held open by pid(s) {', '.join(busy)}" if busy else
+                   "could not be checked for open handles (lsof/pgrep unavailable)")
+            print(f"\n  {sv.store} {why}, so "
                   f"{' and '.join(writes)}\n  must wait. Stop the holder and re-run for those. "
                   f"Continuing with the\n  parts that write no sqlite.")
             do_wal = False

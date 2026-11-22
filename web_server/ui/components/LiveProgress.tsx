@@ -61,8 +61,8 @@ export function LiveProgress({ run, events }: Props) {
     let awaitingTakeover = false;
     // Why the illustration step failed (image_failed event). The run still
     // completes, so this is the only place the reader learns why the
-    // artifact has no picture. Cleared on resume: a restarted attempt runs
-    // a fresh image step.
+    // artifact has no picture. Cleared when a new attempt starts (resumed
+    // or not): a restarted attempt runs a fresh image step.
     let imageFailed: string | null = null;
     let synth: {
       draft: number;
@@ -108,12 +108,16 @@ export function LiveProgress({ run, events }: Props) {
       } else if (e.event === 'done') {
         const c = Number(e.payload?.total_cost_usd);
         if (Number.isFinite(c)) liveCost = c;
-      } else if (e.event === 'resumed') {
-        // Caesar's synthesizer has no checkpoint, so on resume it restarts
-        // from draft 1. Drop all prior-cycle synth state — including the
-        // draft_complete events from previous resume cycles, which would
-        // otherwise inflate the displayed draft number past what Caesar's
-        // current cycle has actually finished.
+      } else if (
+        e.event === 'resumed'
+        || (e.event === 'log' && String(e.payload?.message ?? '').startsWith('Run started'))
+      ) {
+        // A new attempt: `resumed`, or job_runner's "Run started" line when
+        // there is no checkpoint (every refine run). Caesar's synthesizer has
+        // no checkpoint either way, so it restarts from draft 1. Drop all
+        // prior-cycle synth state — including the draft_complete events from
+        // previous cycles, which would otherwise inflate the displayed draft
+        // number past what Caesar's current cycle has actually finished.
         synth = null;
         seenDrafts.clear();
         imageFailed = null;

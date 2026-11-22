@@ -17,9 +17,8 @@ Agent:
 # ============================================================================
 CaesarAgent:
   mode: arxiv
-  # CaesarAgent settings mirror the `regular` preset; only max_iterations is
-  # pinned (240) and mode is arxiv. No max_depth cap (like regular): depth is
-  # bounded by max_iterations + the exploration strategy, not a fixed ceiling.
+  # Like `regular` (max_iterations 250, no max_depth cap) but explores with
+  # the lighter gpt-5.6-luna (regular: gpt-5.6-terra).
   additional_starting_queries: 9
   max_web_searches: 20
   max_iterations: 250

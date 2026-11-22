@@ -379,9 +379,8 @@ else
     info "API FastAPI deps already installed"
 fi
 
-# Install Caesar runtime deps from rome/requirements.txt — minus pygraphviz
-# which needs system graphviz and isn't required for the server. Skipped
-# if a sentinel set is already importable AND any pinned versions match.
+# Install Caesar runtime deps from rome/requirements.txt. Skipped if a
+# sentinel set is already importable AND any pinned versions match.
 #
 # Sentinel set covers the heaviest deps; if any are missing we re-run the
 # full install. Smaller deps (networkx, beautifulsoup4, pypdf,
@@ -403,7 +402,7 @@ fi
 # An explicit exit keeps the security check active under PYTHONOPTIMIZE.
 SENTINEL_PY="$SENTINEL_PY; import sys; from packaging.version import Version; sys.exit(0 if Version(curl_cffi.__version__) >= Version('0.17.0') else 1)"
 if ! "$PY" -c "$SENTINEL_PY" 2>/dev/null; then
-    step "Installing Caesar runtime deps (rome/requirements.txt, minus pygraphviz)"
+    step "Installing Caesar runtime deps (rome/requirements.txt)"
     [ -f "../requirements.txt" ] || fail "../requirements.txt not found — Caesar can't run without it. Run launch.sh from web_server/ inside the rome repo."
     if [ -n "$EXPECTED_CHROMADB" ]; then
         installed=$("$PY" -c "import chromadb; print(chromadb.__version__)" 2>/dev/null || echo "absent")
@@ -411,9 +410,7 @@ if ! "$PY" -c "$SENTINEL_PY" 2>/dev/null; then
             info "chromadb $installed installed; downgrading to $EXPECTED_CHROMADB (pin)"
         fi
     fi
-    # Strip pygraphviz line; everything else is fair game.
-    grep -v -E "^pygraphviz\s*$" ../requirements.txt > "$LOGS_DIR/req.txt"
-    $INSTALL --quiet -r "$LOGS_DIR/req.txt" || \
+    $INSTALL --quiet -r ../requirements.txt || \
         fail "Caesar deps install failed — see install output above"
 else
     info "Caesar runtime deps already installed${EXPECTED_CHROMADB:+ (chromadb $EXPECTED_CHROMADB ✓)}"

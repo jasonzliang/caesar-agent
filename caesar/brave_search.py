@@ -150,7 +150,12 @@ class BraveSearch:
         # num_retries=0: fails soft to _truncate_query below, so don't let
         # litellm stack up to 3x the request timeout on a hung call (would
         # otherwise reproduce the "Worker stalled" watchdog failure).
-        shortened = self.agent.chat_completion(prompt, num_retries=0).strip().strip('"\'')
+        try:
+            shortened = self.agent.chat_completion(prompt, num_retries=0).strip().strip('"\'')
+        except Exception as e:
+            # FatalLLMError (auth/quota) is a BaseException, so it still propagates.
+            self.logger.error(f"LLM query summary failed ({e}), falling back to truncation")
+            return self._truncate_query(query)
         if not shortened:
             self.logger.error("LLM returned empty summary, falling back to truncation")
             shortened = self._truncate_query(query)

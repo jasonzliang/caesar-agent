@@ -134,7 +134,7 @@ builder's own description says "7-states"; it wires eight.)
 - Linux or macOS with Python 3.10–3.13 (`requires-python = ">=3.10,<3.14"`)
 - OpenAI API key or compatible LLM endpoint
 - Optional: the system `graphviz` library for FSM visualization (the `graphviz`
-  / `pygraphviz` Python bindings are already in `requirements.txt`)
+  Python binding is in `requirements.txt`; `pygraphviz` is the `[graph]` extra)
 
 ### Installation
 
@@ -150,13 +150,15 @@ pip install -e ".[dev]"  # Include development dependencies (black, mypy, pytest
 #### Dependencies
 
 `pip install -e .` installs everything listed in `requirements.txt` — the core
-runtime (litellm, openai, networkx, numpy, scipy, tinydb, portalocker, psutil,
-colorama), the KB/memory stack (chromadb, llama-index, mem0ai), and the optional
-extras `evalplus`, `graphviz` and `tiktoken`.
+runtime (litellm, openai, networkx, numpy, scipy, tinydb, portalocker, psutil),
+the KB/memory stack (chromadb, llama-index, mem0ai), plus `graphviz` and
+`tiktoken`.
 
 Not included, install separately if needed:
 
 ```bash
+# EvalPlus benchmark tools under benchmark/ (the [benchmark] extra)
+pip install -e ".[benchmark]"
 # Streamlit dashboard under web_app/
 pip install streamlit
 ```

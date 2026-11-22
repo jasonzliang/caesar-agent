@@ -29,9 +29,10 @@ from typing import Dict, List, Optional, Tuple
 from urllib.parse import quote, unquote
 
 from rome.config import LONGER_SUMMARY_LEN
+from rome.llm_handler import FatalLLMError
 
 from .semantic_scholar import SemanticScholarClient
-from .web_explorer import WebExplorer
+from .web_explorer import WebExplorer, _PDF_HTML_PREFIX
 
 
 # Node-id prefix for an arXiv paper
@@ -50,6 +51,17 @@ ARXIV_MAX_TEXT_LENGTH = 150000
 # influential-first ranking -- the frontier/menu cap. Distinct from
 # MAX_EDGE_LIMIT, the S2 per-page *fetch* cap.
 ARXIV_MAX_NUM_LINKS = 1000
+
+# Cap on _paper_cache (~4.5 KB/entry, ~22 MB full); a miss re-fetches via get_paper().
+ARXIV_PAPER_CACHE_SIZE = 5000
+
+
+class SeedSearchError(FatalLLMError):
+    """The arxiv seed produced no papers and at least one S2 search failed (on
+    the first visit, or the first root revisit after a resume). Subclasses
+    FatalLLMError only for its BaseException propagation: it escapes
+    perceive()/_update_role()'s except Exception, and run_agent/job_runner mark
+    the run failed."""
 
 
 def paper_node_id(paper: dict) -> Optional[str]:
@@ -115,11 +127,16 @@ class ArxivExplorer(WebExplorer):
                 # normally seen as an edge neighbour (extract_links caches the
                 # whole edge page) before it is ever visited, so the edge dict is
                 # the one that sticks and _fetch_paper's get_paper() never runs
-                # for it. That is only safe because NEIGHBOR_FIELDS requests the
-                # same fields as PAPER_FIELDS except tldr -- keep the two in step
-                # or non-seed nodes silently lose whatever diverges.
+                # for it (unless evicted). That is only safe because
+                # NEIGHBOR_FIELDS requests the same fields as PAPER_FIELDS except
+                # tldr -- keep the two in step or non-seed nodes silently lose
+                # whatever diverges.
                 if nid and nid not in self._paper_cache:
                     self._paper_cache[nid] = p
+                elif nid:  # re-seen: move to the back so it isn't evicted next
+                    self._paper_cache[nid] = self._paper_cache.pop(nid)
+            while len(self._paper_cache) > ARXIV_PAPER_CACHE_SIZE:
+                del self._paper_cache[next(iter(self._paper_cache))]
 
     # ── node reading (WebExplorer overrides) ────────────────────────────────
     def fetch_html(self, url: str, referer_url: Optional[str] = None) -> Optional[dict]:
@@ -140,7 +157,18 @@ class ArxivExplorer(WebExplorer):
         # its LLM-generated variants (shared with the web path), one S2 search
         # each, merged + de-duped. Breadth then comes from following citations.
         queries = self.agent._build_starting_queries()
-        papers = self._multi_search(queries)
+        papers, failed = self._multi_search(queries)
+        if failed and not papers:
+            # Empty BECAUSE searches failed, not a genuine zero-hit query: fail
+            # the run loudly instead of synthesising an empty KB as "success".
+            raise SeedSearchError(
+                f"Semantic Scholar seed search failed for '{query}' "
+                f"({failed}/{len(queries)} searches errored, 0 papers). "
+                f"Likely S2 rate limiting or an outage; retry later.")
+        if failed:
+            self.logger.warning(
+                f"[ARXIV] {failed}/{len(queries)} seed searches failed; "
+                f"proceeding with a smaller seed")
         self._cache_papers(papers)
         payload = {
             "kind": "seed",
@@ -154,17 +182,25 @@ class ArxivExplorer(WebExplorer):
             f"papers ({len(self._papers_to_links(papers))} usable graph nodes)")
         return payload
 
-    def _multi_search(self, queries: List[str]) -> List[dict]:
+    def _multi_search(self, queries: List[str]) -> Tuple[List[dict], int]:
         """One S2 search per query, merged and de-duped by node id. First
         occurrence wins, so the primary query's ranking leads the frontier.
+        Returns (merged papers, number of searches that FAILED) -- a failed
+        search (client.search() -> None) is not the same as zero hits.
 
         Each search is logged: the seed phase can be several rate-limited calls
         (one per query) and would otherwise be silent while it churns, which is
         worst on the throttled anonymous S2 pool."""
         seen = set()
         merged = []
+        failed = 0
         for i, q in enumerate(queries, 1):
             hits = self.client.search(q)
+            if hits is None:
+                failed += 1
+                self.logger.error(
+                    f"[ARXIV] Seed search {i}/{len(queries)} '{q}': FAILED")
+                continue
             self.logger.info(
                 f"[ARXIV] Seed search {i}/{len(queries)} '{q}': {len(hits)} hits")
             for p in hits:
@@ -172,7 +208,7 @@ class ArxivExplorer(WebExplorer):
                 if nid and nid not in seen:
                     seen.add(nid)
                     merged.append(p)
-        return merged
+        return merged, failed
 
     def _fetch_paper(self, url: str) -> Optional[dict]:
         s2_id = node_id_to_s2_id(url)
@@ -218,10 +254,17 @@ class ArxivExplorer(WebExplorer):
         """Fetch + parse a PDF's full text via WebExplorer's fetcher (curl_cffi +
         pypdf, including its SSRF guard). Returns '' on any failure. A non-None
         referer keeps this off the shared _last_fetched_url so it stays
-        thread-safe under quick_explore."""
+        thread-safe under quick_explore. Only a parsed PDF (the _PDF_HTML_PREFIX
+        envelope) counts; any other 200 body (captcha, landing page) falls back
+        to the abstract."""
         try:
             html = super().fetch_html(pdf_url, referer_url=referer)
-            return super().extract_text_from_html(html, max_length=ARXIV_MAX_TEXT_LENGTH) if html else ""
+            if not html:
+                return ""
+            if not html.startswith(_PDF_HTML_PREFIX):
+                self.logger.info(f"[ARXIV] Non-PDF response from {pdf_url}; ignoring")
+                return ""
+            return super().extract_text_from_html(html, max_length=ARXIV_MAX_TEXT_LENGTH)
         except Exception as e:
             self.logger.error(f"[ARXIV] PDF fetch failed for {pdf_url}: {e}")
             return ""
@@ -242,7 +285,10 @@ class ArxivExplorer(WebExplorer):
         if not payload:
             return []
         if payload.get("kind") == "seed":
-            return self._papers_to_links(payload.get("papers") or [], exclude=base_url)
+            # rank=False: keep the merged search-relevance order (primary query
+            # first); re-sorting by citations let off-topic hubs lead the menu.
+            return self._papers_to_links(payload.get("papers") or [],
+                                         exclude=base_url, rank=False)
         # Paper node: neighbours = its references + citations, fetched lazily
         # here. perceive() calls extract_links once per node, and quick_explore
         # never calls it, so no edge fetches happen on the quick path.
@@ -262,9 +308,13 @@ class ArxivExplorer(WebExplorer):
             return []
         try:
             papers = self.client.search(query)
+            if papers is None:  # S2 failed: don't spend the search budget on an outage
+                self.logger.error(f"[ARXIV] Search during exploration failed for '{query}'")
+                return []
             self.agent.web_searches_used += 1
             self._cache_papers(papers)
-            links = self._papers_to_links(papers, exclude=self.agent.current_url)
+            links = self._papers_to_links(
+                papers, exclude=self.agent.current_url, rank=False)
             self.logger.info(f"[ARXIV] Search '{query}' returned {len(links)} nodes")
             return links
         except Exception as e:
@@ -274,13 +324,15 @@ class ArxivExplorer(WebExplorer):
 
     # ── helpers ─────────────────────────────────────────────────────────────
     def _papers_to_links(self, papers: List[dict],
-                         exclude: Optional[str] = None) -> List[Tuple[str, str]]:
+                         exclude: Optional[str] = None,
+                         rank: bool = True) -> List[Tuple[str, str]]:
         """Rank + filter neighbour papers into (node_id, label) tuples.
 
         Drops non-arxiv papers when arxiv_only, the excluded/base node, dupes,
         known-failed nodes, and over-revisited nodes (mirrors WebExplorer's
         extract_links gates). Ranks influential citations first, then by
-        citation count, so the frontier surfaces load-bearing papers."""
+        citation count, so the frontier surfaces load-bearing papers.
+        rank=False keeps input (search-relevance) order."""
         arxiv_only = getattr(self.client, "arxiv_only", True)
         max_revisits = getattr(self.agent, "max_allowed_revisits", 20)
         failed = getattr(self.agent, "failed_urls", set()) or set()
@@ -310,9 +362,10 @@ class ArxivExplorer(WebExplorer):
         # `> 0`, not a tuned threshold: a paper nobody has cited yet carries no
         # corroborating signal, while a single citation still beats raw
         # popularity (see test_frontier_ranks_influential_first).
-        kept.sort(key=lambda p: (
-            not (p.get("_isInfluential", False) and (p.get("citationCount") or 0) > 0),
-            -(p.get("citationCount") or 0)))
+        if rank:
+            kept.sort(key=lambda p: (
+                not (p.get("_isInfluential", False) and (p.get("citationCount") or 0) > 0),
+                -(p.get("citationCount") or 0)))
 
         return [(paper_node_id(p), self._label(p)) for p in kept[:ARXIV_MAX_NUM_LINKS]]
 

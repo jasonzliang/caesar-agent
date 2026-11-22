@@ -79,11 +79,13 @@ class MultiAgent:
         self._validate_paths()
         self.agent_role_config = self._load_role_config()
 
-        # Runtime state - process_managed will handle cleanup automatically
+        # Runtime state. Workers are registered with process_manager on start
+        # (it reaps only tracked procs), so shutdown()/SIGTERM terminates them.
         self.agent_processes: Dict[str, mp.Process] = {}
         self.result_queue = None
         self.results = {}
         self.agent_status = {}
+        self._reported = set()  # workers that sent their own success/error
 
     def _setup_config(self, config_dict: Dict = None) -> Dict:
         """Setup and validate configuration"""
@@ -120,9 +122,13 @@ class MultiAgent:
 
     def run_loop(self, max_iterations: int = 10, timeout_per_agent: int = 0) -> Dict:
         """Execute all agents in parallel - cleanup handled by decorator"""
-        # Reset state
+        # Reset state. Workers from a previous run that have exited need no reaping.
         self.results.clear()
         self.agent_status.clear()
+        self._reported.clear()
+        for process in self.agent_processes.values():
+            if not process.is_alive():
+                self.process_manager.untrack_subprocess(process)
         self.agent_processes.clear()
 
         # Setup fresh queue
@@ -137,7 +143,7 @@ class MultiAgent:
         except Exception as e:
             self.logger.error(f"Agent execution failed: {e}")
             raise
-        # No finally block needed - process_managed handles cleanup
+        # No finally block needed - shutdown() terminates the tracked workers
 
         return {
             'total_agents': len(self.agent_role_config),
@@ -170,6 +176,7 @@ class MultiAgent:
                     daemon=False
                 )
                 process.start()
+                self.process_manager.track_subprocess(process)
                 self.agent_processes[agent_name] = process
                 self.agent_status[agent_name] = 'starting'
             except Exception as e:
@@ -198,11 +205,13 @@ class MultiAgent:
                 elif result_type == 'success':
                     self.results[agent_name] = data
                     self.agent_status[agent_name] = 'completed'
+                    self._reported.add(agent_name)
                     completed += 1
 
                 elif result_type == 'error':
                     self.results[agent_name] = {'error': data}
                     self.agent_status[agent_name] = 'failed'
+                    self._reported.add(agent_name)
                     self._log_error(agent_name, data)
                     completed += 1
 
@@ -299,3 +308,16 @@ class MultiAgent:
             except:
                 pass
             self.result_queue = None
+
+        # The decorator reaps tracked workers right after this returns. A worker
+        # that has reported may still be in its own agent.shutdown(); give those
+        # one shared, bounded window to exit on their own first. Workers that
+        # never reported (timed out) are reaped without waiting.
+        deadline = time.monotonic() + self.process_manager.timeout
+        for name in self._reported:
+            process = self.agent_processes.get(name)
+            try:
+                if process is not None:
+                    process.join(max(0, deadline - time.monotonic()))
+            except Exception:
+                pass

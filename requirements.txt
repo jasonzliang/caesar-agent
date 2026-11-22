@@ -48,7 +48,5 @@ anthropic
 # Minimum SDK verified with the Interactions / Deep Research API.
 google-genai>=2.16.0
 graphviz
-# Requires the Graphviz system libraries when built from source.
-pygraphviz
 scipy
 tenacity

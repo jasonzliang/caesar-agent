@@ -234,8 +234,8 @@ class LLMHandler:
         ages with the pin (1.95.0's bundle prices gpt-5.6-luna at 5x today's rate) and may lack
         a model this table carries, and completion_cost() reads it before this handler's own table. Registering
         the table makes every model here resolvable and priced the way the table says, whichever
-        map was loaded. Entries litellm already has keep their other fields; only what is set here
-        is overridden.
+        map was loaded. Entries litellm already has get only the prices; their provider, mode and
+        max_input_tokens are left as litellm has them (filled in only where missing).
         """
         if cls._known_models_registered:
             return
@@ -243,20 +243,24 @@ class LLMHandler:
         for model in set(cls.MODEL_PRICING) | set(cls.MODEL_CONTEXT_SIZE):
             provider = ("anthropic" if model.startswith("claude") else
                         "gemini" if model.startswith("gemini") else "openai")
-            entry = {"litellm_provider": provider, "mode": "chat"}
+            defaults = {"litellm_provider": provider, "mode": "chat"}
+            ctx = cls.MODEL_CONTEXT_SIZE.get(model)
+            if ctx:
+                defaults["max_input_tokens"] = ctx
+            existing = litellm.model_cost.get(model)
+            if isinstance(existing, dict):
+                entry = {k: v for k, v in defaults.items() if existing.get(k) is None}
+            else:
+                # No cache pricing is known for a model litellm has never heard of; saying so
+                # explicitly is what keeps register_model from warning about it at every start.
+                entry = {**defaults, "cache_read_input_token_cost": 0.0,
+                         "cache_creation_input_token_cost": 0.0}
             price = cls.MODEL_PRICING.get(model)
             if price:
                 entry["input_cost_per_token"] = price["input"] / 1_000_000
                 entry["output_cost_per_token"] = price["output"] / 1_000_000
-            ctx = cls.MODEL_CONTEXT_SIZE.get(model)
-            if ctx:
-                entry["max_input_tokens"] = ctx
-            if model not in litellm.model_cost:
-                # No cache pricing is known for a model litellm has never heard of; saying so
-                # explicitly is what keeps register_model from warning about it at every start.
-                entry["cache_read_input_token_cost"] = 0.0
-                entry["cache_creation_input_token_cost"] = 0.0
-            entries[model] = entry
+            if entry:
+                entries[model] = entry
         try:
             litellm.register_model(entries)
             cls._known_models_registered = True
@@ -309,22 +313,23 @@ class LLMHandler:
     def _get_model_context_length(self) -> int:
         """Context window of the current model, in input tokens.
 
-        litellm.get_max_tokens() answers a different question: the largest completion the
-        model will produce. Read as a context window it made gpt-4o a 16k model and gpt-5.4 a
-        128k one, so context management compressed and truncated far too early. The window is
-        get_model_info()['max_input_tokens']; the handler's own table (registered into that map
-        at init) is the fallback for a model litellm does not know.
+        The handler's MODEL_CONTEXT_SIZE wins (exact name, then the base name), so a window does
+        not shift with the installed litellm. A model the table lacks takes litellm's
+        get_model_info()['max_input_tokens'], then 128000. litellm.get_max_tokens() and
+        info['max_tokens'] are not windows but the largest completion the model will produce;
+        read as one, they made gpt-4o a 16k model and gpt-5.4 a 128k one, so context management
+        compressed and truncated far too early.
         """
+        for name in (self.model, self._get_base_model()):
+            if name in self.MODEL_CONTEXT_SIZE:
+                return self.MODEL_CONTEXT_SIZE[name]
         try:
             info = litellm.get_model_info(self._get_litellm_model())
-            window = info.get("max_input_tokens") or info.get("max_tokens")
+            window = info.get("max_input_tokens")
             if window:
                 return int(window)
         except Exception:
             pass
-        base_model = self._get_base_model()
-        if base_model in self.MODEL_CONTEXT_SIZE:
-            return self.MODEL_CONTEXT_SIZE[base_model]
         self.logger.error(f"Unknown model {self.model}, using 128000 as fallback context size")
         return 128000
 

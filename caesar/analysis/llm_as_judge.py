@@ -136,7 +136,8 @@ def load_answers(directory: Path) -> Dict[str, str]:
             answers[f.name] = f.read_text(encoding="utf-8")
     return answers
 
-def create_judge_prompt(query: str, answers: Dict[str, str], rubric: str, json_mode: bool) -> str:
+def create_judge_prompt(query: str, answers: Dict[str, str], rubric: str, json_mode: bool,
+                        scale: int = 10) -> str:
     sep = "-" * 80
     prompt = f"#### QUERY FILE (query.txt):\n{query.strip()}\n\n{sep}\n\n"
     for filename, content in sorted(answers.items()):
@@ -144,11 +145,9 @@ def create_judge_prompt(query: str, answers: Dict[str, str], rubric: str, json_m
 
     prompt += f"{sep}\n\n#### SCORING RUBRIC\n{rubric.strip()}\n\n"
 
-    # Dynamically append the correct formatting instruction
-    if json_mode:
-        prompt += JSON_FORMAT_INSTRUCTION
-    else:
-        prompt += TEXT_FORMAT_INSTRUCTION
+    # Dynamically append the correct formatting instruction for the rubric's scale
+    block = JSON_FORMAT_INSTRUCTION if json_mode else TEXT_FORMAT_INSTRUCTION
+    prompt += block.replace("[1-10]", f"[1-{scale}]").replace('": 8', f'": {round(scale * 0.8)}')
 
     return prompt
 
@@ -313,7 +312,8 @@ def run_single_judge_task(
             for filename, content in sorted(answers.items()):
                 # Create a prompt specifically for this one answer
                 single_answer_dict = {filename: content}
-                prompt = create_judge_prompt(query_text, single_answer_dict, rubric_content, args.json)
+                prompt = create_judge_prompt(query_text, single_answer_dict, rubric_content, args.json,
+                                             args.score_scale)
 
                 # Call API
                 resp = caller_func(client, prompt, args.reasoning, args.json)
@@ -327,7 +327,8 @@ def run_single_judge_task(
 
         else:
             # --- Bulk Mode: 1 API call for ALL answers ---
-            prompt = create_judge_prompt(query_text, answers, rubric_content, args.json)
+            prompt = create_judge_prompt(query_text, answers, rubric_content, args.json,
+                                         args.score_scale)
             judgment = caller_func(client, prompt, args.reasoning, args.json)
 
             if args.json:
@@ -414,7 +415,8 @@ def find_and_judge_all(args):
     print("\n✨ All tasks completed")
 
     print("\n📊 Running judge analysis...")
-    os.system(f"python {Path(__file__).parent / 'judge_analysis.py'} {args.root_directory}")
+    os.system(f"python {Path(__file__).parent / 'judge_analysis.py'} {args.root_directory} "
+              f"--scale {args.score_scale}")
 
 def parse_args():
     parser = argparse.ArgumentParser(
@@ -451,6 +453,8 @@ if __name__ == "__main__":
         exit(1)
 
     args.rubric_content = load_rubric(args.rubric)
+    m = re.search(r"(\d+)pt", args.rubric.name)
+    args.score_scale = int(m.group(1)) if m else 10
 
     if args.batch:
         subdirs = sorted(d for d in args.root_directory.iterdir() if d.is_dir())

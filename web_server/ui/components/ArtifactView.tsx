@@ -22,13 +22,15 @@ export function ArtifactView({
   runId: string;
   wrapEnabled?: boolean;
 }) {
+  // Only ids SourcesPanel renders (as #source-<index>) become citation chips,
+  // so [2024] or [0] stay literal instead of linking to nothing.
   const transformedAbstract = useMemo(
-    () => prepareMarkdown(synthesis.abstract ?? ''),
-    [synthesis.abstract],
+    () => prepareMarkdown(synthesis.abstract ?? '', synthesis.sources.map((c) => c.index)),
+    [synthesis.abstract, synthesis.sources],
   );
   const transformedArtifact = useMemo(
-    () => prepareMarkdown(synthesis.artifact),
-    [synthesis.artifact],
+    () => prepareMarkdown(synthesis.artifact, synthesis.sources.map((c) => c.index)),
+    [synthesis.artifact, synthesis.sources],
   );
   // Embedded markdown images use relative paths like `images/<file>.png`;
   // the API serves them at /api/runs/{runId}/file/<artifact_dir>/<path>.

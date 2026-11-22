@@ -3,12 +3,15 @@ import concurrent.futures
 import copy
 import hashlib
 import os
+import random
 import sys
 import time
 from typing import Any, Dict, List, Optional, Tuple
 from urllib.parse import urlparse
 
 import networkx as nx
+from litellm.exceptions import (BadGatewayError, InternalServerError, RateLimitError,
+                                ServiceUnavailableError)
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 from rome.base_agent import BaseAgent
@@ -40,29 +43,44 @@ class CaesarAgent(BaseAgent):
         # NOW setup Caesar-specific attributes (logger is configured)
         self.caesar_config = self.config.get('CaesarAgent', {})
         set_attributes_from_config(self, self.caesar_config, CAESAR_CONFIG['CaesarAgent'].keys())
+        # Before Caesar's own setup: an unrecognized mode (e.g. "arXiv") would
+        # otherwise silently fall through to a web crawl.
+        if self.mode not in ("web", "arxiv"):
+            raise ValueError(
+                f"CaesarAgent.mode must be 'web' or 'arxiv', got {self.mode!r}")
 
         self._setup_allowed_domains()
         self._setup_knowledge_base()
-        # Explorer is created before search setup: in arxiv mode the seed URL is
-        # produced by the explorer and _setup_brave_search dispatches to it. The
-        # ArxivExplorer subclasses WebExplorer, so the rest of the agent is
-        # backend-agnostic (it only ever handles opaque node-URL strings).
-        self.web_explorer = (ArxivExplorer(agent=self) if self.mode == "arxiv"
-                             else WebExplorer(agent=self))
-        self._setup_brave_search()
-        self._setup_synthesizer()
-        self.checkpoint_manager = CheckpointManager(agent=self)
+        try:
+            # Explorer is created before search setup: in arxiv mode the seed URL is
+            # produced by the explorer and _setup_brave_search dispatches to it. The
+            # ArxivExplorer subclasses WebExplorer, so the rest of the agent is
+            # backend-agnostic (it only ever handles opaque node-URL strings).
+            self.web_explorer = (ArxivExplorer(agent=self) if self.mode == "arxiv"
+                                 else WebExplorer(agent=self))
+            self._setup_brave_search()
+            self._setup_synthesizer()
+            self.checkpoint_manager = CheckpointManager(agent=self)
 
-        self._setup_exploration_state()
-        if self.checkpoint_manager.load():
-            self.logger.info("Resumed from checkpoint")
-        else:
-            self._update_role()
-            self.logger.info("Starting fresh exploration")
+            self._setup_exploration_state()
+            if self.checkpoint_manager.load():
+                self.logger.info("Resumed from checkpoint")
+            else:
+                self._update_role()
+                self.logger.info("Starting fresh exploration")
 
-        self._validate_caesar_config()
-        self._validate_starting_url()
-        self._log_initialization()
+            self._validate_caesar_config()
+            self._validate_starting_url()
+            self._log_initialization()
+            self._init_complete = True
+        except BaseException:
+            # No agent object reaches the caller, so nobody else can release the
+            # KB's registered Chroma client (self.shutdown() would checkpoint).
+            try:
+                self.kb_manager.shutdown()
+            except Exception as e:
+                self.logger.error(f"KB shutdown after failed init: {e}")
+            raise
 
     def _prepare_caesar_config(self, config: Dict = None,
                                starting_url: str = None,
@@ -267,7 +285,7 @@ Using your current role as basis, analyze the page content{insights_info} to cre
 
 Provide an adapted role description (~{self.role_max_length} words) that is creative, innovative, and original!
 
-IMPORATNT: Your response must start with "Your role:" followed by the adapted role description."""
+IMPORTANT: Your response must start with "Your role:" followed by the adapted role description."""
 
             if not (adapted_role := self.chat_completion(prompt, num_retries=0).strip()) or len(adapted_role) < 50:
                 self.logger.error("[ADAPT ROLE] Invalid LLM response, keeping default role")
@@ -681,6 +699,9 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
         try:
             import pygraphviz as pgv
         except ImportError:
+            self.logger.error("draw_graph needs pygraphviz and the Graphviz system "
+                              "libraries (the [graph] extra); graph drawing disabled")
+            self.draw_graph = False
             return
 
         try:
@@ -793,9 +814,26 @@ IMPORTANT: Use your role as a guide on how to respond!
 
 Depending on the complexity of the content, provide anywhere from 1 to 6 concise but substantive insights, but do not exceed ~600 words in total length:"""
 
-            insights = self.chat_completion(
-                prompt, override_config=self.exploration_llm_config,
-                num_retries=0)
+            # Retry fast-failing 429/5xx only; num_retries=0 keeps a hung call to one timeout.
+            for attempt in range(3):
+                try:
+                    insights = self.chat_completion(
+                        prompt, override_config=self.exploration_llm_config,
+                        num_retries=0)
+                    break
+                except (RateLimitError, InternalServerError,
+                        ServiceUnavailableError, BadGatewayError) as e:
+                    if self.shutdown_called:
+                        return None  # leave the page pending for resume
+                    if attempt >= 2:
+                        raise
+                    delay = 2 ** (attempt + 1) * random.uniform(0.5, 1.5)
+                    self.logger.warning(
+                        f"[QUICK_EXPLORE] Transient LLM error for {url} ({type(e).__name__}); "
+                        f"retry {attempt + 1}/2 in {delay:.1f}s")
+                    time.sleep(delay)
+                    if self.shutdown_called:
+                        return None
             return {"url": url, "insights": insights, "iteration": iteration}
 
         except FatalLLMError:
@@ -882,8 +920,8 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
                     # refresh. Unconsumed in-flight work cannot be recovered.
                     save_progress(graph_save_every)
             finally:
-                executor.shutdown(wait=not self.shutdown_called,
-                                  cancel_futures=self.shutdown_called)
+                # Never run queued pages whose results can no longer be consumed.
+                executor.shutdown(wait=not self.shutdown_called, cancel_futures=True)
 
         complete = state["targets"] is not None and all(
             has_note(target["url"]) or target["url"] in self.failed_urls for target in targets)
@@ -990,8 +1028,10 @@ Depending on the complexity of the content, provide anywhere from 1 to 6 concise
         # Set flags IMMEDIATELY to stop loops
         self.shutdown_called = True
 
-        # Save final checkpoint with session cost
-        if hasattr(self, 'current_iteration') and hasattr(self, 'llm_handler') and self.url_stack:
+        # Save final checkpoint with session cost. Not before __init__ finished:
+        # a resume would then skip _update_role and explore with the default role.
+        if (getattr(self, '_init_complete', False) and hasattr(self, 'current_iteration')
+                and hasattr(self, 'llm_handler') and self.url_stack):
             self.checkpoint_manager.save(self.current_iteration)
             self.logger.info("Final checkpoint saved on shutdown")
 

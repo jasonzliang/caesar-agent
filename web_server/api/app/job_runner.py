@@ -625,6 +625,7 @@ class JobPool:
         if resuming:
             await self._emit(state, "resumed", message="Resuming from saved checkpoint.")
         else:
+            # The UI's LiveProgress keys new-attempt resets on the "Run started" prefix.
             await self._emit(state, "log", message=f"Run started for preset {preset_id!r}.")
 
         # A restart signals the previous attempt and submits immediately, so this

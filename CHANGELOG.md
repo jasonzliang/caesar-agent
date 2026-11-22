@@ -2,6 +2,56 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.36] - 2026-11-21
+
+### Fixed
+
+- Keep merged-artifact citations bound to the right sources: adjacent markers
+  such as `[1][2]` are renumbered across drafts (they were kept as draft-local
+  numbers, misattributing most citations in drafts that use them), and
+  `[0,1]`-style intervals are no longer treated as citations.
+- Citation scanning no longer backtracks for seconds on an unclosed
+  `[label](`, keeps code protected inside list items, and closes fenced blocks
+  the way Markdown does.
+- Normalize emphasis without corrupting text around inline code, links, or
+  `*` bullets, and drop the stray space left by a removed citation marker.
+- Carry the parent artifact's sources into web follow-up runs, which pass
+  Caesar's saved `.txt` (citations were all stripped before).
+- Fail arXiv runs whose seed search fails instead of completing on an empty
+  knowledge base; accept PDF text only from real PDFs; keep Semantic Scholar
+  relevance order for seed and search links; bound the paper cache; don't
+  spend the search budget on failed searches.
+- Quick explore retries transient 429/5xx errors instead of dropping the
+  page and cancels queued pages when a run aborts.
+- A stop during agent setup no longer saves a checkpoint that skips role
+  adaptation on resume; query shortening falls back to truncation on an LLM
+  error; validate `CaesarAgent.mode`; release knowledge-base clients when
+  setup fails.
+- Web UI: display math inside lists, quotes, and tables keeps its container;
+  only known source ids become citation links; clear stale image-failure
+  state on restart. Keep `.env` files and core dumps out of the Docker build
+  context.
+- MultiAgent workers are reaped on shutdown; model registration no longer
+  overwrites litellm's provider, mode, or context fields; `release.sh` aborts
+  on PyPI lookup errors and guards mirror deletions; `cleanup_chroma` keeps
+  collections whose run state it cannot confirm.
+- Fix a Python 3.10/3.11 syntax error in synthesis and the LLM-judge format
+  block for 4-point rubrics.
+
+### Changed
+
+- Each refined draft query now builds on the query that produced the previous
+  draft instead of always restarting from the original; drafts and the merge
+  still answer the original query.
+- Move citation and Markdown helpers into `caesar/citations.py`.
+- `mini` and `regular` CLI presets use 15 and 20 synthesis iterations.
+- `pygraphviz` is optional: `pip install "caesar-agent[graph]"`.
+- The Docker image runs the server as the unprivileged `caesar` user (UID
+  10001, `HOME=/home/caesar`) after fixing data and log directory ownership;
+  set `CAESAR_RUN_AS_ROOT=1` to keep root (also required with
+  `CAESAR_INSTANCE_ID`, which rebuilds the UI). Pods that drop all
+  capabilities should run as UID 10001 (`runAsUser`, `fsGroup`).
+
 ## [0.4.35] - 2026-11-08
 
 ### Fixed

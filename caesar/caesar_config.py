@@ -160,10 +160,11 @@ CAESAR_CONFIG = {
         "synthesis_drafts": 3,
         # Number of Q/A iterations per draft
         "synthesis_iterations": 20,
-        # Reasoning effort for the artifact-generating SYNTHESIS + MERGE calls;
-        # steps down high->medium->low on timeout (see _llm_call). The light
-        # post-processes (clarify, eli5, human_eval) ignore this and run at the
-        # model's default effort.
+        # Reasoning effort for the SYNTHESIS, MERGE and CLARIFY calls. Within a
+        # call, every failed attempt (timeout, bad JSON, missing keys) steps it
+        # down high->medium->low; only a transport timeout persists as a floor
+        # for later SYNTHESIS drafts (see _llm_call). The light post-processes
+        # (eli5, human_eval) ignore this and run at the model's default effort.
         "synthesis_reasoning_effort": "high",
         # Top_k for synthesis query and retrieval from DB
         "synthesis_top_k": 50,
@@ -256,8 +257,10 @@ CAESAR_CONFIG = {
         # Min seconds between S2 calls, shared process-wide. Tune to your key
         # tier: the ~1 rps individual tier still 429s in practice under bursts,
         # so 2s (~0.5 rps) gives headroom and cuts the retry/backoff churn (a
-        # 429 costs up to ~31s of retries and can drop a node's edges). Request
-        # timeout + retry budget are constants in semantic_scholar.py, not knobs.
+        # persistent 429 burns ~15-19s of backoff (see
+        # SemanticScholarClient._request) and can drop a node's edges).
+        # Request timeout + retry budget are constants in semantic_scholar.py,
+        # not knobs.
         "min_request_interval": 2.0,
     },
 

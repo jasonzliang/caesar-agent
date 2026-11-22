@@ -93,7 +93,7 @@ def repair_json(raw):
     raise json.JSONDecodeError("Could not repair JSON", raw, 0)
 
 
-def process_judge_file(judge_file, category_name, csv_data, stats):
+def process_judge_file(judge_file, category_name, csv_data, stats, max_score=10):
     """Process a single judge JSON file and extract reviews."""
     judge_name = extract_judge_name(judge_file)
 
@@ -121,6 +121,9 @@ def process_judge_file(judge_file, category_name, csv_data, stats):
                 'Useful Score': float(scores['Useful']),
                 'Surprising Score': float(scores['Surprising']),
             }
+            if not all(1 <= v <= max_score for v in (row['New Score'], row['Useful Score'], row['Surprising Score'])):
+                print(f"  ⚠️  Rejected {agent_name} in {judge_file.name}: scores outside 1-{max_score}")
+                continue
             row['Total Score'] = row['New Score'] + row['Useful Score'] + row['Surprising Score']
 
             csv_data.append(row)
@@ -136,7 +139,7 @@ def process_judge_file(judge_file, category_name, csv_data, stats):
 
     return 0
 
-def process_directory(base_dir, categories):
+def process_directory(base_dir, categories, max_score=10):
     """Process all judge JSON files and extract scores."""
     csv_data = []
     stats = defaultdict(lambda: defaultdict(int))
@@ -150,7 +153,7 @@ def process_directory(base_dir, categories):
         total_judge_files += len(judge_files)
 
         for judge_file in judge_files:
-            process_judge_file(judge_file, category_name, csv_data, stats)
+            process_judge_file(judge_file, category_name, csv_data, stats, max_score)
 
         print(f"  → Processed {len(judge_files)} judge files")
 
@@ -544,6 +547,8 @@ Examples:
         help="Statistical test for pairwise agent comparison: 'mwu' (Mann-Whitney U) or 'cliffs_delta' (Cliff's delta effect size). Default: cliffs_delta")
     parser.add_argument('-v', '--verbose', action='store_true',
         help='Show detailed progress information')
+    parser.add_argument('--scale', type=int, default=10,
+        help="Max score N of the judge rubric's 1..N scale; reviews with scores outside it are rejected (default: 10)")
 
     args = parser.parse_args()
 
@@ -569,7 +574,7 @@ Examples:
     print()
 
     # Process all files
-    csv_data, stats, total_judge_files = process_directory(args.input_dir, categories)
+    csv_data, stats, total_judge_files = process_directory(args.input_dir, categories, args.scale)
 
     if not csv_data:
         print("\n❌ No data extracted! Check if directories and files exist.")

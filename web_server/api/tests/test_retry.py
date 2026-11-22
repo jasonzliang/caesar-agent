@@ -69,6 +69,16 @@ async def _wait_terminal(client, run_id: str, **kw) -> dict:
     raise AssertionError(f"run {run_id} never reached a terminal status")
 
 
+async def _wait_untracked(run_id: str) -> None:
+    from app.job_runner import job_pool
+
+    for _ in range(100):
+        if not job_pool.is_tracked(run_id):
+            return
+        await asyncio.sleep(0.05)
+    raise AssertionError(f"run {run_id} is still tracked by the job pool")
+
+
 # --------------------------------------------------------------------------
 # unarchive_checkpoint (pure)
 # --------------------------------------------------------------------------
@@ -187,7 +197,7 @@ async def test_retry_takes_over_a_run_in_flight(client):
     final = await _wait_terminal(client, run_id)
     assert final["status"] == "completed", final["error_message"]
     # One row, one surviving worker: the pool released the first attempt.
-    assert not job_pool.is_tracked(run_id)
+    await _wait_untracked(run_id)
 
 
 @pytest.mark.asyncio
@@ -380,7 +390,7 @@ async def test_takeover_timeout_fails_cleanly_instead_of_ghosting(client, monkey
         assert final["status"] == "failed"
         assert "still running" in (final["error_message"] or "")
         # Slot released, so the id is reusable rather than wedged forever.
-        assert not job_pool.is_tracked(run_id)
+        await _wait_untracked(run_id)
     finally:
         never_stops.set()
         job_pool._worker_done.pop(run_id, None)

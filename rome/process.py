@@ -12,6 +12,8 @@ Usage:
 Dependencies: pip install psutil
 """
 import signal, sys, os, threading, traceback, io
+import multiprocessing.process
+import subprocess
 from typing import List, Callable, Optional
 import psutil
 
@@ -39,13 +41,21 @@ class ProcessManager:
             self.callbacks.append(callback)
 
     def track_subprocess(self, proc) -> None:
-        """Register a subprocess (subprocess.Popen or psutil.Process) that
-        this agent owns. shutdown_processes() will terminate every tracked
-        proc. Only track things you actually own — never register shared or
-        externally-managed processes; that's what caused the multi-hour Chroma
-        cascade-kill bug (chroma.log SIGTERM history from 2026-07 through 08)."""
+        """Register a subprocess (subprocess.Popen, multiprocessing.Process or
+        psutil.Process) that this agent owns. shutdown_processes() will
+        terminate every tracked proc. Only track things you actually own — never
+        register shared or externally-managed processes; that's what caused the
+        multi-hour Chroma cascade-kill bug (chroma.log SIGTERM history from
+        2026-07 through 08)."""
         if proc is not None:
             self._tracked.append(proc)
+
+    def untrack_subprocess(self, proc) -> None:
+        """Forget a tracked proc (e.g. one that has already exited)."""
+        try:
+            self._tracked.remove(proc)
+        except ValueError:
+            pass
 
     def setup_signals(self, logger=None) -> None:
         """Setup signal handlers - only works in main thread"""
@@ -146,23 +156,48 @@ class ProcessManager:
         except:
             return False
 
-    def _terminate_process(self, proc: psutil.Process) -> bool:
-        """Terminate a process"""
+    def _terminate_process(self, proc) -> bool:
+        """Terminate a process: SIGTERM, a bounded wait, then SIGKILL.
+
+        Accepts the three handle types track_subprocess() takes. Each is waited
+        on through its own API so the child is reaped by the object that owns it
+        (a psutil.Process wait on a multiprocessing child would leave the
+        mp.Process handle reporting it alive). Returns True once it is gone."""
+        grace = min(3, self.timeout)
         try:
+            if isinstance(proc, multiprocessing.process.BaseProcess):
+                if not proc.is_alive():
+                    return True
+                proc.terminate()
+                proc.join(grace)
+                if proc.is_alive():
+                    proc.kill()
+                    proc.join(self.timeout)
+                return not proc.is_alive()
+
+            if isinstance(proc, subprocess.Popen):
+                if proc.poll() is not None:
+                    return True
+                proc.terminate()
+                try:
+                    proc.wait(timeout=grace)
+                except subprocess.TimeoutExpired:
+                    proc.kill()
+                    proc.wait(timeout=self.timeout)
+                return proc.poll() is not None
+
             if not proc.is_running():
                 return True
-
             proc.terminate()
             try:
-                proc.wait(timeout=min(3, self.timeout))
-                return True
+                proc.wait(timeout=grace)
             except psutil.TimeoutExpired:
                 proc.kill()
                 proc.wait(timeout=self.timeout)
-                return True
-        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             return True
-        except:
+        except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess, ProcessLookupError):
+            return True
+        except Exception:
             return False
 
     def cleanup_zombies(self, children_only: bool = True, logger=None) -> int:
@@ -193,28 +228,31 @@ class ProcessManager:
         return cleaned
 
     def _force_cleanup(self):
-        """Emergency cleanup without error handling"""
-        try:
-            for child in self.get_children():
-                try:
-                    child.kill()
-                    child.wait(timeout=1)
-                except:
-                    pass
-        except:
-            pass
+        """Emergency cleanup: SIGKILL every tracked proc, never other children
+        (same tracked-only policy as shutdown_processes)."""
+        for proc in list(self._tracked):
+            try:
+                proc.kill()
+                if isinstance(proc, multiprocessing.process.BaseProcess):
+                    proc.join(1)
+                else:
+                    proc.wait(timeout=1)
+            except:
+                pass
 
     def shutdown_processes(self, cleanup_zombies: bool = True, logger=None):
-        if cleanup_zombies:
-            self.cleanup_zombies(logger=logger)
-
         # Only reap subprocesses we explicitly track. Do NOT walk
         # psutil.Process(parent_pid).children(recursive=True) — parent_pid is
         # os.getpid() at agent __init__, which in a web server is uvicorn's
         # PID. Reaping uvicorn's descendants killed the shared Chroma every
         # time any single agent shut down. Track only what you own.
-        for proc in self._tracked:
+        # Tracked procs go before the zombie sweep so each is reaped through its
+        # own handle; the sweep reaping one first would leave that handle stale.
+        for proc in list(self._tracked):
             self._terminate_process(proc)
+
+        if cleanup_zombies:
+            self.cleanup_zombies(logger=logger)
 
     def shutdown(self, cleanup_zombies: bool = True):
         with self._lock:

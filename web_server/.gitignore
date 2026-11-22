@@ -58,3 +58,13 @@ ui.log
 # Env
 .env
 .env.local
+
+# Core dumps: install-service.sh sets LimitCORE=infinity, so a native crash
+# drops one in the crashing process's cwd. They hold process memory (API
+# keys, passwords) and must never be committed.
+/core
+/core.[0-9]*
+api/core
+api/core.[0-9]*
+ui/core
+ui/core.[0-9]*

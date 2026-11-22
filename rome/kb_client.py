@@ -169,14 +169,21 @@ class ChromaClientManager:
             if not self.server.start():
                 raise RuntimeError(f"Failed to start ChromaDB server at {self.server.server_url}")
 
-        # Initialize ChromaDB client and collection
-        self._setup_chroma_client()
+        try:
+            # Initialize ChromaDB client and collection
+            self._setup_chroma_client()
 
-        # Initialize LlamaIndex components
-        self._setup_llamaindex()
+            # Initialize LlamaIndex components
+            self._setup_llamaindex()
 
-        # Initialize reranker if enabled
-        self._setup_reranker()
+            # Initialize reranker if enabled
+            self._setup_reranker()
+        except BaseException:
+            # A registered client keeps the server's non-forced atexit stop
+            # from stopping a server this process started.
+            if hasattr(self, "client"):
+                self.server.release_client(self.client)
+            raise
 
         self.logger.info(f"ChromaClientManager initialized: collection={self.collection_name}, reranking={self.enable_reranking}")
 

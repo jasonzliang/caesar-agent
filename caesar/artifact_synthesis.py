@@ -15,6 +15,8 @@ from rome.llm_handler import FatalLLMError
 from rome.logger import get_logger
 from .caesar_config import (CAESAR_CONFIG, MAX_SYNTHESIS_QUERY_SOURCES,
     MAX_SYNTHESIS_QA_CONTEXT, NUM_SYNTHESIS_RETRIES, SYNTHESIS_SAVE_JSON)
+from .citations import (eligible_source_url, extract_cited_indices, format_source_list,
+    normalize_formatting, parse_synthesis_txt, remap_citations, source_urls_by_index)
 
 
 class ArtifactSynthesizer:
@@ -122,6 +124,15 @@ class ArtifactSynthesizer:
                 missing = [k for k in required_keys if k not in result]
                 if missing:
                     raise ValueError(f"Missing required keys: {missing}")
+                # Every synthesis response field is text; a null/object/list
+                # value would crash citation remapping or formatting later. A
+                # malformed summary is just empty, not worth a lower-effort retry.
+                for k in required_keys:
+                    if k.endswith("abstract") and not isinstance(result[k], str):
+                        result[k] = ""
+                non_text = [k for k in required_keys if not isinstance(result[k], str)]
+                if non_text:
+                    raise ValueError(f"Non-string values for keys: {non_text}")
                 # Persist only the step justified by a transport timeout, not
                 # additional steps used to repair JSON/schema failures.
                 if (use_floor
@@ -151,18 +162,13 @@ class ArtifactSynthesizer:
         self.logger.error(f"[{label}] All attempts exhausted")
         return None
 
-    @staticmethod
-    def _format_source_list(sources: Dict[str, int]) -> str:
-        """Format a {url: idx} dict as a sorted '[idx] url' string."""
-        return "\n".join(f"[{idx}] {url}"
-            for url, idx in sorted(sources.items(), key=lambda x: x[1]))
-
     def _load_reference_draft(self, path: str) -> Optional[Dict]:
         """Load reference text and its explicit, unambiguous cited HTTP(S) URL map.
 
-        Saved synthesis JSON may carry source identities across runs. Plain text
-        and unknown IDs have no mapping, so unmapped citation markers are stripped
-        while code and math brackets are preserved.
+        Saved synthesis JSON, or the saved .txt with its SOURCES list (what the
+        web server hands a follow-up run), carries source identities across
+        runs. Other plain text and unknown IDs have no mapping, so unmapped
+        citation markers are stripped while code and math brackets are preserved.
         """
         if not os.path.exists(path):
             self.logger.error(f"[SYNTHESIS] Reference draft path not found: {path}")
@@ -176,24 +182,24 @@ class ArtifactSynthesizer:
         source_urls = {}
         try:
             data = json.loads(content)
-            if isinstance(data, dict) and isinstance(data.get("artifact"), str) and data["artifact"].strip():
-                content = data["artifact"]
-                for idx, url in self._source_urls_by_index(data.get("sources")).items():
-                    try:
-                        parsed = urlsplit(url)
-                        if (parsed.scheme in {"http", "https"} and parsed.hostname
-                                and not any(char.isspace() for char in url)):
-                            source_urls[idx] = url
-                    except ValueError:
-                        continue
-        except (json.JSONDecodeError, ValueError):
-            pass
+        except ValueError:
+            data = parse_synthesis_txt(content)
+        if isinstance(data, dict) and isinstance(data.get("artifact"), str) and data["artifact"].strip():
+            content = data["artifact"]
+            for idx, url in source_urls_by_index(data.get("sources")).items():
+                try:
+                    parsed = urlsplit(url)
+                    if (parsed.scheme in {"http", "https"} and parsed.hostname
+                            and not any(char.isspace() for char in url)):
+                        source_urls[idx] = url
+                except ValueError:
+                    continue
         if not content.strip():
             return None
-        cited = self._extract_cited_indices(content)
+        cited = extract_cited_indices(content)
         source_urls = {idx: url for idx, url in source_urls.items() if idx in cited}
         return {
-            "artifact": self._remap_citations(
+            "artifact": remap_citations(
                 content, {idx: idx for idx in source_urls}, drop_unmapped=True),
             "sources": {url: idx for idx, url in source_urls.items()},
         }
@@ -213,15 +219,15 @@ class ArtifactSynthesizer:
         """Return (query_context, query_role) strings used in prompts."""
         q = self.agent.starting_query
         query_context = f" that creatively answers this query: {q}" if q else ""
-        query_role = f" to the query creatively!" if q else "!"
+        query_role = " to the query creatively!" if q else "!"
         return query_context, query_role
 
     def _post_process(self, result: Dict, prompt: str, response_key: str,
                       label: str, base_dir: str = None, suffix: str = "post",
                       timestamp: str = None) -> Optional[Dict]:
         """Shared post-process: LLM call → wrap as artifact → save."""
-        # eli5 / human_eval are light post-processes (like clarify): they run at
-        # the model's default effort, not the synthesis reasoning tier.
+        # eli5 / human_eval are light post-processes: unlike clarify, they run
+        # at the model's default effort, not the synthesis reasoning tier.
         llm_result = self._llm_call(prompt, [response_key], label=label)
         if not llm_result:
             return None
@@ -247,7 +253,7 @@ class ArtifactSynthesizer:
         """
         return bool(getattr(self.agent, 'shutdown_called', False))
 
-    def synthesize_artifact(self, num_drafts: int = None) -> None:
+    def synthesize_artifact(self, num_drafts: int = None) -> Dict:
         """Generate final synthesis with optional multi-draft refinement.
 
         Returns the final result dict. In addition to the synthesis fields
@@ -273,8 +279,9 @@ class ArtifactSynthesizer:
         current_query = self.agent.starting_query
         all_drafts = []; previous_result = None; base_dir = None
         if num_drafts > 1:
+            stamp = datetime.now().strftime("%m%d%H%M")
             base_dir = os.path.join(self.agent.get_repo(),
-                f"{self.agent.get_id()}.synthesis.{datetime.now().strftime("%m%d%H%M")}")
+                f"{self.agent.get_id()}.synthesis.{stamp}")
         artifact_dir = base_dir if base_dir else self.agent.get_repo()
 
         # Optional: seed draft 1 with an external reference answer.
@@ -309,7 +316,7 @@ class ArtifactSynthesizer:
 
             # Refine query for next draft (if not last draft)
             if draft_num < num_drafts:
-                current_query = self._refine_query(result)
+                current_query = self._refine_query(result, current_query)
                 if not current_query: break
 
         if len(all_drafts) < 1:
@@ -383,17 +390,17 @@ class ArtifactSynthesizer:
             )
         if previous_artifact and previous_artifact.get("artifact"):
             previous_text = previous_artifact["artifact"]
-            prior_sources = self._source_urls_by_index(previous_artifact.get("sources"))
+            prior_sources = source_urls_by_index(previous_artifact.get("sources"))
             prior_to_current = {}
             # Keep the new Q&A IDs stable; carry only sources actually cited in
             # the prior prose we show, reusing current IDs for shared URLs.
-            for old_idx in sorted(self._extract_cited_indices(previous_text)):
+            for old_idx in sorted(extract_cited_indices(previous_text)):
                 url = prior_sources.get(old_idx)
                 if url is not None:
                     if url not in source_map:
                         source_map[url] = len(source_map) + 1
                     prior_to_current[old_idx] = source_map[url]
-            previous_text = self._remap_citations(
+            previous_text = remap_citations(
                 previous_text, prior_to_current, drop_unmapped=True)
             previous_context = f"""{query_block}
 PREVIOUS ARTIFACT:
@@ -401,7 +408,7 @@ PREVIOUS ARTIFACT:
 --- END OF ARTIFACT ---
 """
 
-        source_list = self._format_source_list(source_map)
+        source_list = format_source_list(source_map)
         prompt = f"""You explored {len(self.agent.visited_urls)} sources and gathered {self.kb_manager.size()} insights.
 
 KEY INSIGHTS (with source citations):
@@ -442,7 +449,7 @@ Respond with valid JSON only:
         if not result: return None
 
         result["sources"] = dict(sorted(source_map.items(), key=lambda x: x[1]))
-        cited = self._extract_cited_indices(result.get("artifact", ""), result.get("abstract", ""))
+        cited = extract_cited_indices(result.get("artifact", ""), result.get("abstract", ""))
         result["metadata"] = {
             "insights_collected": self.kb_manager.size(),
             "iterations_run": self.agent.current_iteration,
@@ -505,130 +512,6 @@ Respond with JSON:
     # TODO: Ring merge of drafts (feed random draft sequence in connected ring of unique agents)
     # TODO: Debate merge of drafts (multiple of rounds of unique agents critiquing drafts)
 
-    # Explicit [n](url) links carry their own URL, not a source-map ID.
-    _CITE_RE = re.compile(r'\[\s*(\d+(?:\s*,\s*\d+)*)\s*\](?!\()')
-
-    # Spans where numeric brackets and '*' are literal syntax rather than prose:
-    # fenced/indented code, single-paragraph inline code, LaTeX math, links/URLs,
-    # HTML entities, and backslash-escaped characters.
-    _PROTECTED_SPAN_RE = re.compile(
-        r"(?P<fence>^[ \t]{0,3}(?P<fence_delim>`{3,}|~{3,})[^\n]*\n[\s\S]*?(?:^[ \t]{0,3}(?P=fence_delim)[~`]*[ \t]*$|\Z))"
-        r"|(?P<indented>(?:\A|(?<=\n\n)|(?<=\r\n\r\n))(?:(?: {4}|\t)[^\n]*(?:\r?\n|$)+)+)"
-        r"|(?P<inline_code>(?P<ticks>`+)(?!`)(?:(?<!\n)\n(?![ \t]*(?:[-*+]|\d+[.)]|>|#)[ \t]|\r?\n)|[^\n])*?(?<!`)(?P=ticks)(?!`))"
-        r"|(?P<math>\\\((?:\\[\s\S]|[^\\])*?\\\)|\\\[(?:\\[\s\S]|[^\\])*?\\\])"
-        r"|(?P<link_def>^[ \t]{0,3}\[[^\]\n]+\]:[ \t]*\S+[^\n]*)"
-        r"|(?P<link>!?\[(?:[^\[\]\n]|\[[^\]\n]*\])*\]\((?:<[^>\n]*>|[^)\n])*(?:\n[ \t]*>?[ \t]*[^)\n]*)*\))"
-        r"|(?P<ref_link>!?\[(?:[^\[\]\n]|\[[^\]\n]*\])*\]\[[^\]\n]*\])"
-        r"|(?P<autolink><https?://[^>\s]+>)"
-        r"|(?P<bare_url>https?://[^\s<>()]+(?<![.,;:!?]))"
-        r"|(?P<entity>&#\d+;|&#x[0-9a-fA-F]+;|&[a-zA-Z]\w*;)"
-        r"|(?P<escape>\\[\s\S])",
-        re.MULTILINE,
-    )
-    _LIST_LINE_RE = re.compile(r"^[ \t]*(?:[-*+]|\d+[.)])[ \t]+")
-
-    @classmethod
-    def _markdown_prose_ranges(cls, text: str):
-        """Yield (start, end) slices of text outside code, math, links, URLs, and escapes."""
-        cursor = 0
-        for match in cls._PROTECTED_SPAN_RE.finditer(text):
-            start, end = match.span()
-            if match.lastgroup == "indented" and start > 0:
-                prev_block = text[:start].rstrip("\r\n")
-                prev_line = prev_block.rsplit("\n", 1)[-1]
-                if (cls._LIST_LINE_RE.match(prev_line)
-                        and not match.group(0).startswith(("        ", "\t\t"))):
-                    continue
-            if start > cursor:
-                yield cursor, start
-            cursor = end
-        if cursor < len(text):
-            yield cursor, len(text)
-
-    @classmethod
-    def _citation_matches(cls, text: str):
-        """Find numeric markers only in prose source ranges."""
-        for start, end in cls._markdown_prose_ranges(text):
-            yield from cls._CITE_RE.finditer(text, start, end)
-
-    @classmethod
-    def _source_urls_by_index(cls, sources) -> Dict[int, str]:
-        """Accept only unambiguous positive integer IDs in an eligible URL→ID map."""
-        if not isinstance(sources, dict):
-            return {}
-        by_index, ambiguous = {}, set()
-        for url, idx in sources.items():
-            if not cls._eligible_source_url(url):
-                continue
-            if isinstance(idx, bool) or not isinstance(idx, (int, str)):
-                continue
-            if isinstance(idx, str) and not re.fullmatch(r"\d+", idx.strip()):
-                continue
-            try:
-                idx = int(idx)
-            except ValueError:
-                continue
-            if idx < 1:
-                continue
-            if idx in by_index and by_index[idx] != url:
-                ambiguous.add(idx)
-            by_index[idx] = url
-        return {idx: url for idx, url in by_index.items() if idx not in ambiguous}
-
-    @classmethod
-    def _remap_citations(cls, text: str, mapping: Dict[int, int],
-                         drop_unmapped: bool = True) -> str:
-        """Rewrite [n] / [n,m,...] markers via an int→int mapping.
-
-        With drop_unmapped=True (default), indices not in `mapping` are dropped
-        so unmapped markers cannot collide across draft namespaces; with
-        drop_unmapped=False they pass through unchanged so non-citation
-        bracketed numbers (e.g. years like [2024]) survive final renumbering.
-        """
-        def _sub(m):
-            parts = []
-            for tok in m.group(1).split(','):
-                try:
-                    n = int(tok.strip())
-                except ValueError:
-                    return m.group(0)
-                g = mapping.get(n)
-                if g is not None:
-                    parts.append(str(g))
-                elif not drop_unmapped:
-                    parts.append(str(n))
-            return f"[{','.join(parts)}]" if parts else ""
-        fragments = []
-        cursor = 0
-        for match in cls._citation_matches(text):
-            start, end = match.span()
-            replacement = _sub(match)
-            # Clean up a single preceding space when an unmapped citation before
-            # punctuation is dropped (e.g. "Claim [1]." -> "Claim.").
-            if (not replacement and start > cursor and text[start - 1] == " "
-                    and end < len(text) and text[end] in ".,;:!?)"):
-                fragments.append(text[cursor:start - 1])
-            else:
-                fragments.append(text[cursor:start])
-            fragments.append(replacement)
-            cursor = end
-        fragments.append(text[cursor:])
-        return "".join(fragments)
-
-    @classmethod
-    def _extract_cited_indices(cls, *texts: str) -> set:
-        cited: set = set()
-        for text in texts:
-            if not isinstance(text, str):
-                continue
-            for m in cls._citation_matches(text):
-                for tok in m.group(1).split(','):
-                    try:
-                        cited.add(int(tok.strip()))
-                    except ValueError:
-                        pass
-        return cited
-
     def _merge_artifacts(self, all_drafts: List[Dict],
                          base_dir: str = None) -> Optional[Dict[str, str]]:
         """Merge artifacts from all drafts into a single comprehensive artifact.
@@ -648,7 +531,7 @@ Respond with JSON:
         # ordered by first appearance).
         global_sources: Dict[str, int] = {}
         next_idx = 1
-        draft_sources = [self._source_urls_by_index(r.get('sources')) for r in all_drafts]
+        draft_sources = [source_urls_by_index(r.get('sources')) for r in all_drafts]
         for sources in draft_sources:
             for _, url in sorted(sources.items()):
                 if url not in global_sources:
@@ -659,7 +542,7 @@ Respond with JSON:
         artifacts_context = []
         for i, (r, sources) in enumerate(zip(all_drafts, draft_sources), 1):
             local_to_global = {idx: global_sources[url] for idx, url in sources.items()}
-            rewritten = self._remap_citations(r['artifact'], local_to_global,
+            rewritten = remap_citations(r['artifact'], local_to_global,
                 drop_unmapped=True)
             artifacts_context.append(
                 f"--- DRAFT {i} ---\n\n"
@@ -668,7 +551,7 @@ Respond with JSON:
             )
         artifacts_text = "\n\n".join(artifacts_context)
         idx_to_url = {idx: url for url, idx in global_sources.items()}
-        global_source_list = self._format_source_list(global_sources)
+        global_source_list = format_source_list(global_sources)
 
         query_context, query_role = self._get_query_context()
         length_context1 = f"{self.synthesis_max_length} words" if self.synthesis_max_length else ">= average draft artifact length"
@@ -734,24 +617,24 @@ EXAMPLE OUTPUT:
         # Reconstruct sources from [N] markers that survived merge + clarify,
         # then renumber to sequential 1..N for backward compat with draft
         # output shape (which is always sequential from 1).
-        all_cited = self._extract_cited_indices(
+        all_cited = extract_cited_indices(
             result.get("artifact", ""), result.get("abstract", ""))
         cited_globals = {i for i in all_cited if i in idx_to_url}
         orphan_markers = all_cited - cited_globals
         if orphan_markers:
             # Markers the LLM emitted that don't correspond to a known source
-            # (e.g. a bracketed year, or an index hallucinated outside the
-            # global range). We preserve them in text (drop_unmapped=False)
-            # to match the previous code's tolerance for non-citation
-            # brackets, but they cannot appear in the sources dict.
+            # (an index hallucinated outside the global range; bracketed
+            # numbers from the drafts were already dropped at the draft
+            # namespace boundary). They stay in text (drop_unmapped=False)
+            # but cannot appear in the sources dict.
             self.logger.error(
                 f"[MERGE] {len(orphan_markers)} marker(s) in merged text "
                 f"don't map to a global source: {sorted(orphan_markers)[:10]}"
             )
         global_to_seq = {g: f for f, g in enumerate(sorted(cited_globals), 1)}
-        result["artifact"] = self._remap_citations(
+        result["artifact"] = remap_citations(
             result.get("artifact", ""), global_to_seq, drop_unmapped=False)
-        result["abstract"] = self._remap_citations(
+        result["abstract"] = remap_citations(
             result.get("abstract", ""), global_to_seq, drop_unmapped=False)
         result["sources"] = {
             idx_to_url[g]: seq for g, seq in sorted(global_to_seq.items(), key=lambda x: x[1])
@@ -762,9 +645,9 @@ EXAMPLE OUTPUT:
 
         # Normalize formatting on the final merged text so the saved artifact
         # has consistent Markdown whether clarify ran, was gated off, or
-        # returned None. _normalize_formatting is idempotent.
-        result["artifact"] = self._normalize_formatting(result.get("artifact") or "")
-        result["abstract"] = self._normalize_formatting(result.get("abstract") or "")
+        # returned None.
+        result["artifact"] = normalize_formatting(result.get("artifact") or "")
+        result["abstract"] = normalize_formatting(result.get("abstract") or "")
 
         self.logger.info(
             f"[MERGE] Sources reconstructed: {len(result['sources'])} cited "
@@ -886,12 +769,6 @@ Respond with JSON:
         result = self._llm_call(prompt, ["query"], retries=1, label="NEXT_QUERY")
         return result["query"] if result else None
 
-    @staticmethod
-    def _eligible_source_url(url):
-        return (isinstance(url, str) and bool(url.strip())
-                and not url.startswith('file://')
-                and 'semanticscholar.org/search' not in url)
-
     # ── Citation building ─────────────────────────────────────────────────
 
     def _build_answers_with_citations(self, qa_pairs):
@@ -903,7 +780,7 @@ Respond with JSON:
             # need not come from our own KB client. Navigation scaffolds remain
             # excluded, and the caller's records are never changed.
             valid_sources = [src for src in (sources or [])
-                             if isinstance(src, dict) and self._eligible_source_url(src.get('url'))]
+                             if isinstance(src, dict) and eligible_source_url(src.get('url'))]
             for src in valid_sources:
                 url = src['url']
                 if url not in source_map:
@@ -916,7 +793,7 @@ Respond with JSON:
             answers.append(f"({i+1}) Question: {q}\n\nAnswer: {a} {refs}")
 
         qa_list = "\n\n\n".join(answers)
-        source_list = self._format_source_list(source_map)
+        source_list = format_source_list(source_map)
 
         return qa_list, source_list, source_map
 
@@ -946,7 +823,7 @@ Respond with JSON:
                 f.write(f"ARTIFACT:\n{result['artifact']}\n\n")
 
                 if sources := result.get('sources'):
-                    f.write(f"SOURCES:\n{self._format_source_list(sources)}\n\n")
+                    f.write(f"SOURCES:\n{format_source_list(sources)}\n\n")
             self.saved_artifact_files.append(f"{base_path}.txt")
 
             if metadata := result.get('metadata'):
@@ -1040,63 +917,40 @@ Respond with valid JSON only:
             reasoning=self.synthesis_reasoning_effort, label="CLARIFY")
         if not llm_result: return None
 
-        new_artifact = llm_result.get("clarified_artifact") or ""
-        if not isinstance(new_artifact, str) or not new_artifact.strip():
+        new_artifact = llm_result["clarified_artifact"]
+        if not new_artifact.strip():
             self.logger.error("[CLARIFY] LLM returned empty or invalid clarified artifact")
             return None
 
         # Abstract is best-effort: if the LLM returns an empty string, fall
         # back to the original abstract rather than blanking it out.
-        new_abstract = llm_result.get("clarified_abstract")
-        if not isinstance(new_abstract, str) or not new_abstract.strip():
+        new_abstract = llm_result["clarified_abstract"]
+        if not new_abstract.strip():
             new_abstract = abstract_text
 
-        known_ids = self._source_urls_by_index(result.get("sources"))
+        known_ids = source_urls_by_index(result.get("sources"))
 
         def required_ids(text):
-            cited = self._extract_cited_indices(text)
+            cited = extract_cited_indices(text)
             return cited.intersection(known_ids) if isinstance(result.get("sources"), dict) else cited
 
         # Main text can be exported without the abstract. A marker moved to the
         # summary or hidden in code/math is not retained main-text attribution.
-        missing_main = required_ids(artifact_text) - self._extract_cited_indices(new_artifact)
+        missing_main = required_ids(artifact_text) - extract_cited_indices(new_artifact)
         if missing_main:
             self.logger.error(
                 f"[CLARIFY] Rejecting rewrite that loses main-text citations: {sorted(missing_main)}")
             return None
-        missing_abstract = required_ids(abstract_text) - self._extract_cited_indices(new_abstract)
+        missing_abstract = required_ids(abstract_text) - extract_cited_indices(new_abstract)
         if missing_abstract:
             self.logger.error(
                 f"[CLARIFY] Keeping original abstract after citation loss: {sorted(missing_abstract)}")
             new_abstract = abstract_text
 
         return {
-            "abstract": self._normalize_formatting(new_abstract),
-            "artifact": self._normalize_formatting(new_artifact),
+            "abstract": normalize_formatting(new_abstract),
+            "artifact": normalize_formatting(new_artifact),
         }
-
-    @classmethod
-    def _normalize_formatting(cls, text: str) -> str:
-        """Normalize prose emphasis, trailing spaces, and blank-line runs without touching code, math, or links."""
-        fragments = []
-        cursor = 0
-        for start, end in cls._markdown_prose_ranges(text):
-            prose = text[start:end]
-            # 1. Collapse bold-wrapping-italic (**Foo *Bar***) -> **Foo Bar**
-            prose = re.sub(r'\*\*([^*\n]*?)\*([^*\n]+?)\*([^*\n]*?)\*\*',
-                           r'**\1\2\3**', prose)
-            # 2. Convert standalone italic (*foo*) to bold (**foo**)
-            prose = re.sub(r'(?<!\*)\*([^*\n]+?)\*(?!\*)', r'**\1**', prose)
-            # 3. Strip trailing horizontal whitespace at line ends in prose
-            prose = re.sub(r'[ \t]+(?=\r?\n)', '', prose)
-            if end == len(text):
-                prose = re.sub(r'[ \t]+\Z', '', prose)
-            # 4. Collapse runs of >2 blank lines in prose
-            prose = re.sub(r'\n{3,}', '\n\n', prose)
-            fragments.extend((text[cursor:start], prose))
-            cursor = end
-        fragments.append(text[cursor:])
-        return "".join(fragments)
 
     def _post_process_eli5(self, result: Dict,
         base_dir: str = None,
@@ -1119,7 +973,8 @@ Respond with valid JSON only:
 
             # Sanitize length suffix string and setup prompt context
             # re.sub(r'[<>:\"/\\|?*\s]', '-', str(length))
-            current_suffix = f"{suffix}.{re.sub(r'\D', '', str(length))}w" if length else suffix
+            length_digits = re.sub(r'\D', '', str(length))
+            current_suffix = f"{suffix}.{length_digits}w" if length else suffix
             length_context = f"\nIMPORTANT: Your explanation MUST be {length} words, double check to make sure" if length else ""
 
             prompt = f"""--- ARTIFACT ---

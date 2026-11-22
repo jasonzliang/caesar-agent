@@ -454,8 +454,8 @@ CaesarAgent:
   starting_query: "self-improving agents" # required; seeds the Semantic Scholar search
 SemanticScholar:
   arxiv_only: true # true = pure arXiv graph; false also keeps DOI/other cited papers
-  refs_limit: 100 # references (papers this one cites) pulled per node
-  citations_limit: 100 # citations (papers that cite this one) pulled per node
+  refs_limit: 200 # (default) references (papers this one cites) pulled per node
+  citations_limit: 800 # (default) citations (papers that cite this one) pulled per node; S2 lists citers newest-first, so a shallow page can miss arXiv citers
 ```
 
 An optional `SEMANTIC_SCHOLAR_API_KEY` is used automatically if set; arxiv mode
