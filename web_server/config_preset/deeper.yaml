@@ -38,7 +38,7 @@ ImageGenerator:
   max_candidates_to_score: 90
 
 LLMHandler:
-  model: gpt-6-luna
+  model: gpt-6.1-terra
   reasoning_effort: low
 
 AgentMemory:
@@ -46,7 +46,7 @@ AgentMemory:
   use_graph: false
 
 ChromaClientManager:
-  model: gpt-5.4-mini
+  model: gpt-6-luna
   reasoning_effort: low
 
 BraveSearch:

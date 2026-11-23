@@ -22,7 +22,8 @@ xxhash
 chromadb
 llama-index
 llama-index-embeddings-openai
-llama-index-llms-openai
+# 0.9.0 is the first release that knows gpt-6-luna, the web presets' KB model.
+llama-index-llms-openai>=0.9.0
 llama-index-vector-stores-chroma
 mem0ai
 # llama-index-core imports PIL at import time and does not always pull it in transitively.

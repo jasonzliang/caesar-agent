@@ -399,8 +399,10 @@ SENTINEL_PY="import litellm, chromadb, llama_index, anthropic, ddgs, curl_cffi"
 if [ -n "$EXPECTED_CHROMADB" ]; then
     SENTINEL_PY="$SENTINEL_PY; assert chromadb.__version__ == '$EXPECTED_CHROMADB', f'chromadb {chromadb.__version__} != pin $EXPECTED_CHROMADB'"
 fi
+# Version floors from ../requirements.txt that an old venv would otherwise keep:
+# curl_cffi for a security fix, llama-index-llms-openai so the KB knows gpt-6-luna.
 # An explicit exit keeps the security check active under PYTHONOPTIMIZE.
-SENTINEL_PY="$SENTINEL_PY; import sys; from packaging.version import Version; sys.exit(0 if Version(curl_cffi.__version__) >= Version('0.17.0') else 1)"
+SENTINEL_PY="$SENTINEL_PY; import sys; from importlib.metadata import version; from packaging.version import Version; sys.exit(0 if Version(curl_cffi.__version__) >= Version('0.17.0') and Version(version('llama-index-llms-openai')) >= Version('0.9.0') else 1)"
 if ! "$PY" -c "$SENTINEL_PY" 2>/dev/null; then
     step "Installing Caesar runtime deps (rome/requirements.txt)"
     [ -f "../requirements.txt" ] || fail "../requirements.txt not found — Caesar can't run without it. Run launch.sh from web_server/ inside the rome repo."

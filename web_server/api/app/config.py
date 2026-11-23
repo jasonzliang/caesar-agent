@@ -136,7 +136,7 @@ PRESETS: list[dict] = [
         "id": "deeper",
         "label": "Deeper",
         "caesar_preset": "deeper",
-        "description": "Deep iterative web exploration with GPT-6 Luna. ~$5, ~1.5 h.",
+        "description": "Deep iterative web exploration with GPT-6.1 Terra. ~$5, ~1.5 h.",
         "estimated_cost_usd": 5.00,
         "estimated_time_min": 90,
     },

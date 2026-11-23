@@ -45,7 +45,7 @@ AgentMemory:
   use_graph: false
 
 ChromaClientManager:
-  model: gpt-5.4-mini
+  model: gpt-6-luna
   reasoning_effort: low
 
 BraveSearch:

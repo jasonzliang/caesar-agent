@@ -2,6 +2,19 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.38] - 2026-11-23
+
+### Changed
+
+- The web presets' knowledge base uses `gpt-6-luna` instead of
+  `gpt-5.4-mini`. In an A/B on 18 real synthesis queries it cost about 7.5x
+  less per query, and two blind judges preferred its answers (18 of 18 and
+  15 of 18); each query took about 2 seconds longer.
+- The web Deeper preset synthesizes with `gpt-6.1-terra`.
+- Require `llama-index-llms-openai>=0.9.0`, the first release that knows
+  `gpt-6-luna`. `web_server/launch.sh` reinstalls dependencies when an
+  existing environment is older.
+
 ## [0.4.37] - 2026-11-23
 
 ### Changed
