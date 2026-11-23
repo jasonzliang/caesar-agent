@@ -120,7 +120,7 @@ PRESETS: list[dict] = [
         "id": "fast",
         "label": "Fast",
         "caesar_preset": "fast",
-        "description": "Quick parallel web exploration with GPT-5.6 Luna. ~$0.50, ~10 min.",
+        "description": "Quick parallel web exploration with GPT-6 Luna. ~$0.50, ~10 min.",
         "estimated_cost_usd": 0.50,
         "estimated_time_min": 10,
     },
@@ -128,7 +128,7 @@ PRESETS: list[dict] = [
         "id": "normal",
         "label": "Normal",
         "caesar_preset": "normal",
-        "description": "Mid-depth web exploration with GPT-5.6 Luna. ~$1, ~20 min.",
+        "description": "Mid-depth web exploration with GPT-6 Luna. ~$1, ~20 min.",
         "estimated_cost_usd": 1.00,
         "estimated_time_min": 20,
     },
@@ -136,7 +136,7 @@ PRESETS: list[dict] = [
         "id": "deeper",
         "label": "Deeper",
         "caesar_preset": "deeper",
-        "description": "Deep iterative web exploration with GPT-5.6 Luna. ~$5, ~1.5 h.",
+        "description": "Deep iterative web exploration with GPT-6 Luna. ~$5, ~1.5 h.",
         "estimated_cost_usd": 5.00,
         "estimated_time_min": 90,
     },
@@ -144,7 +144,7 @@ PRESETS: list[dict] = [
         "id": "deepest",
         "label": "Deepest",
         "caesar_preset": "deepest",
-        "description": "Deepest iterative web exploration with GPT-5.6 Sol. ~$30, ~6 h.",
+        "description": "Deepest iterative web exploration with GPT-6.2 Sol. ~$30, ~6 h.",
         "estimated_cost_usd": 30.00,
         "estimated_time_min": 360,
     },
@@ -152,7 +152,7 @@ PRESETS: list[dict] = [
         "id": "deeper_arxiv",
         "label": "ArXiv",
         "caesar_preset": "deeper_arxiv",
-        "description": "Deep arXiv citation-graph exploration with GPT-5.6 Terra. ~$5, ~1.5 h.",
+        "description": "Deep arXiv citation-graph exploration with GPT-6.1 Terra. ~$5, ~1.5 h.",
         "estimated_cost_usd": 5.00,
         "estimated_time_min": 90,
     },
@@ -160,7 +160,7 @@ PRESETS: list[dict] = [
         "id": "deepest_arxiv",
         "label": "ArXiv Deep",
         "caesar_preset": "deepest_arxiv",
-        "description": "Deepest arXiv citation-graph exploration with GPT-5.6 Sol. ~$30, ~6 h.",
+        "description": "Deepest arXiv citation-graph exploration with GPT-6.2 Sol. ~$30, ~6 h.",
         "estimated_cost_usd": 30.00,
         "estimated_time_min": 360,
     },
@@ -239,8 +239,16 @@ def synthesis_model_choices() -> list[dict]:
 
 
 def is_valid_synthesis_model(model_id: str) -> bool:
-    """True if model_id is one of the OpenAI models we allow as a synthesis override."""
-    return any(c["id"] == model_id for c in synthesis_model_choices())
+    """True if model_id is an OpenAI reasoning model rome prices. Wider than the
+    dropdown (the newest model of each tier) so a choice saved in a browser
+    cookie keeps working after the dropdown moves on to a newer model."""
+    ensure_caesar_on_path()
+    try:
+        from rome.llm_handler import LLMHandler  # noqa: WPS433
+    except Exception:  # noqa: BLE001
+        return False
+    return (model_id in LLMHandler.MODEL_PRICING
+            and LLMHandler.is_reasoning_model(model_id))
 
 
 # ---------------------------------------------------------------------------

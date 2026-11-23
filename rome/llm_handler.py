@@ -77,18 +77,25 @@ class LLMHandler:
 
     # Model pricing (per 1M tokens) - fallback when litellm doesn't have pricing
     MODEL_PRICING = {
+        # OpenAI GPT-6 family, newest of each tier (luna < terra < sol < astra).
+        # Prompts over 272K input tokens bill at 2x input / 1.5x output (not
+        # modelled). Verified 2026-11-23 against developers.openai.com/api/docs/pricing.
+        "gpt-6-luna": {"input": 0.1, "output": 0.5},
+        "gpt-6.1-terra": {"input": 1.0, "output": 5.0},
+        "gpt-6.2-sol": {"input": 2.0, "output": 10.0},
+        "gpt-6.2-astra": {"input": 8.0, "output": 40.0},
         # OpenAI GPT-5 series. gpt-5.5 surcharges 2x input / 1.5x output when
         # the prompt exceeds 272K tokens for the whole session; that band is
         # not modelled here (estimates would be off only in long-context runs).
         # GPT-5.6 family (Jul 2026). The bare `gpt-5.6` alias is deliberately
         # absent: it routes to -sol, so carrying it here offered one model under
         # two names and hid which tier was being bought. Name the tier.
-        "gpt-5.6-sol": {"input": 5.0, "output": 30.0},
-        # luna/terra/sol are the 5.6 tiers, 1:10:25 on input. Both of these were
+        "gpt-5.6-sol": {"input": 4.0, "output": 20.0},
+        # luna/terra/sol are the 5.6 tiers, 1:10:20 on input. Both of these were
         # entered too high (luna 5x, terra 1.25x) which made every Luna run look
         # 5x pricier than it is wherever this table is consulted. Verified
         # 2026-08-03 against developers.openai.com/api/docs/pricing, which
-        # litellm's live map also matches.
+        # litellm's live map also matches; sol re-verified at $4/$20 2026-11-23.
         "gpt-5.6-terra": {"input": 2.0, "output": 12.0},
         "gpt-5.6-luna": {"input": 0.2, "output": 1.2},
         "gpt-5.5-pro": {"input": 30.0, "output": 180.0},
@@ -122,6 +129,11 @@ class LLMHandler:
     }
 
     MODEL_CONTEXT_SIZE = {
+        # OpenAI GPT-6 family: 1.05M context (per OpenAI docs).
+        "gpt-6-luna": 1050000,
+        "gpt-6.1-terra": 1050000,
+        "gpt-6.2-sol": 1050000,
+        "gpt-6.2-astra": 1050000,
         # OpenAI GPT-5 series
         # GPT-5.6 family: 1.05M context across sol/terra/luna (per OpenAI docs).
         "gpt-5.6-sol": 1050000,
@@ -158,8 +170,8 @@ class LLMHandler:
     }
 
     # Models that take reasoning_effort and reject temperature. is_reasoning_model()
-    # also accepts any `gpt-5*` name, so new GPT-5.x releases gate correctly before
-    # they are listed here; the explicit entries keep the older ones visible.
+    # also accepts any `gpt-5*` or `gpt-6*` name, so new releases gate correctly
+    # before they are listed here; the explicit entries keep the older ones visible.
     #
     # This is the single source of truth. rome/kb_client.py kept a hand-maintained
     # second copy until it drifted: its copy was missing the whole GPT-5.6 family,
@@ -174,20 +186,23 @@ class LLMHandler:
     # Unique identifier for chat completion requests
     USER_ID = "tzeentch-nietzsche"
 
+    # OpenAI's cost tiers, cheapest first.
+    SYNTHESIS_TIERS = ("luna", "terra", "sol", "astra")
+
     @classmethod
     def synthesis_models(cls) -> list[str]:
-        """OpenAI current-generation text models offered as synthesis targets:
-        the GPT-5.x family, in MODEL_PRICING order. The legacy GPT-4.x line,
-        audio/realtime models, and non-OpenAI providers are all excluded by
-        construction, so there is no second list to keep in sync with
-        MODEL_PRICING — add a new gpt-5.x entry there and it is offered
-        automatically. The o-series was dropped once OpenAI scheduled o1, o1-pro,
-        o3-mini and o4-mini for retirement (2026-10-23) and had already retired
-        o1-mini."""
-        return [
-            m for m in cls.MODEL_PRICING
-            if m.startswith("gpt-5") and "realtime" not in m
-        ]
+        """Synthesis targets: the newest MODEL_PRICING entry of each OpenAI cost
+        tier, cheapest tier first. Derived rather than listed, so adding
+        gpt-6.3-sol to MODEL_PRICING replaces gpt-6.2-sol here with no second
+        list to keep in sync."""
+        newest = {}
+        for model in cls.MODEL_PRICING:
+            hit = re.fullmatch(r"gpt-(\d+(?:\.\d+)*)-([a-z]+)", model)
+            if hit and hit[2] in cls.SYNTHESIS_TIERS:
+                version = tuple(int(n) for n in hit[1].split("."))
+                if version > newest.get(hit[2], ((),))[0]:
+                    newest[hit[2]] = (version, model)
+        return [newest[t][1] for t in cls.SYNTHESIS_TIERS if t in newest]
 
     def __init__(self, config: Dict = None):
         # Layer user config OVER DEFAULT_CONFIG['LLMHandler'] so direct
@@ -284,8 +299,8 @@ class LLMHandler:
     def _is_reasoning_model(self, model: str = None) -> bool:
         """Check if model supports reasoning parameters.
 
-        Falls back to a `gpt-5*` prefix match so future GPT-5.x releases
-        (5.5, 5.6, mini/pro variants…) are auto-detected as reasoning
+        Falls back to a `gpt-5*` / `gpt-6*` prefix match so new releases
+        (5.6 tiers, 6.x tiers, mini/pro variants…) are auto-detected as reasoning
         models without a code change. Without this, a new model bumped
         in a preset YAML fails synthesis with "Unsupported value:
         'temperature'" because the temperature-strip path at
@@ -303,7 +318,7 @@ class LLMHandler:
         of sync with this one.
         """
         base = model.split("/", 1)[-1] if "/" in model else model
-        return base in cls.REASONING_MODELS or base.startswith("gpt-5")
+        return base in cls.REASONING_MODELS or base.startswith(("gpt-5", "gpt-6"))
 
     def _get_max_input_tokens(self) -> int:
         """Get max input tokens."""

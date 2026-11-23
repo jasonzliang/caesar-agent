@@ -14,7 +14,7 @@ CaesarAgent:
   use_quick_explore: False
   quick_explore_insights: False
   exploration_llm_config:
-    model: gpt-5.6-luna
+    model: gpt-6-luna
     reasoning_effort: low
 
   adapt_role: True
@@ -31,9 +31,9 @@ ArtifactSynthesizer:
   synthesis_generate_images: 6
 
 LLMHandler:
-  model: gpt-5.6-sol
+  model: gpt-6.2-sol
   reasoning_effort: medium
-  # Override 900s default: gpt-5.6-sol needs the extra headroom.
+  # Override 900s default: gpt-6.2-sol needs the extra headroom.
   timeout: 1200
 
 AgentMemory:

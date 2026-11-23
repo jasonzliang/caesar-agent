@@ -224,6 +224,10 @@ export default function ConfigPage() {
           className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500"
         >
           <option value="">Preset default</option>
+          {/* A saved model the list no longer offers still runs; show it rather than a wrong pick. */}
+          {model && models.length > 0 && !models.some((m) => m.id === model) && (
+            <option value={model}>{model}</option>
+          )}
           {models.map((m) => (
             <option key={m.id} value={m.id}>
               {m.id}

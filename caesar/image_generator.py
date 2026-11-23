@@ -41,7 +41,6 @@ from pathlib import Path
 from typing import Dict, List, NamedTuple, Optional, Tuple, Union
 from urllib.parse import urljoin, urlparse
 
-import litellm
 from bs4 import BeautifulSoup
 from curl_cffi import requests
 from openai import OpenAI
@@ -68,7 +67,7 @@ SCORE_POOL_TIMEOUT_S = 300               # VLM scoring pool ceiling
 CAPTION_POOL_TIMEOUT_S = 180             # VLM captioning pool ceiling
 DOWNLOAD_POOL_TIMEOUT_S = 60             # image download pool ceiling
 IMAGE_API_TIMEOUT_S = 240.0              # per-call OpenAI images.edit /
-                                         # litellm.image_generation timeout;
+                                         # images.generate timeout;
                                          # SDK default is ~10 min × 2 retries.
                                          # gpt-image-1 has a ~180s server
                                          # timeout; 240s + max_retries=1
@@ -1023,9 +1022,8 @@ class ImageGenerator:
 
     @staticmethod
     def _save_image_data(data_obj, output_path: Path) -> None:
-        """OpenAI/litellm image responses carry b64_json or url; current litellm
-        always returns pydantic objects (never raw dicts), so plain getattr is
-        sufficient."""
+        """OpenAI image responses carry b64_json or url as pydantic objects
+        (never raw dicts), so plain getattr is sufficient."""
         b64 = getattr(data_obj, "b64_json", None)
         url = getattr(data_obj, "url", None)
         if b64:
@@ -1099,52 +1097,41 @@ class ImageGenerator:
         Two paths, picked once — no silent fallback between them:
           - reference_urls non-empty: download bytes, call OpenAI's images.edit so
             gpt-image-* conditions directly on the reference pixels.
-          - reference_urls empty: call litellm.image_generation, prompt-only.
+          - reference_urls empty: call OpenAI's images.generate, prompt-only.
         Exceptions propagate — silently retrying as prompt-only would mask real
         API errors (model rejection, auth, etc.) behind a downgrade."""
         refs: List[io.BytesIO] = []
         if reference_urls:
             refs = self._download_refs_parallel(reference_urls[:MAX_GPT_IMAGE_REFS])
 
-        api_format = _FORMAT_TO_API.get(self.output_format, "webp")
-        if refs:
-            # Use the per-run key from the LLM handler (not the ambient env): in
-            # public mode the server strips OPENAI_API_KEY, and image gen runs
-            # during synthesis, outside the per-run env window.
-            # timeout + max_retries=1 bound the call — OpenAI SDK defaults to
-            # ~10 min × 2 retries, which stacks into ~30 min per image when
-            # the API is slow. That's an ugly failure mode for an
-            # otherwise-completed run; the watchdog would kill the whole run.
-            client = OpenAI(
-                api_key=self.llm_handler.api_key,
-                timeout=IMAGE_API_TIMEOUT_S,
-                max_retries=1,
-            )
-            kwargs = dict(model=self.image_model, image=refs, prompt=prompt,
-                          size=self.size, n=1, output_format=api_format)
-            if self.quality:
-                kwargs["quality"] = self.quality
-            result = client.images.edit(**kwargs)
-            data = getattr(result, "data", None)
-            if not data:
-                raise RuntimeError("images.edit returned empty data")
-            self._save_image_data(data[0], output_path)
-            self._report_image_cost()
-            return {"via": "images.edit", "refs_used": len(refs)}
-
-        kwargs = dict(model=self.image_model, prompt=prompt, size=self.size,
-                      n=1, output_format=api_format,
-                      api_key=self.llm_handler.api_key,
-                      timeout=IMAGE_API_TIMEOUT_S)
+        # Use the per-run key from the LLM handler (not the ambient env): in
+        # public mode the server strips OPENAI_API_KEY, and image gen runs
+        # during synthesis, outside the per-run env window.
+        # timeout + max_retries=1 bound the call — OpenAI SDK defaults to
+        # ~10 min × 2 retries, which stacks into ~30 min per image when
+        # the API is slow. That's an ugly failure mode for an
+        # otherwise-completed run; the watchdog would kill the whole run.
+        # Both paths use this client: litellm.image_generation fails or drops
+        # output_format when its bundled model map predates the image model.
+        client = OpenAI(
+            api_key=self.llm_handler.api_key,
+            timeout=IMAGE_API_TIMEOUT_S,
+            max_retries=1,
+        )
+        kwargs = dict(model=self.image_model, prompt=prompt, size=self.size, n=1,
+                      output_format=_FORMAT_TO_API.get(self.output_format, "webp"))
         if self.quality:
             kwargs["quality"] = self.quality
-        result = litellm.image_generation(**kwargs)
+        if refs:
+            via, result = "images.edit", client.images.edit(image=refs, **kwargs)
+        else:
+            via, result = "images.generate", client.images.generate(**kwargs)
         data = getattr(result, "data", None)
         if not data:
-            raise RuntimeError("Image API returned empty data")
+            raise RuntimeError(f"{via} returned empty data")
         self._save_image_data(data[0], output_path)
         self._report_image_cost()
-        return {"via": "images.generate", "refs_used": 0}
+        return {"via": via, "refs_used": len(refs)}
 
     def _per_image_ref_urls(self, picked: List[PickedRef],
                             captions: List[str],

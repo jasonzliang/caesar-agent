@@ -2,6 +2,24 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.37] - 2026-11-23
+
+### Changed
+
+- Web presets and the public synthesis-model dropdown use the newest OpenAI
+  model of each cost tier: `gpt-6-luna`, `gpt-6.1-terra`, `gpt-6.2-sol` and
+  `gpt-6.2-astra`. GPT-6 models are priced, sized, and treated as reasoning
+  models. A synthesis model saved in a browser before the change keeps
+  working. The knowledge base stays on `gpt-5.4-mini`.
+- Price `gpt-5.6-sol` at $4/$20 per 1M tokens (was $5/$30).
+
+### Fixed
+
+- Text-only illustrations, used when no reference image scores high enough,
+  failed with "LLM Provider NOT provided" whenever litellm's bundled model map
+  lacked the image model. Both image paths now call the OpenAI API directly
+  and keep the configured output format.
+
 ## [0.4.36] - 2026-11-21
 
 ### Fixed

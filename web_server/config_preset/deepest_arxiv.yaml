@@ -2,7 +2,7 @@
 # Based on the `deepest` preset, but explores the Semantic Scholar citation graph
 # of arXiv papers instead of the open web: an S2 search seeds the graph, then
 # each hop follows a reference/citation edge (papers = nodes, citations = edges).
-# Iterative depth-first walk with GPT-5.6 Luna. Set an optional
+# Iterative depth-first walk with GPT-6 Luna. Set an optional
 # SEMANTIC_SCHOLAR_API_KEY on the server for reliable throughput (the anonymous
 # S2 pool is heavily rate-limited).
 Agent:
@@ -22,7 +22,7 @@ CaesarAgent:
   use_quick_explore: False
   quick_explore_insights: False
   exploration_llm_config:
-    model: gpt-5.6-luna
+    model: gpt-6-luna
     reasoning_effort: low
 
   adapt_role: True
@@ -44,7 +44,7 @@ ImageGenerator:
   max_candidates_to_score: 90
 
 LLMHandler:
-  model: gpt-5.6-sol
+  model: gpt-6.2-sol
   reasoning_effort: medium
   timeout: 1200
 
