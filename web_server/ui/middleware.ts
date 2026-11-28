@@ -13,17 +13,22 @@ import { NextResponse, type NextRequest } from 'next/server';
 const PUBLIC_PATHS = ['/login', '/api/auth/login', '/api/auth/logout'];
 
 // Identity cookie for public mode. Mirrors the LOCKED contract in deps.py
-// (CAESAR_ID_COOKIE). HttpOnly + Secure + SameSite=Lax, 30-day lifetime.
+// (CAESAR_ID_COOKIE). HttpOnly + Secure + SameSite=Lax, 400-day lifetime.
 const CAESAR_ID_COOKIE = 'caesar_id';
-const CAESAR_ID_MAX_AGE = 2592000; // 30 days in seconds.
+const CAESAR_ID_MAX_AGE = 34560000; // 400 days, Chrome's cookie cap.
 
 export async function middleware(req: NextRequest) {
-  // Branch 1: public mode. Mint the identity cookie when absent; never gate
-  // further here (FastAPI enforces per-row ownership off this cookie).
+  // Branch 1: public mode. Mint the identity cookie when absent; on page
+  // requests also re-issue it with the same value, so its lifetime counts from
+  // the latest visit rather than the first. /api requests leave an existing
+  // cookie alone: /api/restore sets a new one, and a second Set-Cookie here
+  // could put the old value back. Never gate further here (FastAPI enforces
+  // per-row ownership off this cookie).
   if (process.env.PUBLIC_MODE === '1') {
     const res = NextResponse.next();
-    if (!req.cookies.get(CAESAR_ID_COOKIE)?.value) {
-      res.cookies.set(CAESAR_ID_COOKIE, crypto.randomUUID(), {
+    const existing = req.cookies.get(CAESAR_ID_COOKIE)?.value;
+    if (!existing || !req.nextUrl.pathname.startsWith('/api/')) {
+      res.cookies.set(CAESAR_ID_COOKIE, existing || crypto.randomUUID(), {
         httpOnly: true,
         sameSite: 'lax',
         secure: true,

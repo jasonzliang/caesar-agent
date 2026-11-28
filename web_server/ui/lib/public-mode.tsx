@@ -30,7 +30,9 @@ export function usePublicMode(): boolean {
 // key in the POST /runs body. The server never reads the key from this cookie
 // (only from the request body) and never persists it.
 export const OPENAI_KEY_COOKIE = 'caesar_openai_key';
-const OPENAI_KEY_MAX_AGE = 2592000; // 30 days in seconds.
+// 400 days, the longest Chrome keeps any cookie. Shared by the key, model and
+// length cookies so a visitor's settings expire together.
+const SETTINGS_MAX_AGE = 34560000;
 
 export function getStoredKey(): string {
   if (typeof document === 'undefined') return '';
@@ -45,7 +47,7 @@ export function setStoredKey(value: string): void {
   const secure = location.protocol === 'https:' ? '; Secure' : '';
   document.cookie =
     `${OPENAI_KEY_COOKIE}=${encodeURIComponent(value)}; Path=/; ` +
-    `Max-Age=${OPENAI_KEY_MAX_AGE}; SameSite=Lax${secure}`;
+    `Max-Age=${SETTINGS_MAX_AGE}; SameSite=Lax${secure}`;
 }
 
 export function clearStoredKey(): void {
@@ -76,7 +78,7 @@ export function setStoredModel(value: string): void {
   }
   document.cookie =
     `${SYNTH_MODEL_COOKIE}=${encodeURIComponent(value)}; Path=/; ` +
-    `Max-Age=${OPENAI_KEY_MAX_AGE}; SameSite=Lax${secure}`;
+    `Max-Age=${SETTINGS_MAX_AGE}; SameSite=Lax${secure}`;
 }
 
 // Artifact word target, same cookie treatment as the model override: not a
@@ -89,10 +91,13 @@ export const OUTPUT_LENGTH_COOKIE = 'caesar_output_length';
 // 500..20000 bound (RunCreate.output_length); '' means "preset default".
 export const OUTPUT_LENGTH_CHOICES: { value: string; label: string }[] = [
   { value: '', label: 'Preset default (unconstrained)' },
-  { value: '1500', label: 'Brief (~1,500 words)' },
-  { value: '3000', label: 'Standard (~3,000 words)' },
-  { value: '6000', label: 'Detailed (~6,000 words)' },
+  ...[1000, 2000, 3000, 4000, 5000, 6000].map((n) => ({
+    value: String(n),
+    label: `~${n.toLocaleString('en-US')} words`,
+  })),
 ];
+// Lengths offered before and still honoured, so a saved choice keeps its target.
+const RETIRED_OUTPUT_LENGTHS = ['1500'];
 
 export function getStoredOutputLength(): string {
   if (typeof document === 'undefined') return '';
@@ -106,7 +111,9 @@ export function getStoredOutputLength(): string {
   // preset default. Checking membership rather than re-stating the numeric
   // bound also keeps the server's range from being duplicated here.
   const v = decodeURIComponent(m[1]);
-  return OUTPUT_LENGTH_CHOICES.some((c) => c.value === v) ? v : '';
+  return OUTPUT_LENGTH_CHOICES.some((c) => c.value === v) || RETIRED_OUTPUT_LENGTHS.includes(v)
+    ? v
+    : '';
 }
 
 export function setStoredOutputLength(value: string): void {
@@ -118,7 +125,7 @@ export function setStoredOutputLength(value: string): void {
   }
   document.cookie =
     `${OUTPUT_LENGTH_COOKIE}=${encodeURIComponent(value)}; Path=/; ` +
-    `Max-Age=${OPENAI_KEY_MAX_AGE}; SameSite=Lax${secure}`;
+    `Max-Age=${SETTINGS_MAX_AGE}; SameSite=Lax${secure}`;
 }
 
 

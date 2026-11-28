@@ -2,6 +2,16 @@
 
 All notable changes to Caesar are documented in this file. Format follows [Keep a Changelog](https://keepachangelog.com/en/1.1.0/), and versioning adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.4.39] - 2026-11-28
+
+### Changed
+
+- The web UI keeps the OpenAI key, synthesis model and answer length for
+  400 days instead of 30. The browser identity behind "Past Runs" lasts 400
+  days too, counted from the latest visit.
+- Answer length offers unconstrained or roughly 1,000 to 6,000 words in
+  1,000-word steps. A previously saved 1,500-word target keeps working.
+
 ## [0.4.38] - 2026-11-23
 
 ### Changed

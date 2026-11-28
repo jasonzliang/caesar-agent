@@ -37,7 +37,7 @@ _OWNER_MAX_LEN = 64
 
 # Lifetime of the identity cookie when (re)set server-side; matches the value
 # the Next.js middleware mints with (web_server/ui/middleware.ts).
-CAESAR_ID_MAX_AGE = 2592000  # 30 days in seconds.
+CAESAR_ID_MAX_AGE = 34560000  # 400 days, Chrome's cookie cap; matches ui/middleware.ts.
 
 
 def is_valid_owner_token(value: str | None) -> bool:

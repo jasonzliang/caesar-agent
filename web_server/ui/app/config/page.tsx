@@ -283,6 +283,10 @@ export default function ConfigPage() {
           }}
           className="w-full rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm text-gray-700 focus:outline-none focus:ring-2 focus:ring-brand-200 focus:border-brand-500"
         >
+          {/* A saved length the list no longer offers still applies; show it rather than a wrong pick. */}
+          {outputLength && !OUTPUT_LENGTH_CHOICES.some((c) => c.value === outputLength) && (
+            <option value={outputLength}>~{Number(outputLength).toLocaleString('en-US')} words</option>
+          )}
           {OUTPUT_LENGTH_CHOICES.map((c) => (
             <option key={c.value} value={c.value}>
               {c.label}
